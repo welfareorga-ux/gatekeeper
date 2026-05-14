@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Rol {
+  RESIDENTE
+  VIGILANTE
+  ADMIN
+}
+
+enum EstadoVisita {
+  PENDIENTE
+  INGRESADO
+  SALIDO
+  EXPIRADO
+  CANCELADO
+}
+
+enum PlanType {
+  BASICO
+  ESTANDAR
+  PREMIUM
+}
+
+// ─── Modelos ──────────────────────────────────────────────────────────────────
+
+model Condominio {
+  id        String   @id @default(cuid())
+  nombre    String
+  direccion String?
+  ruc       String?
+  telefono  String?
+  email     String?
+  plan      PlanType @default(BASICO)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usuarios   User[]
+  visitas    Visita[]
+  turnos     TurnoVigilante[]
+  plantillas PlantillaVisita[]
+
+  @@index([activo])
+}
+
+model User {
+  id           String      @id @default(cuid())
+  nombre       String
+  email        String      @unique
+  password     String
+  telefono     String?
+  rol          Rol         @default(RESIDENTE)
+  direccion    String?
+  activo       Boolean     @default(true)
+  isSuperAdmin Boolean     @default(false)
+  condominioId String?
+  condominio   Condominio? @relation(fields: [condominioId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  visitas         Visita[]          @relation("ResidenteVisitas")
+  plantillas      PlantillaVisita[]
+  turnosVigilante TurnoVigilante[]
+  ingresos        RegistroIngreso[] @relation("VigilanteIngreso")
+  salidas         RegistroIngreso[] @relation("VigilanteSalida")
+  logs            LogActividad[]
+
+  @@index([email])
+  @@index([rol])
+  @@index([condominioId])
+}
+
+model Visita {
+  id              String       @id @default(cuid())
+  residenteId     String
+  residente       User         @relation("ResidenteVisitas", fields: [residenteId], references: [id])
+  condominioId    String?
+  condominio      Condominio?  @relation(fields: [condominioId], references: [id])
+  nombreVisitante String
+  dniVisitante    String
+  motivoVisita    String
+  fechaProgramada DateTime
+  horaInicio      DateTime
+  horaFin         DateTime
+  estado          EstadoVisita @default(PENDIENTE)
+  observaciones   String?
+  codigoQR        String       @unique @default(cuid())
+  esRecurrente    Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+
+  vehiculos Vehiculo[]
+  registros RegistroIngreso[]
+
+  @@index([residenteId])
+  @@index([condominioId])
+  @@index([estado])
+  @@index([fechaProgramada])
+}
+
+model Vehiculo {
+  id       String  @id @default(cuid())
+  visitaId String
+  visita   Visita  @relation(fields: [visitaId], references: [id], onDelete: Cascade)
+  placa    String
+  marca    String?
+  modelo   String?
+  color    String?
+
+  registros RegistroIngreso[]
+
+  @@index([placa])
+  @@index([visitaId])
+}
+
+model RegistroIngreso {
+  id                 String    @id @default(cuid())
+  visitaId           String
+  visita             Visita    @relation(fields: [visitaId], references: [id])
+  vehiculoId         String
+  vehiculo           Vehiculo  @relation(fields: [vehiculoId], references: [id])
+  vigilanteIngresoId String?
+  vigilanteIngreso   User?     @relation("VigilanteIngreso", fields: [vigilanteIngresoId], references: [id])
+  fechaHoraIngreso   DateTime  @default(now())
+  vigilanteSalidaId  String?
+  vigilanteSalida    User?     @relation("VigilanteSalida", fields: [vigilanteSalidaId], references: [id])
+  fechaHoraSalida    DateTime?
+  notasVigilante     String?
+
+  @@index([visitaId])
+  @@index([vehiculoId])
+  @@index([fechaHoraIngreso])
+}
+
+model TurnoVigilante {
+  id              String      @id @default(cuid())
+  vigilanteId     String
+  vigilante       User        @relation(fields: [vigilanteId], references: [id])
+  condominioId    String?
+  condominio      Condominio? @relation(fields: [condominioId], references: [id])
+  horaInicioTurno DateTime    @default(now())
+  horaFinTurno    DateTime?
+  activo          Boolean     @default(true)
+
+  @@index([vigilanteId])
+  @@index([condominioId])
+  @@index([activo])
+}
+
+model PlantillaVisita {
+  id                 String      @id @default(cuid())
+  residenteId        String
+  residente          User        @relation(fields: [residenteId], references: [id])
+  condominioId       String?
+  condominio         Condominio? @relation(fields: [condominioId], references: [id])
+  nombreAlias        String
+  datosVisitanteJSON Json
+  datosVehiculoJSON  Json
+  createdAt          DateTime    @default(now())
+
+  @@index([residenteId])
+  @@index([condominioId])
+}
+
+model LogActividad {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  accion    String
+  detalle   String?
+  ip        String?
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([accion])
+}

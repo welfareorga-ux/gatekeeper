@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { nuevaVisitaSchema } from "@/lib/validations/visita"
+import { EstadoVisita } from "@prisma/client"
+
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+  const condominioId = session.user.condominioId
+  if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+
+  const { searchParams } = req.nextUrl
+  const estado = searchParams.get("estado") as EstadoVisita | null
+  const placa = searchParams.get("placa")
+  const fechaDesde = searchParams.get("fechaDesde")
+  const fechaHasta = searchParams.get("fechaHasta")
+
+  const residenteFilter = session.user.rol === "ADMIN" ? {} : { residenteId: session.user.id }
+
+  const visitas = await prisma.visita.findMany({
+    where: {
+      condominioId,
+      ...residenteFilter,
+      ...(estado ? { estado } : {}),
+      ...(fechaDesde || fechaHasta ? { fechaProgramada: { ...(fechaDesde ? { gte: new Date(fechaDesde) } : {}), ...(fechaHasta ? { lte: new Date(fechaHasta + "T23:59:59") } : {}) } } : {}),
+      ...(placa ? { vehiculos: { some: { placa: { contains: placa.toUpperCase(), mode: "insensitive" } } } } : {}),
+    },
+    include: {
+      vehiculos: true,
+      residente: { select: { nombre: true, direccion: true } },
+      _count: { select: { registros: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  })
+
+  return NextResponse.json(visitas)
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+  if (session.user.rol !== "RESIDENTE" && session.user.rol !== "ADMIN") {
+    return NextResponse.json({ error: "Solo residentes pueden crear visitas" }, { status: 403 })
+  }
+  const condominioId = session.user.condominioId
+  if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+
+  let body: unknown
+  try { body = await req.json() } catch { return NextResponse.json({ error: "Cuerpo inválido" }, { status: 400 }) }
+
+  const parsed = nuevaVisitaSchema.safeParse(body)
+  if (!parsed.success) return NextResponse.json({ error: "Datos inválidos", details: parsed.error.issues }, { status: 422 })
+
+  const { nombreVisitante, dniVisitante, motivoVisita, fechaProgramada, horaInicio, horaFin, vehiculos, esRecurrente, guardarComoPlantilla, nombreAlias } = parsed.data
+
+  const [aniof, mesf, diaf] = fechaProgramada.split("-").map(Number)
+  const [hiH, hiM] = horaInicio.split(":").map(Number)
+  const [hfH, hfM] = horaFin.split(":").map(Number)
+  const fechaBase = new Date(aniof, mesf - 1, diaf)
+  const fechaInicioFull = new Date(aniof, mesf - 1, diaf, hiH, hiM)
+  const fechaFinFull = new Date(aniof, mesf - 1, diaf, hfH, hfM)
+
+  const visita = await prisma.$transaction(async (tx) => {
+    const v = await tx.visita.create({
+      data: {
+        residenteId: session.user.id,
+        condominioId,
+        nombreVisitante, dniVisitante, motivoVisita,
+        fechaProgramada: fechaBase, horaInicio: fechaInicioFull, horaFin: fechaFinFull,
+        esRecurrente: esRecurrente ?? false,
+        vehiculos: { create: vehiculos.map((veh) => ({ placa: veh.placa, marca: veh.marca || null, modelo: veh.modelo || null, color: veh.color || null })) },
+      },
+      include: { vehiculos: true },
+    })
+    if (guardarComoPlantilla && nombreAlias) {
+      await tx.plantillaVisita.create({ data: { residenteId: session.user.id, condominioId, nombreAlias, datosVisitanteJSON: { nombreVisitante, dniVisitante, motivoVisita }, datosVehiculoJSON: vehiculos } })
+    }
+    await tx.logActividad.create({ data: { userId: session.user.id, accion: "CREAR_VISITA", detalle: `Visita para ${nombreVisitante} | ${vehiculos.map((v) => v.placa).join(", ")}` } })
+    return v
+  })
+
+  return NextResponse.json(visita, { status: 201 })
+}
