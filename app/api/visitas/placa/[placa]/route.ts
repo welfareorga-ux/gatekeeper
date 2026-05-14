@@ -41,7 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: { placa: strin
         residente: { select: { id: true, nombre: true, direccion: true, telefono: true } },
         registros: { where: { fechaHoraSalida: null }, take: 1, orderBy: { fechaHoraIngreso: "desc" } },
       },
-      orderBy: { fechaInicio: "desc" } as never,
+      orderBy: { createdAt: "desc" },
       take: 10,
     })
   } catch (err) {
