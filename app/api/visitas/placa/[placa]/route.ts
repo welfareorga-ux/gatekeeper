@@ -28,20 +28,26 @@ export async function GET(req: NextRequest, { params }: { params: { placa: strin
   const esBusquedaParcial = /^\d{3}$/.test(placaRaw.replace(/[^0-9]/g, "")) && placaRaw.length <= 3
   const whereVehiculo = esBusquedaParcial ? { placa: { endsWith: placaRaw } } : { placa: { equals: placa, mode: "insensitive" as const } }
 
-  const visitas = await prisma.visita.findMany({
-    where: {
-      condominioId,
-      vehiculos: { some: whereVehiculo },
-      estado: { notIn: [EstadoVisita.CANCELADO] },
-    },
-    include: {
-      vehiculos: { where: whereVehiculo },
-      residente: { select: { id: true, nombre: true, direccion: true, telefono: true } },
-      registros: { where: { fechaHoraSalida: null }, take: 1, orderBy: { fechaHoraIngreso: "desc" } },
-    },
-    orderBy: { fechaInicio: "desc" } as never,
-    take: 10,
-  })
+  let visitas
+  try {
+    visitas = await prisma.visita.findMany({
+      where: {
+        condominioId,
+        vehiculos: { some: whereVehiculo },
+        estado: { notIn: [EstadoVisita.CANCELADO] },
+      },
+      include: {
+        vehiculos: { where: whereVehiculo },
+        residente: { select: { id: true, nombre: true, direccion: true, telefono: true } },
+        registros: { where: { fechaHoraSalida: null }, take: 1, orderBy: { fechaHoraIngreso: "desc" } },
+      },
+      orderBy: { fechaInicio: "desc" } as never,
+      take: 10,
+    })
+  } catch (err) {
+    console.error("[placa] DB error:", err)
+    return NextResponse.json({ error: "Error de base de datos", detail: String(err) }, { status: 500 })
+  }
 
   const ordenadas = visitas.sort((a, b) => PRIORIDAD[a.estado] - PRIORIDAD[b.estado])
 
