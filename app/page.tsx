@@ -124,7 +124,7 @@ export default async function RootPage() {
                 gradient: "from-blue-500 to-blue-700",
                 icon: Shield,
                 descripcion: "Ideal para condominios pequeños que necesitan digitalizar su control de acceso.",
-                features: ["Hasta 50 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"],
+                features: ["Hasta 20 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"],
               },
               {
                 nombre: "Estándar",
@@ -134,7 +134,7 @@ export default async function RootPage() {
                 gradient: "from-primary to-primary/70",
                 icon: BarChart3,
                 descripcion: "El más elegido. Perfecto para condominios medianos con múltiples vigilantes.",
-                features: ["Hasta 150 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación", "Soporte prioritario"],
+                features: ["Hasta 50 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación", "Soporte prioritario"],
                 destacado: true,
               },
               {

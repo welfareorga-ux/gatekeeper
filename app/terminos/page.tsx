@@ -59,8 +59,8 @@ export default function TerminosPage() {
             <h2 className="text-xl font-semibold">3. Planes y precios</h2>
             <p>Los planes disponibles y sus tarifas mensuales son:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong>Plan Básico:</strong> S/ 49.00/mes — hasta 50 residentes, 1 vigilante, historial 30 días.</li>
-              <li><strong>Plan Estándar:</strong> S/ 89.00/mes — hasta 150 residentes, 3 vigilantes, historial 90 días, reportes.</li>
+              <li><strong>Plan Básico:</strong> S/ 49.00/mes — hasta 20 residentes, 1 vigilante, historial 30 días.</li>
+              <li><strong>Plan Estándar:</strong> S/ 89.00/mes — hasta 50 residentes, 3 vigilantes, historial 90 días, reportes.</li>
               <li><strong>Plan Premium:</strong> S/ 149.00/mes — sin límite de residentes y vigilantes, historial ilimitado, reportes avanzados, soporte dedicado.</li>
               <li><strong>Onboarding y Configuración:</strong> S/ 99.00 (pago único) — implementación inicial del sistema.</li>
               <li><strong>Capacitación del Personal:</strong> S/ 79.00 (pago único) — sesión de capacitación para vigilantes y administradores.</li>
