@@ -56,7 +56,7 @@ export default async function RootPage() {
           Todo desde una plataforma web, sin instalar nada.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/registro">
+          <Link href="/checkout?plan=ESTANDAR">
             <Button size="lg" className="w-full sm:w-auto px-8">
               Comenzar gratis — 14 días
             </Button>
@@ -180,12 +180,12 @@ export default async function RootPage() {
                         </li>
                       ))}
                     </ul>
-                    <Link href={`/registro?plan=${plan.slug}`} className="block">
+                    <Link href={`/checkout?plan=${plan.slug}`} className="block">
                       <Button
                         variant={plan.destacado ? "default" : "outline"}
                         className="w-full"
                       >
-                        Contratar ahora
+                        Comprar plan
                       </Button>
                     </Link>
                   </div>
