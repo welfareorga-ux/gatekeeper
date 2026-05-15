@@ -46,7 +46,7 @@ declare global {
   }
 }
 
-type Step = "pago" | "datos" | "exito"
+type Step = "datos" | "pago" | "exito"
 
 export function CheckoutForm() {
   const router = useRouter()
@@ -55,8 +55,7 @@ export function CheckoutForm() {
   const planKey: PlanKey = rawPlan in PLANES ? (rawPlan as PlanKey) : "ESTANDAR"
   const plan = PLANES[planKey]
 
-  const [step, setStep] = useState<Step>("pago")
-  const [culqiToken, setCulqiToken] = useState("")
+  const [step, setStep] = useState<Step>("datos")
   const [loadingPago, setLoadingPago] = useState(false)
   const [loadingCuenta, setLoadingCuenta] = useState(false)
 
@@ -92,6 +91,20 @@ export function CheckoutForm() {
     }
   }
 
+  function handleContinuar(e: React.FormEvent) {
+    e.preventDefault()
+    if (form.adminPassword !== form.confirmarPassword) {
+      toast.error("Las contraseñas no coinciden")
+      return
+    }
+    if (form.adminPassword.length < 8) {
+      toast.error("La contraseña debe tener mínimo 8 caracteres")
+      return
+    }
+    setStep("pago")
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
   async function handlePagar() {
     setLoadingPago(true)
 
@@ -117,35 +130,19 @@ export function CheckoutForm() {
         window.Culqi.open()
       })
     } catch {
-      toast.error("Pago cancelado o con error.")
+      toast.error("Pago cancelado.")
       setLoadingPago(false)
       return
     }
 
-    // Pago aprobado — pasamos a completar la cuenta
-    setCulqiToken(tokenId)
-    setLoadingPago(false)
-    setStep("datos")
-  }
-
-  async function handleCrearCuenta(e: React.FormEvent) {
-    e.preventDefault()
-    if (form.adminPassword !== form.confirmarPassword) {
-      toast.error("Las contraseñas no coinciden")
-      return
-    }
-    if (form.adminPassword.length < 8) {
-      toast.error("La contraseña debe tener mínimo 8 caracteres")
-      return
-    }
-
+    // Pago aprobado — crear cuenta
     setLoadingCuenta(true)
     try {
       const res = await fetch("/api/pago", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tokenId: culqiToken,
+          tokenId,
           plan: planKey,
           amount: plan.precio,
           nombreCondominio: form.nombreCondominio,
@@ -159,6 +156,8 @@ export function CheckoutForm() {
       if (!res.ok) {
         const err = await res.json()
         toast.error(err.error ?? "Error al crear la cuenta")
+        setLoadingPago(false)
+        setLoadingCuenta(false)
         return
       }
 
@@ -166,7 +165,7 @@ export function CheckoutForm() {
       setTimeout(() => router.push("/login"), 3000)
     } catch {
       toast.error("Error de conexión")
-    } finally {
+      setLoadingPago(false)
       setLoadingCuenta(false)
     }
   }
@@ -176,33 +175,61 @@ export function CheckoutForm() {
     return (
       <div className="max-w-md mx-auto flex flex-col items-center text-center py-20 space-y-4">
         <CheckCircle2 className="h-16 w-16 text-green-500" />
-        <h2 className="text-2xl font-bold">¡Listo!</h2>
+        <h2 className="text-2xl font-bold">¡Pago exitoso!</h2>
         <p className="text-muted-foreground">
-          Tu pago fue procesado y la cuenta ha sido creada.<br />
+          Tu condominio ha sido registrado.<br />
           Redirigiendo al inicio de sesión…
         </p>
       </div>
     )
   }
 
-  // ── Paso 2: Datos de la cuenta ────────────────────────────────────────────
-  if (step === "datos") {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-        {/* Formulario */}
-        <div className="lg:col-span-3 space-y-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <span className="font-semibold text-green-600">Pago aprobado</span>
-            </div>
-            <h1 className="text-2xl font-bold">Completa tu cuenta</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Crea las credenciales de acceso para tu condominio.
-            </p>
-          </div>
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-start">
 
-          <form onSubmit={handleCrearCuenta} className="space-y-5">
+      {/* ── Panel principal ──────────────────────────────────────────────── */}
+      <div className="lg:col-span-3 space-y-6">
+
+        {/* Indicador de pasos */}
+        <div className="flex items-center gap-2 text-sm">
+          <div className={`flex items-center gap-1.5 font-medium ${step === "datos" ? "text-primary" : "text-muted-foreground"}`}>
+            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${step === "datos" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {step === "pago" ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : "1"}
+            </span>
+            Tus datos
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <div className={`flex items-center gap-1.5 font-medium ${step === "pago" ? "text-primary" : "text-muted-foreground"}`}>
+            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${step === "pago" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+              2
+            </span>
+            Pago
+          </div>
+        </div>
+
+        {/* ── PASO 1: Datos ──────────────────────────────────────────────── */}
+        {step === "datos" && (
+          <form onSubmit={handleContinuar} className="space-y-5">
+            <div>
+              <h1 className="text-xl font-bold">Información de la cuenta</h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Completa tus datos y en el siguiente paso realizarás el pago.
+              </p>
+            </div>
+
+            {/* Plan */}
+            <div className="rounded-lg border bg-muted/30 px-4 py-3 flex justify-between items-center">
+              <div>
+                <p className="font-medium text-sm">Plan {plan.nombre}</p>
+                <p className="text-xs text-muted-foreground">{plan.descripcion}</p>
+              </div>
+              <div className="text-right shrink-0 ml-4">
+                <p className="font-bold">{plan.precioStr}</p>
+                <p className="text-xs text-muted-foreground">/mes</p>
+              </div>
+            </div>
+
+            {/* Condominio */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                 <Building2 className="h-4 w-4" />
@@ -220,6 +247,7 @@ export function CheckoutForm() {
 
             <Separator />
 
+            {/* Administrador */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                 <User className="h-4 w-4" />
@@ -245,130 +273,103 @@ export function CheckoutForm() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={loadingCuenta}>
-              {loadingCuenta
-                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Creando cuenta…</>
-                : "Crear mi cuenta →"}
+            <Button type="submit" size="lg" className="w-full">
+              <CreditCard className="h-4 w-4 mr-2" />
+              Continuar al pago
+              <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
+
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
+              <Lock className="h-3 w-3" />
+              El siguiente paso es el pago seguro con Culqi
+            </p>
           </form>
-        </div>
+        )}
 
-        {/* Resumen lateral */}
-        <div className="lg:col-span-2">
-          <OrderSummary plan={plan} planKey={planKey} />
-        </div>
+        {/* ── PASO 2: Pago ───────────────────────────────────────────────── */}
+        {step === "pago" && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-xl font-bold">Pago seguro</h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Revisa tu pedido y haz clic en "Pagar" para abrir la pasarela de Culqi.
+              </p>
+            </div>
+
+            {/* Resumen de datos */}
+            <div className="rounded-lg border px-4 py-3 space-y-1 text-sm">
+              <p className="font-medium text-xs text-muted-foreground uppercase tracking-wide mb-2">Cuenta a crear</p>
+              <p><span className="text-muted-foreground">Condominio:</span> {form.nombreCondominio}</p>
+              <p><span className="text-muted-foreground">Administrador:</span> {form.adminNombre}</p>
+              <p><span className="text-muted-foreground">Email:</span> {form.adminEmail}</p>
+            </div>
+
+            {/* Sello seguridad */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2.5">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
+              Pago cifrado con TLS. Certificación PCI DSS nivel 1. Aceptamos Visa, Mastercard y Amex.
+            </div>
+
+            {/* Botón principal de pago */}
+            <Button
+              onClick={handlePagar}
+              size="lg"
+              className="w-full text-base py-6"
+              disabled={loadingPago || loadingCuenta}
+            >
+              {(loadingPago || loadingCuenta) ? (
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Procesando…</>
+              ) : (
+                <><CreditCard className="h-5 w-5 mr-2" />Pagar {plan.precioStr}</>
+              )}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => setStep("datos")}
+              disabled={loadingPago || loadingCuenta}
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mx-auto disabled:opacity-50"
+            >
+              ← Volver y editar datos
+            </button>
+          </div>
+        )}
       </div>
-    )
-  }
 
-  // ── Paso 1: Pago ─────────────────────────────────────────────────────────
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-      {/* Panel de pago */}
-      <div className="lg:col-span-3 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Finalizar compra</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            14 días de prueba incluidos. Cancela cuando quieras.
+      {/* ── Resumen lateral ──────────────────────────────────────────────── */}
+      <div className="lg:col-span-2">
+        <div className="rounded-xl border p-5 space-y-4 bg-muted/20 sticky top-6">
+          <p className="font-semibold">Resumen del pedido</p>
+
+          <div className="flex justify-between items-start text-sm">
+            <div>
+              <p className="font-medium">Plan {plan.nombre}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{plan.descripcion}</p>
+            </div>
+            <span className="font-bold shrink-0 ml-3">{plan.precioStr}</span>
+          </div>
+
+          <ul className="space-y-1.5 text-sm text-muted-foreground">
+            {plan.features.map((f) => (
+              <li key={f} className="flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                {f}
+              </li>
+            ))}
+          </ul>
+
+          <Separator />
+
+          <div className="flex justify-between font-bold text-sm">
+            <span>Total hoy <span className="font-normal text-muted-foreground">(incl. IGV)</span></span>
+            <span>{plan.precioStr}</span>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Incluye 14 días de prueba gratuita. Cancela cuando quieras desde tu panel.
           </p>
         </div>
-
-        {/* Selección de plan */}
-        <div className="space-y-3">
-          <p className="font-semibold text-sm">Plan seleccionado</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {(Object.keys(PLANES) as PlanKey[]).map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => router.push(`/checkout?plan=${k}`)}
-                className={`rounded-lg border p-4 text-left transition-all ${
-                  k === planKey
-                    ? "border-primary bg-primary/5 shadow-sm"
-                    : "hover:border-muted-foreground/40"
-                }`}
-              >
-                <p className="font-semibold text-sm">{PLANES[k].nombre}</p>
-                <p className="text-lg font-bold mt-0.5">{PLANES[k].precioStr}</p>
-                <p className="text-xs text-muted-foreground">/mes</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Botón de pago */}
-        <div className="space-y-3 pt-2">
-          <Button
-            onClick={handlePagar}
-            size="lg"
-            className="w-full text-base py-6"
-            disabled={loadingPago}
-          >
-            {loadingPago ? (
-              <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Abriendo pasarela…</>
-            ) : (
-              <><CreditCard className="h-5 w-5 mr-2" />Pagar {plan.precioStr} con Culqi</>
-            )}
-          </Button>
-
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Lock className="h-3.5 w-3.5" />
-            Pago cifrado con TLS. Certificación PCI DSS nivel 1.
-          </div>
-
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-green-500" />
-            Aceptamos Visa, Mastercard y American Express emitidas en Perú.
-          </div>
-        </div>
       </div>
-
-      {/* Resumen lateral */}
-      <div className="lg:col-span-2">
-        <OrderSummary plan={plan} planKey={planKey} />
-      </div>
-    </div>
-  )
-}
-
-function OrderSummary({
-  plan,
-  planKey,
-}: {
-  plan: (typeof PLANES)[PlanKey]
-  planKey: PlanKey
-}) {
-  return (
-    <div className="rounded-xl border p-5 space-y-4 bg-muted/20">
-      <p className="font-semibold">Resumen del pedido</p>
-
-      <div className="flex justify-between items-start text-sm">
-        <div>
-          <p className="font-medium">Plan {plan.nombre}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{plan.descripcion}</p>
-        </div>
-        <span className="font-bold shrink-0 ml-3">{plan.precioStr}</span>
-      </div>
-
-      <ul className="space-y-1.5 text-sm text-muted-foreground">
-        {plan.features.map((f) => (
-          <li key={f} className="flex items-center gap-2">
-            <ChevronRight className="h-3.5 w-3.5 text-primary shrink-0" />
-            {f}
-          </li>
-        ))}
-      </ul>
-
-      <Separator />
-
-      <div className="flex justify-between font-bold text-sm">
-        <span>Total hoy <span className="font-normal text-muted-foreground">(incl. IGV)</span></span>
-        <span>{plan.precioStr}</span>
-      </div>
-
-      <p className="text-xs text-muted-foreground">
-        Se renovará automáticamente cada mes. Cancela desde tu panel en cualquier momento.
-      </p>
     </div>
   )
 }
