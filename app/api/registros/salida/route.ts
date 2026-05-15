@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { enviarNotificacionSalida } from "@/lib/email"
 import { z } from "zod"
 import { EstadoVisita } from "@prisma/client"
 
@@ -33,7 +34,13 @@ export async function POST(req: NextRequest) {
 
   const visita = await prisma.visita.findFirst({
     where: { id: visitaId, condominioId },
-    select: { estado: true },
+    select: {
+      estado: true,
+      nombreVisitante: true,
+      vehiculos: { select: { placa: true }, take: 1 },
+      residente: { select: { email: true, nombre: true } },
+      condominio: { select: { nombre: true } },
+    },
   })
 
   if (!visita) return NextResponse.json({ error: "Visita no encontrada" }, { status: 404 })
@@ -53,13 +60,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No hay registro de ingreso abierto" }, { status: 404 })
   }
 
-  const ahora = new Date()
+  const horaSalida = new Date()
 
   const registro = await prisma.$transaction(async (tx) => {
     const r = await tx.registroIngreso.update({
       where: { id: registroAbierto.id },
       data: {
-        fechaHoraSalida: ahora,
+        fechaHoraSalida: horaSalida,
         vigilanteSalidaId: session.user.id,
         ...(notasVigilante ? { notasVigilante } : {}),
       },
@@ -79,6 +86,17 @@ export async function POST(req: NextRequest) {
     })
 
     return r
+  })
+
+  // Envío de email en background — no bloquea la respuesta
+  void enviarNotificacionSalida({
+    emailResidente: visita.residente.email,
+    nombreResidente: visita.residente.nombre,
+    nombreVisitante: visita.nombreVisitante,
+    placa: visita.vehiculos[0]?.placa ?? "",
+    condominioNombre: visita.condominio.nombre,
+    horaIngreso: registroAbierto.fechaHoraIngreso,
+    horaSalida,
   })
 
   return NextResponse.json(registro)

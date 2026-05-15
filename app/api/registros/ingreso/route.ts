@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { enviarNotificacionIngreso } from "@/lib/email"
 import { z } from "zod"
 import { EstadoVisita } from "@prisma/client"
 
@@ -34,7 +35,13 @@ export async function POST(req: NextRequest) {
 
   const visita = await prisma.visita.findFirst({
     where: { id: visitaId, condominioId },
-    select: { estado: true, vehiculos: { select: { id: true } } },
+    select: {
+      estado: true,
+      nombreVisitante: true,
+      vehiculos: { select: { id: true, placa: true } },
+      residente: { select: { email: true, nombre: true } },
+      condominio: { select: { nombre: true } },
+    },
   })
 
   if (!visita) return NextResponse.json({ error: "Visita no encontrada" }, { status: 404 })
@@ -45,10 +52,12 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const vehiculoPertenece = visita.vehiculos.some((v) => v.id === vehiculoId)
-  if (!vehiculoPertenece) {
+  const vehiculo = visita.vehiculos.find((v) => v.id === vehiculoId)
+  if (!vehiculo) {
     return NextResponse.json({ error: "El vehículo no pertenece a esta visita" }, { status: 400 })
   }
+
+  const horaIngreso = new Date()
 
   const registro = await prisma.$transaction(async (tx) => {
     const r = await tx.registroIngreso.create({
@@ -56,7 +65,7 @@ export async function POST(req: NextRequest) {
         visitaId,
         vehiculoId,
         vigilanteIngresoId: session.user.id,
-        fechaHoraIngreso: new Date(),
+        fechaHoraIngreso: horaIngreso,
         notasVigilante: notasVigilante ?? null,
       },
     })
@@ -75,6 +84,16 @@ export async function POST(req: NextRequest) {
     })
 
     return r
+  })
+
+  // Envío de email en background — no bloquea la respuesta
+  void enviarNotificacionIngreso({
+    emailResidente: visita.residente.email,
+    nombreResidente: visita.residente.nombre,
+    nombreVisitante: visita.nombreVisitante,
+    placa: vehiculo.placa,
+    condominioNombre: visita.condominio.nombre,
+    horaIngreso,
   })
 
   return NextResponse.json(registro, { status: 201 })
