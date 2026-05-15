@@ -1,7 +1,8 @@
+import { Suspense } from "react"
 import Script from "next/script"
 import { RegistroForm } from "./registro-form"
 import Link from "next/link"
-import { Shield } from "lucide-react"
+import { Shield, Loader2 } from "lucide-react"
 
 export const metadata = { title: "Registrar Condominio — Gatekeeper" }
 
@@ -27,7 +28,9 @@ export default function RegistroPage() {
             </div>
           </div>
 
-          <RegistroForm />
+          <Suspense fallback={<div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+            <RegistroForm />
+          </Suspense>
 
           <p className="text-center text-sm text-muted-foreground">
             ¿Ya tienes cuenta?{" "}
