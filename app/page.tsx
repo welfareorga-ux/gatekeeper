@@ -3,7 +3,10 @@ import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Shield, Car, Users, BarChart3, CheckCircle2 } from "lucide-react"
+import {
+  Shield, Car, Users, BarChart3, CheckCircle2,
+  Bell, FileSpreadsheet, Phone, Mail, MapPin, Building2,
+} from "lucide-react"
 
 export default async function RootPage() {
   const session = await getServerSession(authOptions)
@@ -105,7 +108,7 @@ export default async function RootPage() {
       </section>
 
       {/* Planes */}
-      <section className="border-t">
+      <section className="border-t" id="planes">
         <div className="container max-w-6xl mx-auto px-4 py-20 space-y-10">
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-bold">Planes simples y transparentes</h2>
@@ -113,53 +116,197 @@ export default async function RootPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
-              { nombre: "Básico", precio: "S/ 49", periodo: "/mes", features: ["Hasta 50 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"] },
-              { nombre: "Estándar", precio: "S/ 89", periodo: "/mes", features: ["Hasta 150 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación", "Soporte prioritario"], destacado: true },
-              { nombre: "Premium", precio: "S/ 149", periodo: "/mes", features: ["Residentes ilimitados", "Vigilantes ilimitados", "Historial ilimitado", "Reportes avanzados", "Soporte dedicado"] },
-            ].map((plan) => (
-              <div
-                key={plan.nombre}
-                className={`rounded-xl border p-6 space-y-5 ${plan.destacado ? "border-primary shadow-lg shadow-primary/10" : ""}`}
-              >
-                {plan.destacado && (
-                  <div className="text-xs font-semibold text-primary uppercase tracking-wide">Más popular</div>
-                )}
-                <div>
-                  <p className="font-bold text-xl">{plan.nombre}</p>
-                  <div className="flex items-end gap-1 mt-1">
-                    <span className="text-3xl font-bold">{plan.precio}</span>
-                    <span className="text-muted-foreground text-sm mb-1">{plan.periodo}</span>
+              {
+                nombre: "Básico",
+                precio: "S/ 49",
+                periodo: "/mes",
+                slug: "BASICO",
+                gradient: "from-blue-500 to-blue-700",
+                icon: Shield,
+                descripcion: "Ideal para condominios pequeños que necesitan digitalizar su control de acceso.",
+                features: ["Hasta 50 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"],
+              },
+              {
+                nombre: "Estándar",
+                precio: "S/ 89",
+                periodo: "/mes",
+                slug: "ESTANDAR",
+                gradient: "from-primary to-primary/70",
+                icon: BarChart3,
+                descripcion: "El más elegido. Perfecto para condominios medianos con múltiples vigilantes.",
+                features: ["Hasta 150 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación", "Soporte prioritario"],
+                destacado: true,
+              },
+              {
+                nombre: "Premium",
+                precio: "S/ 149",
+                periodo: "/mes",
+                slug: "PREMIUM",
+                gradient: "from-purple-500 to-purple-800",
+                icon: Building2,
+                descripcion: "Sin límites. Para grandes edificios y urbanizaciones con operación intensiva.",
+                features: ["Residentes ilimitados", "Vigilantes ilimitados", "Historial ilimitado", "Reportes avanzados", "Soporte dedicado"],
+              },
+            ].map((plan) => {
+              const Icon = plan.icon
+              return (
+                <div
+                  key={plan.nombre}
+                  className={`rounded-xl border overflow-hidden ${plan.destacado ? "border-primary shadow-lg shadow-primary/10" : ""}`}
+                >
+                  {/* Visual del plan */}
+                  <div className={`bg-gradient-to-br ${plan.gradient} p-6 flex flex-col items-center justify-center gap-3 min-h-[120px]`}>
+                    {plan.destacado && (
+                      <span className="text-xs font-semibold text-white/80 uppercase tracking-wide bg-white/20 px-3 py-1 rounded-full">
+                        Más popular
+                      </span>
+                    )}
+                    <Icon className="h-10 w-10 text-white/90" />
+                    <p className="text-white font-bold text-xl">{plan.nombre}</p>
+                    <div className="flex items-end gap-1">
+                      <span className="text-white text-3xl font-bold">{plan.precio}</span>
+                      <span className="text-white/70 text-sm mb-1">{plan.periodo}</span>
+                    </div>
+                  </div>
+
+                  {/* Contenido */}
+                  <div className="p-6 space-y-4">
+                    <p className="text-muted-foreground text-sm leading-relaxed">{plan.descripcion}</p>
+                    <ul className="space-y-2">
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2 text-sm">
+                          <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href={`/registro?plan=${plan.slug}`} className="block">
+                      <Button
+                        variant={plan.destacado ? "default" : "outline"}
+                        className="w-full"
+                      >
+                        Contratar ahora
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-                <ul className="space-y-2">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/registro" className="block">
-                  <Button variant={plan.destacado ? "default" : "outline"} className="w-full">
-                    Comenzar
-                  </Button>
-                </Link>
+              )
+            })}
+          </div>
+
+          {/* Servicios adicionales */}
+          <div className="max-w-4xl mx-auto space-y-4">
+            <h3 className="text-center text-xl font-semibold pt-4">Servicios adicionales</h3>
+            <p className="text-center text-muted-foreground text-sm">Complementa tu plan con servicios de implementación y capacitación.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {[
+                {
+                  icon: Bell,
+                  gradient: "from-amber-400 to-amber-600",
+                  nombre: "Onboarding y Configuración",
+                  precio: "S/ 99",
+                  periodo: "pago único",
+                  descripcion: "Configuramos Gatekeeper en tu condominio: carga de residentes, creación de usuarios y puesta en marcha. Incluye 1 sesión de acompañamiento remoto.",
+                },
+                {
+                  icon: FileSpreadsheet,
+                  gradient: "from-teal-500 to-teal-700",
+                  nombre: "Capacitación del Personal",
+                  precio: "S/ 79",
+                  periodo: "pago único",
+                  descripcion: "Capacitamos a tus vigilantes y administradores en el uso de la plataforma. Incluye manual de uso y sesión de preguntas en vivo.",
+                },
+              ].map((srv) => {
+                const Icon = srv.icon
+                return (
+                  <div key={srv.nombre} className="rounded-xl border overflow-hidden">
+                    <div className={`bg-gradient-to-br ${srv.gradient} p-5 flex items-center gap-4`}>
+                      <div className="bg-white/20 p-3 rounded-lg">
+                        <Icon className="h-7 w-7 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-white font-bold text-lg leading-tight">{srv.nombre}</p>
+                        <div className="flex items-end gap-1 mt-0.5">
+                          <span className="text-white text-2xl font-bold">{srv.precio}</span>
+                          <span className="text-white/70 text-xs mb-0.5">{srv.periodo}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-4">
+                      <p className="text-muted-foreground text-sm leading-relaxed">{srv.descripcion}</p>
+                      <Link href="/registro" className="block">
+                        <Button variant="outline" className="w-full">Contratar servicio</Button>
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contacto */}
+      <section className="border-t bg-muted/30">
+        <div className="container max-w-6xl mx-auto px-4 py-16 space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold">Información de contacto</h2>
+            <p className="text-muted-foreground text-sm">Estamos disponibles para atender tus consultas.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="bg-primary/10 p-3 rounded-full">
+                <Phone className="h-5 w-5 text-primary" />
               </div>
-            ))}
+              <p className="font-medium text-sm">Teléfono / WhatsApp</p>
+              <a href="tel:+51964462645" className="text-muted-foreground text-sm hover:text-foreground transition-colors">
+                +51 964 462 645
+              </a>
+            </div>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="bg-primary/10 p-3 rounded-full">
+                <Mail className="h-5 w-5 text-primary" />
+              </div>
+              <p className="font-medium text-sm">Correo electrónico</p>
+              <a href="mailto:welfareorga@gmail.com" className="text-muted-foreground text-sm hover:text-foreground transition-colors">
+                welfareorga@gmail.com
+              </a>
+            </div>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="bg-primary/10 p-3 rounded-full">
+                <MapPin className="h-5 w-5 text-primary" />
+              </div>
+              <p className="font-medium text-sm">Dirección</p>
+              <p className="text-muted-foreground text-sm">Calle 39 Nº 111, Lima, Perú</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <span>Gatekeeper © 2026</span>
+      <footer className="border-t py-10">
+        <div className="container max-w-6xl mx-auto px-4 space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <span className="font-bold">Gatekeeper</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Josue Antonio Medina Bocanegra — RUC 10460632027
+              </p>
+              <p className="text-xs text-muted-foreground">Calle 39 Nº 111, Lima, Perú</p>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+              <Link href="/login" className="hover:text-foreground transition-colors">Iniciar sesión</Link>
+              <Link href="/registro" className="hover:text-foreground transition-colors">Registrarse</Link>
+              <Link href="/terminos" className="hover:text-foreground transition-colors">Términos y condiciones</Link>
+              <Link href="/politica-devoluciones" className="hover:text-foreground transition-colors">Política de devoluciones</Link>
+              <Link href="/libro-reclamaciones" className="hover:text-foreground transition-colors">Libro de reclamaciones</Link>
+            </div>
           </div>
-          <div className="flex gap-6">
-            <Link href="/login" className="hover:text-foreground transition-colors">Iniciar sesión</Link>
-            <Link href="/registro" className="hover:text-foreground transition-colors">Registrarse</Link>
+          <div className="border-t pt-4 text-xs text-muted-foreground text-center">
+            © 2026 Gatekeeper. Todos los derechos reservados.
           </div>
         </div>
       </footer>
