@@ -69,14 +69,19 @@ export function CheckoutForm() {
   })
 
   const resolveToken = useRef<((id: string) => void) | null>(null)
-  const rejectToken = useRef<(() => void) | null>(null)
+  const rejectToken = useRef<((msg?: string | null) => void) | null>(null)
 
   useEffect(() => {
     window.culqi = function () {
+      console.log("[Culqi] callback fired", {
+        token: window.Culqi?.token,
+        error: window.Culqi?.error,
+      })
       if (window.Culqi?.token) {
         resolveToken.current?.(window.Culqi.token.id)
       } else {
-        rejectToken.current?.()
+        const errMsg = window.Culqi?.error?.user_message ?? null
+        rejectToken.current?.(errMsg)
       }
       resolveToken.current = null
       rejectToken.current = null
@@ -112,11 +117,17 @@ export function CheckoutForm() {
     try {
       tokenId = await new Promise<string>((resolve, reject) => {
         resolveToken.current = resolve
-        rejectToken.current = reject
+        rejectToken.current = (msg?: string | null) => reject(msg ?? null)
 
         const pk = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY
-        if (!pk || !window.Culqi) {
-          reject()
+        console.log("[Culqi] pk disponible:", !!pk, "| window.Culqi:", typeof window.Culqi)
+
+        if (!pk) {
+          reject("Clave pública no configurada — contacta al soporte")
+          return
+        }
+        if (!window.Culqi) {
+          reject("Pasarela de pago no disponible. Recarga la página e intenta de nuevo.")
           return
         }
 
@@ -127,10 +138,14 @@ export function CheckoutForm() {
           description: `Plan ${plan.nombre} — 1 mes`,
           amount: plan.precio,
         })
+        console.log("[Culqi] Culqi.open() llamado")
         window.Culqi.open()
       })
-    } catch {
-      toast.error("Pago cancelado.")
+    } catch (err) {
+      const msg = typeof err === "string" && err
+        ? err
+        : "Pago cancelado."
+      toast.error(msg)
       setLoadingPago(false)
       return
     }
