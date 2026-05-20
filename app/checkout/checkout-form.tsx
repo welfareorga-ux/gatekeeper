@@ -56,6 +56,7 @@ export function CheckoutForm() {
   const plan = PLANES[planKey]
 
   const [step, setStep] = useState<Step>("datos")
+  const [loadingVerificar, setLoadingVerificar] = useState(false)
   const [loadingPago, setLoadingPago] = useState(false)
   const [loadingCuenta, setLoadingCuenta] = useState(false)
   const [culqiListo, setCulqiListo] = useState(false)
@@ -115,7 +116,7 @@ export function CheckoutForm() {
     }
   }
 
-  function handleContinuar(e: React.FormEvent) {
+  async function handleContinuar(e: React.FormEvent) {
     e.preventDefault()
     if (form.adminPassword !== form.confirmarPassword) {
       toast.error("Las contraseñas no coinciden")
@@ -125,6 +126,20 @@ export function CheckoutForm() {
       toast.error("La contraseña debe tener mínimo 8 caracteres")
       return
     }
+
+    setLoadingVerificar(true)
+    try {
+      const res = await fetch(`/api/verificar-email?email=${encodeURIComponent(form.adminEmail)}`)
+      const data = await res.json()
+      if (data.registrado) {
+        toast.error("Este email ya está registrado. Usa otro o inicia sesión.")
+        setLoadingVerificar(false)
+        return
+      }
+    } catch {
+      // Si falla la verificación, dejamos pasar — el API de pago lo atrapará igual
+    }
+    setLoadingVerificar(false)
     setStep("pago")
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
@@ -307,10 +322,12 @@ export function CheckoutForm() {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full">
-              <CreditCard className="h-4 w-4 mr-2" />
-              Continuar al pago
-              <ChevronRight className="h-4 w-4 ml-1" />
+            <Button type="submit" size="lg" className="w-full" disabled={loadingVerificar}>
+              {loadingVerificar ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Verificando…</>
+              ) : (
+                <><CreditCard className="h-4 w-4 mr-2" />Continuar al pago<ChevronRight className="h-4 w-4 ml-1" /></>
+              )}
             </Button>
 
             <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
