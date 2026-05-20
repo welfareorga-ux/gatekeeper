@@ -3,6 +3,12 @@ import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 
+const PLAN_IDS: Record<string, string> = {
+  BASICO: "plan-basico-2026",
+  ESTANDAR: "plan-estandar-2026",
+  PREMIUM: "plan-premium-2026",
+}
+
 const schema = z.object({
   tokenId: z.string().min(1),
   plan: z.enum(["BASICO", "ESTANDAR", "PREMIUM"]),
@@ -14,6 +20,23 @@ const schema = z.object({
   adminPassword: z.string().min(8),
 })
 
+async function culqiPost(endpoint: string, secretKey: string, body: object) {
+  const res = await fetch(`https://api.culqi.com/v2${endpoint}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const msg = (data as { user_message?: string }).user_message ?? `Error en ${endpoint}`
+    throw new Error(msg)
+  }
+  return data as { id: string }
+}
+
 export async function POST(req: Request) {
   const body = await req.json()
   const result = schema.safeParse(body)
@@ -21,51 +44,76 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
   }
 
-  const {
-    tokenId, plan, amount,
-    nombreCondominio, direccion,
-    adminNombre, adminEmail, adminPassword,
-  } = result.data
+  const { tokenId, plan, nombreCondominio, direccion, adminNombre, adminEmail, adminPassword } =
+    result.data
 
-  // Procesar cargo con Culqi
   const secretKey = process.env.CULQI_SECRET_KEY
-  if (secretKey) {
-    const chargeRes = await fetch("https://api.culqi.com/v2/charges", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount,
-        currency_code: "PEN",
-        email: adminEmail,
-        source_id: tokenId,
-        description: `Gatekeeper — Plan ${plan}`,
-        metadata: { plan, condominio: nombreCondominio },
-      }),
-    })
-
-    if (!chargeRes.ok) {
-      const err = await chargeRes.json().catch(() => ({}))
-      const msg =
-        (err as { user_message?: string }).user_message ??
-        "El pago fue rechazado. Verifica los datos de tu tarjeta."
-      return NextResponse.json({ error: msg }, { status: 402 })
-    }
+  if (!secretKey) {
+    return NextResponse.json({ error: "Configuración de pagos incompleta" }, { status: 500 })
   }
 
-  // Crear cuenta
   const existe = await prisma.user.findUnique({ where: { email: adminEmail.toLowerCase() } })
   if (existe) {
     return NextResponse.json({ error: "Este email ya está registrado" }, { status: 409 })
   }
 
+  // 1. Crear Customer en Culqi
+  const nameParts = adminNombre.trim().split(" ")
+  const firstName = nameParts[0]
+  const lastName = nameParts.slice(1).join(" ") || "-"
+
+  let customer: { id: string }
+  try {
+    customer = await culqiPost("/customers", secretKey, {
+      first_name: firstName,
+      last_name: lastName,
+      email: adminEmail,
+      address: direccion,
+      address_city: "Lima",
+      country_code: "PE",
+      phone_number: 999999999,
+      metadata: { condominio: nombreCondominio },
+    })
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 402 })
+  }
+
+  // 2. Crear Card (asocia token al customer)
+  let card: { id: string }
+  try {
+    card = await culqiPost("/cards", secretKey, {
+      customer_id: customer.id,
+      token_id: tokenId,
+    })
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 402 })
+  }
+
+  // 3. Crear Subscription (primer cobro ocurre automáticamente)
+  let subscription: { id: string }
+  try {
+    subscription = await culqiPost("/subscriptions", secretKey, {
+      card_id: card.id,
+      plan_id: PLAN_IDS[plan],
+      tyc: true,
+      metadata: { condominio: nombreCondominio, plan },
+    })
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 402 })
+  }
+
+  // 4. Crear condominio + admin en DB
   const hash = await bcrypt.hash(adminPassword, 12)
 
   await prisma.$transaction(async (tx) => {
     const condominio = await tx.condominio.create({
-      data: { nombre: nombreCondominio, direccion, plan },
+      data: {
+        nombre: nombreCondominio,
+        direccion,
+        plan,
+        culqiSubscriptionId: subscription.id,
+        suscripcionEstado: "activa",
+      },
     })
     const admin = await tx.user.create({
       data: {
@@ -80,7 +128,7 @@ export async function POST(req: Request) {
       data: {
         userId: admin.id,
         accion: "REGISTRO_CONDOMINIO",
-        detalle: JSON.stringify({ condominio: nombreCondominio, plan }),
+        detalle: JSON.stringify({ condominio: nombreCondominio, plan, subscriptionId: subscription.id }),
       },
     })
   })

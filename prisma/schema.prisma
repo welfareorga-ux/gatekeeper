@@ -37,10 +37,12 @@ model Condominio {
   ruc       String?
   telefono  String?
   email     String?
-  plan      PlanType @default(BASICO)
-  activo    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  plan                PlanType @default(BASICO)
+  activo              Boolean  @default(true)
+  culqiSubscriptionId String?
+  suscripcionEstado   String   @default("activa")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   usuarios   User[]
   visitas    Visita[]
