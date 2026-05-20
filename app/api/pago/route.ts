@@ -3,10 +3,23 @@ import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 
-const PLAN_IDS: Record<string, string> = {
+// Códigos legibles tal como están en CulqiPanel — se resuelven a IDs reales en runtime
+const PLAN_CODES: Record<string, string> = {
   BASICO: "plan-basico-2026",
   ESTANDAR: "plan-estandar-2026",
   PREMIUM: "plan-premium-2026",
+}
+
+async function resolverPlanId(planCode: string, secretKey: string): Promise<string> {
+  const res = await fetch("https://api.culqi.com/v2/recurrent/plans?limit=20", {
+    headers: { Authorization: `Bearer ${secretKey}` },
+  })
+  const data = await res.json().catch(() => ({})) as { data?: { id: string; name?: string; alias?: string }[] }
+  const plan = data?.data?.find(
+    (p) => p.alias === planCode || p.name === planCode || p.id === planCode
+  )
+  if (!plan) throw new Error(`Plan '${planCode}' no encontrado en Culqi. Verifica que exista en CulqiPanel.`)
+  return plan.id
 }
 
 const schema = z.object({
@@ -104,11 +117,18 @@ export async function POST(req: Request) {
   }
 
   // 3. Crear Subscription (primer cobro ocurre automáticamente)
+  let planId: string
+  try {
+    planId = await resolverPlanId(PLAN_CODES[plan], secretKey)
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 402 })
+  }
+
   let subscription: { id: string }
   try {
     subscription = await culqiPost("/recurrent/subscriptions/create", secretKey, {
       card_id: card.id,
-      plan_id: PLAN_IDS[plan],
+      plan_id: planId,
       tyc: true,
       metadata: { condominio: nombreCondominio, plan },
     })
