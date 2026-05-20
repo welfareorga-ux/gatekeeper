@@ -14,12 +14,19 @@ async function resolverPlanId(planCode: string, secretKey: string): Promise<stri
   const res = await fetch("https://api.culqi.com/v2/recurrent/plans?limit=20", {
     headers: { Authorization: `Bearer ${secretKey}` },
   })
-  const data = await res.json().catch(() => ({})) as { data?: { id: string; name?: string; alias?: string }[] }
-  const plan = data?.data?.find(
-    (p) => p.alias === planCode || p.name === planCode || p.id === planCode
+  const data = await res.json().catch(() => ({}))
+  console.log("[Culqi] GET /recurrent/plans status:", res.status, "body:", JSON.stringify(data))
+
+  const planes = (data as { data?: Record<string, unknown>[] })?.data ?? []
+  const plan = planes.find((p) =>
+    Object.values(p).some((v) => v === planCode)
   )
-  if (!plan) throw new Error(`Plan '${planCode}' no encontrado en Culqi. Verifica que exista en CulqiPanel.`)
-  return plan.id
+  if (!plan) {
+    const keys = planes[0] ? Object.keys(planes[0]) : []
+    const samples = planes.slice(0, 3).map((p) => JSON.stringify(p))
+    throw new Error(`Plan '${planCode}' no encontrado. Campos disponibles: ${keys.join(",")} | Planes: ${samples.join(" | ")}`)
+  }
+  return plan.id as string
 }
 
 const schema = z.object({
