@@ -31,5 +31,6 @@ declare module "next-auth/jwt" {
     direccion?: string
     condominioId: string | null
     isSuperAdmin: boolean
+    suscripcionEstado: string
   }
 }

@@ -61,6 +61,19 @@ export const authOptions: NextAuthOptions = {
         token.direccion = (user as { direccion?: string }).direccion
         token.condominioId = (user as { condominioId: string | null }).condominioId
         token.isSuperAdmin = (user as { isSuperAdmin: boolean }).isSuperAdmin
+
+        // Fetch subscription status for ADMIN users and embed in JWT
+        const condominioId = (user as { condominioId: string | null }).condominioId
+        const rol = (user as { rol: Rol }).rol
+        if (condominioId && rol === "ADMIN") {
+          const condominio = await prisma.condominio.findUnique({
+            where: { id: condominioId },
+            select: { suscripcionEstado: true },
+          })
+          token.suscripcionEstado = condominio?.suscripcionEstado ?? "activa"
+        } else {
+          token.suscripcionEstado = "activa"
+        }
       }
       return token
     },
