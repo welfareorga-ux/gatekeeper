@@ -80,7 +80,6 @@ export function CheckoutForm() {
     script.src = "https://checkout.culqi.com/js/v4"
     script.async = true
     script.onload = () => {
-      console.log("[Culqi] script cargado ✅, window.Culqi:", typeof window.Culqi)
       setCulqiListo(true)
     }
     script.onerror = (e) => {
@@ -158,7 +157,6 @@ export function CheckoutForm() {
         rejectToken.current = (msg?: string | null) => reject(msg ?? null)
 
         const pk = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY
-        console.log("[Culqi] pk disponible:", !!pk, "| window.Culqi:", typeof window.Culqi)
 
         if (!pk) {
           reject("Clave pública no configurada — contacta al soporte")
@@ -176,7 +174,6 @@ export function CheckoutForm() {
           description: `Plan ${plan.nombre} — 1 mes`,
           amount: plan.precio,
         })
-        console.log("[Culqi] Culqi.open() llamado")
         window.Culqi.open()
       })
     } catch (err) {
