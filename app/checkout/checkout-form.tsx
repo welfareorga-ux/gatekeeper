@@ -76,7 +76,7 @@ export function CheckoutForm() {
   useEffect(() => {
     if (window.Culqi) { setCulqiListo(true); return }
     const script = document.createElement("script")
-    script.src = "https://checkout.culqi.com/v4/culqi.js"
+    script.src = "https://checkout.culqi.com/js/v4"
     script.async = true
     script.onload = () => {
       console.log("[Culqi] script cargado ✅, window.Culqi:", typeof window.Culqi)
