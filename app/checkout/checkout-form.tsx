@@ -212,7 +212,7 @@ export function CheckoutForm() {
       }
 
       setStep("exito")
-      setTimeout(() => router.push("/login"), 3000)
+      setTimeout(() => router.push("/login"), 6000)
     } catch {
       toast.error("Error de conexión")
       setLoadingPago(false)
@@ -223,13 +223,38 @@ export function CheckoutForm() {
   // ── Éxito ────────────────────────────────────────────────────────────────
   if (step === "exito") {
     return (
-      <div className="max-w-md mx-auto flex flex-col items-center text-center py-20 space-y-4">
-        <CheckCircle2 className="h-16 w-16 text-green-500" />
-        <h2 className="text-2xl font-bold">¡Pago exitoso!</h2>
-        <p className="text-muted-foreground">
-          Tu condominio ha sido registrado.<br />
-          Redirigiendo al inicio de sesión…
+      <div className="max-w-md mx-auto flex flex-col items-center text-center py-20 space-y-6">
+        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-green-100">
+          <CheckCircle2 className="h-10 w-10 text-green-600" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold">¡Pago exitoso!</h2>
+          <p className="text-muted-foreground text-sm">Tu suscripción ha sido activada correctamente.</p>
+        </div>
+        <div className="w-full rounded-xl border bg-muted/30 p-5 text-sm text-left space-y-3">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Condominio</span>
+            <span className="font-medium">{form.nombreCondominio}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Plan</span>
+            <span className="font-medium">Plan {plan.nombre}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Monto cobrado</span>
+            <span className="font-medium">{plan.precioStr} / mes</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Email admin</span>
+            <span className="font-medium">{form.adminEmail}</span>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Redirigiendo al inicio de sesión en unos segundos…
         </p>
+        <Button onClick={() => router.push("/login")} className="w-full">
+          Ir al inicio de sesión ahora
+        </Button>
       </div>
     )
   }
