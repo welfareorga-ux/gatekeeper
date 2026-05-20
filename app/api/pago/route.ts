@@ -31,8 +31,10 @@ async function culqiPost(endpoint: string, secretKey: string, body: object) {
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
-    const msg = (data as { user_message?: string }).user_message ?? `Error en ${endpoint}`
-    throw new Error(msg)
+    const d = data as { user_message?: string; merchant_message?: string }
+    const msg = d.merchant_message ?? d.user_message ?? `Error en ${endpoint}`
+    console.error(`[Culqi] ${endpoint} falló:`, JSON.stringify(data))
+    throw new Error(`[${endpoint}] ${msg}`)
   }
   return data as { id: string }
 }
