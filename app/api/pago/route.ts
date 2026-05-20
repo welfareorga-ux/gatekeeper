@@ -59,23 +59,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Este email ya está registrado" }, { status: 409 })
   }
 
-  // 1. Crear Customer en Culqi
+  // 1. Obtener o crear Customer en Culqi
   const nameParts = adminNombre.trim().split(" ")
   const firstName = nameParts[0]
   const lastName = nameParts.slice(1).join(" ") || "-"
 
   let customer: { id: string }
   try {
-    customer = await culqiPost("/customers", secretKey, {
-      first_name: firstName,
-      last_name: lastName,
-      email: adminEmail,
-      address: direccion,
-      address_city: "Lima",
-      country_code: "PE",
-      phone_number: "999999999",
-      metadata: { condominio: nombreCondominio },
-    })
+    // Buscar si ya existe un customer con ese email en Culqi
+    const searchRes = await fetch(
+      `https://api.culqi.com/v2/customers?email=${encodeURIComponent(adminEmail)}`,
+      { headers: { Authorization: `Bearer ${secretKey}` } }
+    )
+    const searchData = await searchRes.json().catch(() => ({})) as { data?: { id: string }[] }
+    const existing = searchData?.data?.[0]
+
+    if (existing?.id) {
+      customer = existing
+    } else {
+      customer = await culqiPost("/customers", secretKey, {
+        first_name: firstName,
+        last_name: lastName,
+        email: adminEmail,
+        address: direccion,
+        address_city: "Lima",
+        country_code: "PE",
+        phone_number: "999999999",
+        metadata: { condominio: nombreCondominio },
+      })
+    }
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 402 })
   }
