@@ -58,6 +58,7 @@ export function CheckoutForm() {
   const [step, setStep] = useState<Step>("datos")
   const [loadingPago, setLoadingPago] = useState(false)
   const [loadingCuenta, setLoadingCuenta] = useState(false)
+  const [culqiListo, setCulqiListo] = useState(false)
 
   const [form, setForm] = useState({
     nombreCondominio: "",
@@ -70,6 +71,24 @@ export function CheckoutForm() {
 
   const resolveToken = useRef<((id: string) => void) | null>(null)
   const rejectToken = useRef<((msg?: string | null) => void) | null>(null)
+
+  // Carga el script de Culqi manualmente para detectar errores
+  useEffect(() => {
+    if (window.Culqi) { setCulqiListo(true); return }
+    const script = document.createElement("script")
+    script.src = "https://checkout.culqi.com/v4/culqi.js"
+    script.async = true
+    script.onload = () => {
+      console.log("[Culqi] script cargado ✅, window.Culqi:", typeof window.Culqi)
+      setCulqiListo(true)
+    }
+    script.onerror = (e) => {
+      console.error("[Culqi] script NO cargó ❌", e)
+      toast.error("Error al cargar la pasarela de pago. Revisa tu conexión.")
+    }
+    document.head.appendChild(script)
+    return () => { if (document.head.contains(script)) document.head.removeChild(script) }
+  }, [])
 
   useEffect(() => {
     window.culqi = function () {
@@ -330,10 +349,12 @@ export function CheckoutForm() {
               onClick={handlePagar}
               size="lg"
               className="w-full text-base py-6"
-              disabled={loadingPago || loadingCuenta}
+              disabled={loadingPago || loadingCuenta || !culqiListo}
             >
               {(loadingPago || loadingCuenta) ? (
                 <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Procesando…</>
+              ) : !culqiListo ? (
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Cargando pasarela…</>
               ) : (
                 <><CreditCard className="h-5 w-5 mr-2" />Pagar {plan.precioStr}</>
               )}

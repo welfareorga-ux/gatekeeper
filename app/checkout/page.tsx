@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import Script from "next/script"
 import Link from "next/link"
 import { Shield, Loader2 } from "lucide-react"
 import { CheckoutForm } from "./checkout-form"
@@ -9,10 +8,6 @@ export const metadata = { title: "Contratar Plan — Gatekeeper" }
 export default function CheckoutPage() {
   return (
     <>
-      <Script
-        src="https://checkout.culqi.com/v4/culqi.js"
-        strategy="afterInteractive"
-      />
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="border-b">
