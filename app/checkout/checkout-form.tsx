@@ -93,18 +93,22 @@ export function CheckoutForm() {
 
   useEffect(() => {
     window.culqi = function () {
-      console.log("[Culqi] callback fired", {
-        token: window.Culqi?.token,
-        error: window.Culqi?.error,
-      })
       if (window.Culqi?.token) {
+        // Pago exitoso — tokenización OK
         resolveToken.current?.(window.Culqi.token.id)
+        resolveToken.current = null
+        rejectToken.current = null
+      } else if (window.Culqi?.error) {
+        // Error de tarjeta: Culqi mantiene el modal abierto para que el usuario reintente.
+        // Mostramos el mensaje pero NO cerramos la promesa.
+        const msg = window.Culqi.error.user_message ?? "Error al procesar la tarjeta."
+        toast.error(msg)
       } else {
-        const errMsg = window.Culqi?.error?.user_message ?? null
-        rejectToken.current?.(errMsg)
+        // Sin token ni error → usuario cerró el modal
+        rejectToken.current?.(null)
+        resolveToken.current = null
+        rejectToken.current = null
       }
-      resolveToken.current = null
-      rejectToken.current = null
     }
   }, [])
 
