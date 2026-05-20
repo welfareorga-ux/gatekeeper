@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       address: direccion,
       address_city: "Lima",
       country_code: "PE",
-      phone_number: 999999999,
+      phone_number: "999999999",
       metadata: { condominio: nombreCondominio },
     })
   } catch (e) {
