@@ -94,7 +94,7 @@ export async function POST(req: Request) {
   // 3. Crear Subscription (primer cobro ocurre automáticamente)
   let subscription: { id: string }
   try {
-    subscription = await culqiPost("/subscriptions", secretKey, {
+    subscription = await culqiPost("/recurrent/subscriptions/create", secretKey, {
       card_id: card.id,
       plan_id: PLAN_IDS[plan],
       tyc: true,
