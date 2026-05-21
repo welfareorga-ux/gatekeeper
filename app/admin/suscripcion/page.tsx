@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CreditCard, CheckCircle2, XCircle, Loader2, AlertTriangle } from "lucide-react"
+import { CreditCard, CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw, Calendar } from "lucide-react"
 
 const PLAN_INFO: Record<string, { label: string; precio: string; features: string[] }> = {
   BASICO: {
@@ -30,6 +30,7 @@ type SuscripcionData = {
   suscripcionEstado: string
   culqiSubscriptionId: string | null
   nombre: string
+  currentPeriodEnd: number | null
 }
 
 export default function SuscripcionPage() {
@@ -76,6 +77,12 @@ export default function SuscripcionPage() {
   const planInfo = PLAN_INFO[data.plan] ?? { label: data.plan, precio: "—", features: [] }
   const activa = data.suscripcionEstado === "activa"
 
+  const fechaVencimiento = data.currentPeriodEnd
+    ? new Date(data.currentPeriodEnd * 1000).toLocaleDateString("es-PE", {
+        day: "numeric", month: "long", year: "numeric",
+      })
+    : null
+
   return (
     <div className="max-w-xl space-y-6">
       <div>
@@ -106,6 +113,13 @@ export default function SuscripcionPage() {
               </li>
             ))}
           </ul>
+
+          {fechaVencimiento && !activa && (
+            <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+              <Calendar className="h-4 w-4 shrink-0" />
+              <span>Acceso disponible hasta el <strong>{fechaVencimiento}</strong></span>
+            </div>
+          )}
 
           {data.culqiSubscriptionId && (
             <p className="text-xs text-muted-foreground">
@@ -173,9 +187,24 @@ export default function SuscripcionPage() {
       )}
 
       {!activa && (
-        <p className="text-sm text-muted-foreground text-center">
-          Tu suscripción está cancelada. Contacta a soporte para reactivarla.
-        </p>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Renovar suscripción
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Reactiva tu suscripción para recuperar el acceso completo al panel de administración.
+            </p>
+            <Button asChild>
+              <a href={`/checkout?plan=${data.plan}`}>
+                Renovar plan {planInfo.label}
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

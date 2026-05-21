@@ -30,7 +30,8 @@ export default withAuth(
       !isSuperAdmin &&
       suscripcionEstado &&
       ESTADOS_BLOQUEADOS.includes(suscripcionEstado) &&
-      pathname.startsWith("/admin")
+      pathname.startsWith("/admin") &&
+      pathname !== "/admin/suscripcion"
     ) {
       return NextResponse.redirect(new URL("/suscripcion-inactiva", req.url))
     }

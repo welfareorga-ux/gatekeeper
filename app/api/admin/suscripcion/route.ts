@@ -26,7 +26,20 @@ export async function GET() {
   })
   if (!condominio) return NextResponse.json({ error: "Condominio no encontrado" }, { status: 404 })
 
-  return NextResponse.json(condominio)
+  let currentPeriodEnd: number | null = null
+  if (condominio.culqiSubscriptionId) {
+    const secretKey = process.env.CULQI_SECRET_KEY
+    if (secretKey) {
+      const sub = await culqiFetch(
+        `/recurrent/subscriptions/${condominio.culqiSubscriptionId}`,
+        "GET",
+        secretKey
+      ) as { current_period_end?: number }
+      currentPeriodEnd = sub?.current_period_end ?? null
+    }
+  }
+
+  return NextResponse.json({ ...condominio, currentPeriodEnd })
 }
 
 // DELETE — cancela la suscripción en Culqi y actualiza la DB
