@@ -1,10 +1,16 @@
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { UsuariosCliente } from "./usuarios-cliente"
 
 export const metadata = { title: "Usuarios — Gatekeeper Admin" }
 
 export default async function UsuariosPage() {
+  const session = await getServerSession(authOptions)
+  const condominioId = session?.user.condominioId
+
   const usuarios = await prisma.user.findMany({
+    where: { condominioId },
     select: {
       id: true,
       nombre: true,

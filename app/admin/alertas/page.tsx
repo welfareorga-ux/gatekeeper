@@ -1,3 +1,5 @@
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -7,8 +9,11 @@ import { formatFechaHora } from "@/lib/utils"
 export const metadata = { title: "Alertas — Gatekeeper Admin" }
 
 export default async function AlertasPage() {
+  const session = await getServerSession(authOptions)
+  const condominioId = session?.user.condominioId
+
   const alertas = await prisma.logActividad.findMany({
-    where: { accion: "EMERGENCIA_INGRESO" },
+    where: { accion: "EMERGENCIA_INGRESO", user: { condominioId } },
     include: { user: { select: { nombre: true } } },
     orderBy: { timestamp: "desc" },
     take: 100,
