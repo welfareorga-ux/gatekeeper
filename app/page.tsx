@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { LandingNav } from "@/components/layout/landing-nav"
 import {
   Shield, Car, Users, BarChart3, CheckCircle2,
   Bell, FileSpreadsheet, Phone, Mail, MapPin, Building2,
@@ -30,14 +31,7 @@ export default async function RootPage() {
             </div>
             <span className="font-bold text-lg">Gatekeeper</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm">Iniciar sesión</Button>
-            </Link>
-            <Link href="/registro">
-              <Button size="sm">Registrar mi condominio</Button>
-            </Link>
-          </div>
+          <LandingNav />
         </div>
       </header>
 

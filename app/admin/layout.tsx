@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         userNombre={session.user.nombre}
         rolLabel="Panel Admin"
       />
-      <main className="flex-1 overflow-auto bg-background">
+      <main className="flex-1 overflow-auto bg-background pt-14 md:pt-0">
         <div className="container max-w-6xl mx-auto px-4 py-8">{children}</div>
       </main>
     </div>
