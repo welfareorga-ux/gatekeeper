@@ -137,8 +137,8 @@ export async function enviarEmailRecuperarContrasena({
   nombre: string
   resetUrl: string
 }) {
-  try {
-    await resend.emails.send({
+  // No atrapar el error — dejar que suba para que aparezca en los logs de Vercel
+  await resend.emails.send({
       from: FROM,
       to: email,
       subject: `🔑 Recuperar contraseña — Gatekeeper`,
@@ -171,10 +171,7 @@ export async function enviarEmailRecuperarContrasena({
           <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">Este es un mensaje automático de Gatekeeper — no responder.</p>
         </div>
       `,
-    })
-  } catch (err) {
-    console.error("[email] Error al enviar email de recuperación:", err)
-  }
+  })
 }
 
 export async function enviarEmailCobroFallido({
