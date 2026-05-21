@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
-import { enviarEmailTrialBienvenida } from "@/lib/email"
+import { enviarEmailTrialBienvenida, enviarManualUso } from "@/lib/email"
 
 const registroSchema = z.object({
   nombreCondominio: z.string().min(3, "Mínimo 3 caracteres").max(100),
@@ -58,12 +58,21 @@ export async function POST(req: Request) {
     return { condominio, admin }
   })
 
+  const appUrl = process.env.NEXTAUTH_URL ?? "https://gatekeeper-app.org"
+
   void enviarEmailTrialBienvenida({
     email: adminEmail,
     nombre: adminNombre,
     condominioNombre: nombreCondominio,
     trialEndsAt,
-    loginUrl: `${process.env.NEXTAUTH_URL ?? "https://gatekeeper-app.org"}/login`,
+    loginUrl: `${appUrl}/login`,
+  })
+
+  void enviarManualUso({
+    email: adminEmail,
+    nombre: adminNombre,
+    condominioNombre: nombreCondominio,
+    loginUrl: `${appUrl}/login`,
   })
 
   return NextResponse.json(

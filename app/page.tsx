@@ -197,6 +197,7 @@ export default async function RootPage() {
                 {
                   icon: Bell,
                   gradient: "from-amber-400 to-amber-600",
+                  slug: "onboarding",
                   nombre: "Onboarding y Configuración",
                   precio: "S/ 99",
                   periodo: "pago único",
@@ -205,10 +206,11 @@ export default async function RootPage() {
                 {
                   icon: FileSpreadsheet,
                   gradient: "from-teal-500 to-teal-700",
+                  slug: "capacitacion",
                   nombre: "Capacitación del Personal",
                   precio: "S/ 79",
                   periodo: "pago único",
-                  descripcion: "Capacitamos a tus vigilantes y administradores en el uso de la plataforma. Incluye manual de uso y sesión de preguntas en vivo.",
+                  descripcion: "Capacitamos a tus vigilantes, residentes y administradores en el uso de la plataforma. Incluye sesión de preguntas en vivo.",
                 },
               ].map((srv) => {
                 const Icon = srv.icon
@@ -228,7 +230,7 @@ export default async function RootPage() {
                     </div>
                     <div className="p-5 space-y-4">
                       <p className="text-muted-foreground text-sm leading-relaxed">{srv.descripcion}</p>
-                      <Link href="/registro" className="block">
+                      <Link href={`/contratar-servicio?tipo=${srv.slug}`} className="block">
                         <Button variant="outline" className="w-full">Contratar servicio</Button>
                       </Link>
                     </div>

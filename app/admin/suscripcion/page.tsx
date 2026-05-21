@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import Link from "next/link"
 import {
   CreditCard, CheckCircle2, XCircle, Loader2,
   AlertTriangle, RefreshCw, Calendar, Clock, Shield, BarChart3, Building2,
+  Bell, FileSpreadsheet,
 } from "lucide-react"
 
 declare global {
@@ -423,6 +425,57 @@ export default function SuscripcionPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Servicios adicionales ────────────────────────────────────────────── */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">Servicios adicionales</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Complementa tu plan con implementación y capacitación profesional.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[
+            {
+              icon: Bell,
+              gradient: "from-amber-400 to-amber-600",
+              slug: "onboarding",
+              nombre: "Onboarding y Configuración",
+              precio: "S/ 99",
+              descripcion: "Carga de residentes, creación de usuarios y puesta en marcha. Incluye 1 sesión de acompañamiento remoto.",
+            },
+            {
+              icon: FileSpreadsheet,
+              gradient: "from-teal-500 to-teal-700",
+              slug: "capacitacion",
+              nombre: "Capacitación del Personal",
+              precio: "S/ 79",
+              descripcion: "Capacitación para vigilantes, residentes y administradores. Incluye sesión de preguntas en vivo.",
+            },
+          ].map((srv) => {
+            const Icon = srv.icon
+            return (
+              <div key={srv.slug} className="rounded-xl border overflow-hidden">
+                <div className={`bg-gradient-to-br ${srv.gradient} p-4 flex items-center gap-3`}>
+                  <div className="bg-white/20 p-2.5 rounded-lg">
+                    <Icon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-sm leading-tight">{srv.nombre}</p>
+                    <p className="text-white text-lg font-bold mt-0.5">{srv.precio} <span className="text-white/70 text-xs font-normal">pago único</span></p>
+                  </div>
+                </div>
+                <div className="p-4 space-y-3">
+                  <p className="text-muted-foreground text-xs leading-relaxed">{srv.descripcion}</p>
+                  <Link href={`/contratar-servicio?tipo=${srv.slug}`} className="block">
+                    <Button variant="outline" size="sm" className="w-full">Contratar servicio</Button>
+                  </Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
 
       {/* ── Renovar (cancelada pero sin selector de planes) ───────────────────── */}
       {!activa && !mostrarSelectorPlanes && (

@@ -298,6 +298,195 @@ export async function enviarEmailTrialBienvenida({
   }
 }
 
+export async function enviarNotificacionServicioContratado({
+  nombre,
+  email,
+  servicioNombre,
+  precio,
+  condominioNombre,
+}: {
+  nombre: string
+  email: string
+  servicioNombre: string
+  precio: string
+  condominioNombre: string
+}) {
+  const fecha = new Date().toLocaleDateString("es-PE", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "America/Lima",
+  })
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: "welfareorga@gmail.com",
+      subject: `💼 Nuevo servicio contratado: ${servicioNombre}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
+          <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
+            <h1 style="color:#fff;font-size:20px;margin:0">🛡️ Gatekeeper</h1>
+            <p style="color:#9ca3af;font-size:13px;margin:4px 0 0">Notificación interna</p>
+          </div>
+
+          <h2 style="color:#111827;font-size:18px;margin:0 0 8px">Nuevo servicio contratado</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 24px">
+            Un cliente ha contratado un servicio adicional de Gatekeeper.
+          </p>
+
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:16px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:40%">Servicio</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${servicioNombre}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Monto cobrado</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#059669">${precio}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Cliente</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${nombre}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Email</td><td style="padding:8px 0;font-size:14px;color:#111827">${email}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Condominio</td><td style="padding:8px 0;font-size:14px;color:#111827">${condominioNombre}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Fecha</td><td style="padding:8px 0;font-size:14px;color:#111827">${fecha}</td></tr>
+            </table>
+          </div>
+
+          <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:14px 16px">
+            <p style="color:#065f46;font-size:13px;margin:0">✅ El pago fue procesado exitosamente por Culqi. Coordina la sesión de implementación con el cliente.</p>
+          </div>
+        </div>
+      `,
+    })
+  } catch (err) {
+    console.error("[email] Error al enviar notificación de servicio contratado:", err)
+  }
+}
+
+export async function enviarManualUso({
+  email,
+  nombre,
+  condominioNombre,
+  loginUrl,
+}: {
+  email: string
+  nombre: string
+  condominioNombre: string
+  loginUrl: string
+}) {
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: `📋 Manual de uso de Gatekeeper — ${condominioNombre}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
+          <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
+            <h1 style="color:#fff;font-size:20px;margin:0">🛡️ Gatekeeper</h1>
+            <p style="color:#9ca3af;font-size:13px;margin:4px 0 0">Manual de uso — ${condominioNombre}</p>
+          </div>
+
+          <h2 style="color:#111827;font-size:18px;margin:0 0 6px">Hola, ${nombre}</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 24px">
+            Aquí tienes el manual básico de Gatekeeper para que tú y tu equipo comiencen a usar la plataforma de inmediato.
+          </p>
+
+          <!-- ADMINISTRADOR -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:16px">
+            <h3 style="color:#111827;font-size:15px;margin:0 0 12px;border-bottom:1px solid #f3f4f6;padding-bottom:8px">
+              🏢 Guía del Administrador
+            </h3>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:12px 0 6px">Agregar residentes y vigilantes</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>Accede al panel → <strong>Usuarios</strong> en el menú lateral.</li>
+              <li>Haz clic en <strong>"Nuevo usuario"</strong>.</li>
+              <li>Ingresa nombre, email y asigna el rol (RESIDENTE o VIGILANTE).</li>
+              <li>Copia y comparte las credenciales con cada usuario.</li>
+            </ol>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:14px 0 6px">Reportes y exportación</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>Ve a <strong>Reportes</strong>: visitas por día, por residente, vehículos frecuentes.</li>
+              <li>Exporta a <strong>Excel o PDF</strong> con un clic.</li>
+            </ol>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:14px 0 6px">Auditoría y alertas</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li><strong>Auditoría</strong>: historial completo de acciones de todos los usuarios.</li>
+              <li><strong>Alertas</strong>: marca vehículos o personas que requieran seguimiento especial.</li>
+            </ol>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:14px 0 6px">Gestión de suscripción</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>Ve a <strong>Suscripción</strong> para cambiar de plan o cancelar.</li>
+            </ol>
+          </div>
+
+          <!-- VIGILANTE -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:16px">
+            <h3 style="color:#111827;font-size:15px;margin:0 0 12px;border-bottom:1px solid #f3f4f6;padding-bottom:8px">
+              👮 Guía del Vigilante
+            </h3>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:12px 0 6px">Iniciar turno</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>Inicia sesión en <strong>gatekeeper-app.org</strong>.</li>
+              <li>Pulsa <strong>"Iniciar turno"</strong> para activar el registro de accesos.</li>
+            </ol>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:14px 0 6px">Registrar ingreso</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>Escribe la placa en el buscador (funciona en celular).</li>
+              <li>Confirma los datos del visitante y del residente.</li>
+              <li>Pulsa <strong>"Registrar ingreso"</strong>. El residente recibe una notificación automática.</li>
+            </ol>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:14px 0 6px">Registrar salida</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>Ve a <strong>"Dentro"</strong>.</li>
+              <li>Busca el vehículo y pulsa <strong>"Registrar salida"</strong>.</li>
+            </ol>
+          </div>
+
+          <!-- RESIDENTE -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px">
+            <h3 style="color:#111827;font-size:15px;margin:0 0 12px;border-bottom:1px solid #f3f4f6;padding-bottom:8px">
+              🏠 Guía del Residente
+            </h3>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:12px 0 6px">Registrar una visita</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>Ve a <strong>Nueva Visita</strong>.</li>
+              <li>Ingresa nombre del visitante, placa y fecha/hora esperada.</li>
+              <li>Comparte el <strong>código QR</strong> generado por WhatsApp o email.</li>
+            </ol>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:14px 0 6px">Plantillas de visitas frecuentes</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>En <strong>Plantillas</strong>, guarda datos de visitantes recurrentes.</li>
+              <li>Úsalas para crear nuevas visitas en segundos.</li>
+            </ol>
+
+            <p style="color:#374151;font-size:13px;font-weight:600;margin:14px 0 6px">Historial</p>
+            <ol style="color:#6b7280;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+              <li>En <strong>Historial</strong>, revisa todas las visitas pasadas con horarios de ingreso y salida.</li>
+            </ol>
+          </div>
+
+          <a href="${loginUrl}"
+             style="display:inline-block;background:#111827;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;margin-bottom:24px">
+            Ir al panel →
+          </a>
+
+          <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:14px 16px;margin-bottom:16px">
+            <p style="color:#1e40af;font-size:13px;margin:0">
+              💡 <strong>Tip inicial:</strong> Lo primero es crear tus vigilantes y residentes desde
+              <strong>Usuarios</strong> en el panel de administración.
+            </p>
+          </div>
+
+          <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">
+            ¿Necesitas ayuda? Escríbenos a soporte@gatekeeper-app.org o al +51 964 462 645.
+          </p>
+        </div>
+      `,
+    })
+  } catch (err) {
+    console.error("[email] Error al enviar manual de uso:", err)
+  }
+}
+
 export async function enviarEmailCobroFallido({
   emailAdmin,
   nombreAdmin,
