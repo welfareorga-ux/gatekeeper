@@ -128,6 +128,55 @@ export async function enviarNotificacionSalida({
   }
 }
 
+export async function enviarEmailRecuperarContrasena({
+  email,
+  nombre,
+  resetUrl,
+}: {
+  email: string
+  nombre: string
+  resetUrl: string
+}) {
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: `🔑 Recuperar contraseña — Gatekeeper`,
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
+          <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
+            <h1 style="color:#fff;font-size:20px;margin:0">🛡️ Gatekeeper</h1>
+            <p style="color:#9ca3af;font-size:13px;margin:4px 0 0">Sistema de control de acceso</p>
+          </div>
+
+          <h2 style="color:#111827;font-size:18px;margin:0 0 8px">Recuperar contraseña</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 24px">
+            Hola <strong>${nombre}</strong>, recibimos una solicitud para restablecer la contraseña de tu cuenta.
+          </p>
+
+          <a href="${resetUrl}"
+             style="display:inline-block;background:#111827;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;margin-bottom:24px">
+            Restablecer contraseña
+          </a>
+
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px">
+            <p style="color:#6b7280;font-size:13px;margin:0 0 4px">O copia este enlace en tu navegador:</p>
+            <p style="color:#111827;font-size:12px;word-break:break-all;font-family:monospace;margin:0">${resetUrl}</p>
+          </div>
+
+          <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px 16px">
+            <p style="color:#92400e;font-size:13px;margin:0">⏰ Este enlace expira en <strong>1 hora</strong>. Si no solicitaste este cambio, ignora este correo.</p>
+          </div>
+
+          <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">Este es un mensaje automático de Gatekeeper — no responder.</p>
+        </div>
+      `,
+    })
+  } catch (err) {
+    console.error("[email] Error al enviar email de recuperación:", err)
+  }
+}
+
 export async function enviarEmailCobroFallido({
   emailAdmin,
   nombreAdmin,
