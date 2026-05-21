@@ -8,6 +8,11 @@ function createPrismaClient() {
     max: 1,
     ssl: { rejectUnauthorized: false },
   })
+  // Neon está en UTC-5; forzar UTC para que TIMESTAMP WITHOUT TIME ZONE
+  // se almacene y lea siempre en UTC y no expire prematuramente.
+  pool.on("connect", (client) => {
+    client.query("SET timezone = 'UTC'").catch(() => {})
+  })
   const adapter = new PrismaPg(pool)
   return new PrismaClient({
     adapter,
