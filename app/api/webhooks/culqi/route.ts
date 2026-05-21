@@ -8,21 +8,25 @@ const PLAN_LABEL: Record<string, string> = {
   PREMIUM: "Premium",
 }
 
-function verificarToken(req: Request): boolean {
+function verificarAuth(req: Request): boolean {
   const secret = process.env.CULQI_WEBHOOK_SECRET
   if (!secret) {
-    // Sin secret configurado: loguear advertencia pero no bloquear
-    // (permite desarrollo/testing sin configuración extra)
     console.warn("[webhook/culqi] CULQI_WEBHOOK_SECRET no configurado — verificación omitida")
     return true
   }
 
-  // Culqi envía el token en el header Authorization: Bearer <token>
+  // Culqi usa HTTP Basic Auth: Authorization: Basic base64(usuario:contraseña)
   const authHeader = req.headers.get("authorization") ?? ""
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader
+  if (!authHeader.startsWith("Basic ")) {
+    console.warn("[webhook/culqi] Header Authorization ausente o no es Basic Auth")
+    return false
+  }
 
-  if (token !== secret) {
-    console.warn("[webhook/culqi] Token inválido recibido:", token.slice(0, 8) + "…")
+  const decoded = Buffer.from(authHeader.slice(6), "base64").toString("utf-8")
+  const password = decoded.includes(":") ? decoded.split(":").slice(1).join(":") : decoded
+
+  if (password !== secret) {
+    console.warn("[webhook/culqi] Contraseña inválida en Basic Auth")
     return false
   }
 
@@ -30,7 +34,7 @@ function verificarToken(req: Request): boolean {
 }
 
 export async function POST(req: Request) {
-  if (!verificarToken(req)) {
+  if (!verificarAuth(req)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
