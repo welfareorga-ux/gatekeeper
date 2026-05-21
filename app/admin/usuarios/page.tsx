@@ -5,24 +5,32 @@ import { UsuariosCliente } from "./usuarios-cliente"
 
 export const metadata = { title: "Usuarios — Gatekeeper Admin" }
 
+const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
+  BASICO:   { residentes: 20,       vigilantes: 1        },
+  ESTANDAR: { residentes: 50,       vigilantes: 3        },
+  PREMIUM:  { residentes: Infinity, vigilantes: Infinity },
+}
+
 export default async function UsuariosPage() {
   const session = await getServerSession(authOptions)
   const condominioId = session?.user.condominioId
 
-  const usuarios = await prisma.user.findMany({
-    where: { condominioId },
-    select: {
-      id: true,
-      nombre: true,
-      email: true,
-      telefono: true,
-      rol: true,
-      direccion: true,
-      activo: true,
-      createdAt: true,
-    },
-    orderBy: [{ rol: "asc" }, { nombre: "asc" }],
-  })
+  const [usuarios, condominio] = await Promise.all([
+    prisma.user.findMany({
+      where: { condominioId },
+      select: { id: true, nombre: true, email: true, telefono: true, rol: true, direccion: true, activo: true, createdAt: true },
+      orderBy: [{ rol: "asc" }, { nombre: "asc" }],
+    }),
+    prisma.condominio.findUnique({
+      where: { id: condominioId ?? "" },
+      select: { plan: true },
+    }),
+  ])
+
+  const plan = condominio?.plan ?? "BASICO"
+  const limites = LIMITES_PLAN[plan]
+  const activosResidentes = usuarios.filter((u) => u.rol === "RESIDENTE" && u.activo).length
+  const activosVigilantes = usuarios.filter((u) => u.rol === "VIGILANTE" && u.activo).length
 
   return (
     <div className="space-y-6">
@@ -33,10 +41,12 @@ export default async function UsuariosPage() {
         </p>
       </div>
       <UsuariosCliente
-        usuariosIniciales={usuarios.map((u) => ({
-          ...u,
-          createdAt: u.createdAt.toISOString(),
-        }))}
+        usuariosIniciales={usuarios.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }))}
+        limites={{
+          plan,
+          residentes: { actual: activosResidentes, max: limites.residentes },
+          vigilantes: { actual: activosVigilantes, max: limites.vigilantes },
+        }}
       />
     </div>
   )

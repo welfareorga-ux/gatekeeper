@@ -23,8 +23,11 @@ type Usuario = {
   createdAt: string
 }
 
+interface Limite { actual: number; max: number }
+
 interface Props {
   usuariosIniciales: Usuario[]
+  limites: { plan: string; residentes: Limite; vigilantes: Limite }
 }
 
 const ROL_COLOR: Record<string, string> = {
@@ -35,7 +38,7 @@ const ROL_COLOR: Record<string, string> = {
 
 const FORM_INICIAL = { nombre: "", email: "", password: "", rol: "RESIDENTE", telefono: "", direccion: "" }
 
-export function UsuariosCliente({ usuariosIniciales }: Props) {
+export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
   const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciales)
   const [filtroRol, setFiltroRol] = useState("TODOS")
   const [buscar, setBuscar] = useState("")
@@ -173,9 +176,25 @@ export function UsuariosCliente({ usuariosIniciales }: Props) {
         </Button>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        {filtrados.length} usuario{filtrados.length !== 1 ? "s" : ""}
-      </p>
+      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+        <span>{filtrados.length} usuario{filtrados.length !== 1 ? "s" : ""}</span>
+        <span className="text-border">|</span>
+        <span>
+          Residentes:{" "}
+          <span className={limites.residentes.actual >= limites.residentes.max ? "text-destructive font-medium" : "font-medium text-foreground"}>
+            {limites.residentes.actual}
+          </span>
+          {limites.residentes.max !== Infinity && ` / ${limites.residentes.max}`}
+        </span>
+        <span>
+          Vigilantes:{" "}
+          <span className={limites.vigilantes.actual >= limites.vigilantes.max ? "text-destructive font-medium" : "font-medium text-foreground"}>
+            {limites.vigilantes.actual}
+          </span>
+          {limites.vigilantes.max !== Infinity && ` / ${limites.vigilantes.max}`}
+        </span>
+        <span className="text-xs">— Plan {limites.plan.charAt(0) + limites.plan.slice(1).toLowerCase()}</span>
+      </div>
 
       {/* Tabla */}
       <div className="rounded-md border overflow-x-auto">

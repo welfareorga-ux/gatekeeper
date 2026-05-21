@@ -5,6 +5,12 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
 
+const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
+  BASICO:   { residentes: 20,         vigilantes: 1          },
+  ESTANDAR: { residentes: 50,         vigilantes: 3          },
+  PREMIUM:  { residentes: Infinity,   vigilantes: Infinity   },
+}
+
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions)
   if (!session || session.user.rol !== "ADMIN") {
@@ -72,6 +78,29 @@ export async function POST(req: Request) {
   }
 
   const { nombre, email, password, rol, telefono, direccion } = result.data
+
+  // Verificar límites del plan antes de crear
+  if (rol === "RESIDENTE" || rol === "VIGILANTE") {
+    const condominio = await prisma.condominio.findUnique({
+      where: { id: condominioId },
+      select: { plan: true },
+    })
+    const limites = LIMITES_PLAN[condominio?.plan ?? "BASICO"]
+    const campo = rol === "RESIDENTE" ? "residentes" : "vigilantes"
+    const limite = limites[campo]
+
+    if (limite !== Infinity) {
+      const actual = await prisma.user.count({
+        where: { condominioId, rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
+      })
+      if (actual >= limite) {
+        const planLabel = condominio?.plan === "BASICO" ? "Básico" : condominio?.plan === "ESTANDAR" ? "Estándar" : "Premium"
+        return NextResponse.json({
+          error: `Tu plan ${planLabel} permite máximo ${limite} ${campo}. Actualiza tu plan para agregar más.`,
+        }, { status: 403 })
+      }
+    }
+  }
 
   const existe = await prisma.user.findUnique({ where: { email } })
   if (existe) return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 })
