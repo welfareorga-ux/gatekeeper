@@ -22,17 +22,16 @@ export default withAuth(
       return NextResponse.redirect(new URL("/no-autorizado", req.url))
     }
 
-    // Guard de suscripción: admin con suscripción inactiva solo puede ver /admin/suscripcion
+    // Guard de suscripción: admin con suscripción inactiva → página de bloqueo
     const suscripcionEstado = token.suscripcionEstado as string | undefined
     if (
       rol === "ADMIN" &&
       !isSuperAdmin &&
       suscripcionEstado &&
       suscripcionEstado !== "activa" &&
-      pathname.startsWith("/admin") &&
-      pathname !== "/admin/suscripcion"
+      pathname.startsWith("/admin")
     ) {
-      return NextResponse.redirect(new URL("/admin/suscripcion", req.url))
+      return NextResponse.redirect(new URL("/suscripcion-inactiva", req.url))
     }
 
     if (pathname.startsWith("/vigilante") && rol !== "VIGILANTE" && rol !== "ADMIN" && !isSuperAdmin) {
