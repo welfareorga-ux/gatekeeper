@@ -24,7 +24,7 @@ export default withAuth(
 
     // Guard de suscripción: admin con suscripción inactiva → página de bloqueo
     const suscripcionEstado = token.suscripcionEstado as string | undefined
-    const ESTADOS_BLOQUEADOS = ["cancelada", "vencida", "fallida"]
+    const ESTADOS_BLOQUEADOS = ["vencida", "fallida"]
     if (
       rol === "ADMIN" &&
       !isSuperAdmin &&

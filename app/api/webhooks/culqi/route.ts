@@ -57,10 +57,17 @@ export async function POST(req: Request) {
 
   console.log(`[webhook/culqi] Evento: ${type} | suscripción: ${subscriptionId}`)
 
-  if (type.includes("cancel") || type.includes("expir")) {
+  if (type.includes("cancel")) {
+    // Cancelada por el usuario: mantiene acceso hasta fin del período pagado
     await prisma.condominio.updateMany({
       where: { culqiSubscriptionId: subscriptionId },
-      data: { suscripcionEstado: "cancelada", activo: false },
+      data: { suscripcionEstado: "cancelada" },
+    })
+  } else if (type.includes("expir")) {
+    // Período vencido: cortar acceso
+    await prisma.condominio.updateMany({
+      where: { culqiSubscriptionId: subscriptionId },
+      data: { suscripcionEstado: "vencida", activo: false },
     })
   } else if (type.includes("fail")) {
     const condominio = await prisma.condominio.findFirst({
