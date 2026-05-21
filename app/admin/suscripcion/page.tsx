@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -34,6 +35,7 @@ type SuscripcionData = {
 }
 
 export default function SuscripcionPage() {
+  const { update: updateSession } = useSession()
   const [data, setData] = useState<SuscripcionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancelando, setCancelando] = useState(false)
@@ -44,6 +46,8 @@ export default function SuscripcionPage() {
       .then((r) => r.json())
       .then(setData)
       .finally(() => setLoading(false))
+    // Sincroniza el JWT con el estado actual de la DB
+    updateSession()
   }, [])
 
   async function handleCancelar() {
@@ -57,6 +61,7 @@ export default function SuscripcionPage() {
       }
       toast.success("Suscripción cancelada. Mantendrás acceso hasta fin del período.")
       setData((prev) => prev ? { ...prev, suscripcionEstado: "cancelada" } : prev)
+      await updateSession()
     } catch {
       toast.error("Error de conexión")
     } finally {
