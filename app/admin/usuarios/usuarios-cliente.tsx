@@ -80,6 +80,10 @@ export function UsuariosCliente({ usuariosIniciales }: Props) {
       toast.error("Nombre, email y contraseña son requeridos")
       return
     }
+    if (form.password.length < 8) {
+      toast.error("La contraseña debe tener al menos 8 caracteres")
+      return
+    }
     setGuardando(true)
     try {
       const res = await fetch("/api/admin/usuarios", {
@@ -252,6 +256,9 @@ export function UsuariosCliente({ usuariosIniciales }: Props) {
             <div className="col-span-2 space-y-1.5">
               <Label>Contraseña *</Label>
               <Input type="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} placeholder="Mínimo 8 caracteres" />
+              {form.password.length > 0 && form.password.length < 8 && (
+                <p className="text-xs text-destructive">Mínimo 8 caracteres ({form.password.length}/8)</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Rol *</Label>
