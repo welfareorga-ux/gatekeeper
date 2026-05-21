@@ -445,7 +445,7 @@ export function CheckoutForm() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Incluye 14 días de prueba gratuita. Cancela cuando quieras desde tu panel.
+            Cancela cuando quieras desde tu panel.
           </p>
         </div>
       </div>

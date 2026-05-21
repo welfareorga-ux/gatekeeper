@@ -174,6 +174,66 @@ export async function enviarEmailRecuperarContrasena({
   })
 }
 
+export async function enviarEmailBienvenida({
+  email,
+  nombre,
+  condominioNombre,
+  planLabel,
+  loginUrl,
+}: {
+  email: string
+  nombre: string
+  condominioNombre: string
+  planLabel: string
+  loginUrl: string
+}) {
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: `¡Bienvenido a Gatekeeper! Tu cuenta está lista`,
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
+          <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
+            <h1 style="color:#fff;font-size:20px;margin:0">🛡️ Gatekeeper</h1>
+            <p style="color:#9ca3af;font-size:13px;margin:4px 0 0">Sistema de control de acceso vehicular</p>
+          </div>
+
+          <h2 style="color:#111827;font-size:20px;margin:0 0 8px">¡Bienvenido, ${nombre}!</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 24px">
+            Tu suscripción fue activada correctamente. Ya puedes acceder a tu panel de administración.
+          </p>
+
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:40%">Condominio</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${condominioNombre}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Plan</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${planLabel}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Email de acceso</td><td style="padding:8px 0;font-size:14px;color:#111827">${email}</td></tr>
+            </table>
+          </div>
+
+          <a href="${loginUrl}"
+             style="display:inline-block;background:#111827;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;margin-bottom:24px">
+            Acceder al panel →
+          </a>
+
+          <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:14px 16px;margin-bottom:16px">
+            <p style="color:#065f46;font-size:13px;margin:0">
+              ✅ Tu primer paso: agregar residentes y vigilantes desde <strong>Usuarios</strong> en el panel.
+            </p>
+          </div>
+
+          <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">
+            ¿Necesitas ayuda? Escríbenos a soporte@gatekeeper-app.org
+          </p>
+        </div>
+      `,
+    })
+  } catch (err) {
+    console.error("[email] Error al enviar email de bienvenida:", err)
+  }
+}
+
 export async function enviarEmailCobroFallido({
   emailAdmin,
   nombreAdmin,

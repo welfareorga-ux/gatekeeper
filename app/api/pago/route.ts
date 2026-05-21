@@ -2,12 +2,18 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { enviarEmailBienvenida } from "@/lib/email"
 
-// Códigos legibles tal como están en CulqiPanel — se resuelven a IDs reales en runtime
 const PLAN_CODES: Record<string, string> = {
   BASICO: "plan-basico-2026",
   ESTANDAR: "plan-estandar-2026",
   PREMIUM: "plan-premium-2026",
+}
+
+const PLAN_LABELS: Record<string, string> = {
+  BASICO: "Básico",
+  ESTANDAR: "Estándar",
+  PREMIUM: "Premium",
 }
 
 async function resolverPlanId(planCode: string, secretKey: string): Promise<string> {
@@ -137,32 +143,54 @@ export async function POST(req: Request) {
   // 4. Crear condominio + admin en DB
   const hash = await bcrypt.hash(adminPassword, 12)
 
-  await prisma.$transaction(async (tx) => {
-    const condominio = await tx.condominio.create({
-      data: {
-        nombre: nombreCondominio,
-        direccion,
-        plan,
-        culqiSubscriptionId: subscription.id,
-        suscripcionEstado: "activa",
-      },
+  try {
+    await prisma.$transaction(async (tx) => {
+      const condominio = await tx.condominio.create({
+        data: {
+          nombre: nombreCondominio,
+          direccion,
+          plan,
+          culqiSubscriptionId: subscription.id,
+          suscripcionEstado: "activa",
+        },
+      })
+      const admin = await tx.user.create({
+        data: {
+          nombre: adminNombre,
+          email: adminEmail.toLowerCase(),
+          password: hash,
+          rol: "ADMIN",
+          condominioId: condominio.id,
+        },
+      })
+      await tx.logActividad.create({
+        data: {
+          userId: admin.id,
+          accion: "REGISTRO_CONDOMINIO",
+          detalle: JSON.stringify({ condominio: nombreCondominio, plan, subscriptionId: subscription.id }),
+        },
+      })
     })
-    const admin = await tx.user.create({
-      data: {
-        nombre: adminNombre,
-        email: adminEmail.toLowerCase(),
-        password: hash,
-        rol: "ADMIN",
-        condominioId: condominio.id,
-      },
-    })
-    await tx.logActividad.create({
-      data: {
-        userId: admin.id,
-        accion: "REGISTRO_CONDOMINIO",
-        detalle: JSON.stringify({ condominio: nombreCondominio, plan, subscriptionId: subscription.id }),
-      },
-    })
+  } catch (dbErr) {
+    console.error("[pago] Error en DB, revirtiendo suscripción Culqi:", dbErr)
+    // Cancelar la suscripción Culqi para no cobrar al usuario sin cuenta
+    await fetch(
+      `https://api.culqi.com/v2/recurrent/subscriptions/${subscription.id}/delete`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${secretKey}` } }
+    ).catch((e) => console.error("[pago] Error al cancelar suscripción Culqi:", e))
+    return NextResponse.json(
+      { error: "No pudimos crear tu cuenta. El cobro fue revertido. Intenta de nuevo o contáctanos." },
+      { status: 500 }
+    )
+  }
+
+  // Enviar email de bienvenida (no bloqueante)
+  void enviarEmailBienvenida({
+    email: adminEmail,
+    nombre: adminNombre,
+    condominioNombre: nombreCondominio,
+    planLabel: PLAN_LABELS[plan] ?? plan,
+    loginUrl: `${process.env.NEXTAUTH_URL ?? "https://gatekeeper-app.org"}/login`,
   })
 
   return NextResponse.json({ ok: true }, { status: 201 })
