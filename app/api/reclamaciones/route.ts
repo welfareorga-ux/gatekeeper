@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
     })
 
     await resend.emails.send({
-      from: "Gatekeeper <onboarding@resend.dev>",
-      to: "welfareorga@gmail.com",
+      from: "Gatekeeper <noreply@gatekeeper-app.org>",
+      to: "soporte@gatekeeper-app.org",
       replyTo: email,
       subject: `📋 ${tipo} ${nroReclamo} — ${nombres}`,
       html: `
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Confirmación al reclamante
     await resend.emails.send({
-      from: "Gatekeeper <onboarding@resend.dev>",
+      from: "Gatekeeper <noreply@gatekeeper-app.org>",
       to: email,
       subject: `Confirmación de ${tipo.toLowerCase()} — Nº ${nroReclamo}`,
       html: `
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
           </p>
           <ul style="font-size:13px;color:#6b7280;padding-left:20px">
             <li>WhatsApp: +51 964 462 645</li>
-            <li>Email: welfareorga@gmail.com</li>
+            <li>Email: soporte@gatekeeper-app.org</li>
           </ul>
           <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">Gatekeeper — Josue Antonio Medina Bocanegra, RUC 10460632027</p>
         </div>

@@ -1,7 +1,7 @@
 import { Resend } from "resend"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM = "Gatekeeper <onboarding@resend.dev>"
+const FROM = "Gatekeeper <noreply@gatekeeper-app.org>"
 
 function formatHora(date: Date) {
   return date.toLocaleTimeString("es-PE", {
@@ -219,13 +219,13 @@ export async function enviarEmailCobroFallido({
             Para reactivar tu acceso, actualiza tu método de pago o contáctanos:
           </p>
 
-          <a href="mailto:soporte@gatekeeper.pe?subject=Reactivar suscripción — ${condominioNombre}"
+          <a href="mailto:soporte@gatekeeper-app.org?subject=Reactivar suscripción — ${condominioNombre}"
              style="display:inline-block;background:#111827;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
             Contactar soporte
           </a>
 
           <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">
-            Este es un mensaje automático de Gatekeeper — soporte@gatekeeper.pe
+            Este es un mensaje automático de Gatekeeper — soporte@gatekeeper-app.org
           </p>
         </div>
       `,
