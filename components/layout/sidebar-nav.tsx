@@ -1,5 +1,6 @@
 "use client"
 
+import type { ElementType } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
@@ -46,7 +47,7 @@ function NavItems({
   pathname,
   onNavigate,
 }: {
-  items: { href: string; label: string; icon: React.ElementType }[]
+  items: { href: string; label: string; icon: ElementType }[]
   pathname: string
   onNavigate?: () => void
 }) {
