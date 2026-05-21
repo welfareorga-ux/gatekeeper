@@ -35,7 +35,6 @@ export async function GET() {
         "GET",
         secretKey
       ) as Record<string, unknown>
-      console.log("[suscripcion] Culqi response:", JSON.stringify(sub).slice(0, 600))
       currentPeriodEnd = (
         sub?.current_period_end ??
         sub?.billing_date ??
