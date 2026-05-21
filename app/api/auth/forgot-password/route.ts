@@ -27,15 +27,17 @@ export async function POST(req: Request) {
       data: { email: normalizedEmail, token, expiresAt },
     })
 
-    // Usar el origen de la request para no depender de NEXTAUTH_URL
     const baseUrl = new URL(req.url).origin
-    await enviarEmailRecuperarContrasena({
-      email: normalizedEmail,
-      nombre: user.nombre,
-      resetUrl: `${baseUrl}/reset-password?token=${token}`,
-    })
+    const resetUrl = `${baseUrl}/reset-password?token=${token}`
+
+    try {
+      await enviarEmailRecuperarContrasena({ email: normalizedEmail, nombre: user.nombre, resetUrl })
+      console.log("[forgot-password] Email enviado a:", normalizedEmail, "URL:", resetUrl)
+    } catch (err) {
+      console.error("[forgot-password] Error al enviar email:", err)
+      return NextResponse.json({ error: "Error al enviar el correo. Revisa los logs." }, { status: 500 })
+    }
   }
 
-  // Siempre OK — no revelar si el email existe o el rol
   return NextResponse.json({ ok: true })
 }
