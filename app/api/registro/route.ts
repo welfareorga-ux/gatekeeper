@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
+import { enviarEmailTrialBienvenida } from "@/lib/email"
 
 const registroSchema = z.object({
   nombreCondominio: z.string().min(3, "Mínimo 3 caracteres").max(100),
@@ -26,10 +27,17 @@ export async function POST(req: Request) {
   }
 
   const hash = await bcrypt.hash(adminPassword, 12)
+  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
 
   const { condominio, admin } = await prisma.$transaction(async (tx) => {
     const condominio = await tx.condominio.create({
-      data: { nombre: nombreCondominio, direccion },
+      data: {
+        nombre: nombreCondominio,
+        direccion,
+        plan: "ESTANDAR",
+        suscripcionEstado: "trial",
+        trialEndsAt,
+      },
     })
     const admin = await tx.user.create({
       data: {
@@ -43,11 +51,19 @@ export async function POST(req: Request) {
     await tx.logActividad.create({
       data: {
         userId: admin.id,
-        accion: "REGISTRO_CONDOMINIO",
-        detalle: JSON.stringify({ condominio: nombreCondominio }),
+        accion: "REGISTRO_TRIAL",
+        detalle: JSON.stringify({ condominio: nombreCondominio, trialEndsAt }),
       },
     })
     return { condominio, admin }
+  })
+
+  void enviarEmailTrialBienvenida({
+    email: adminEmail,
+    nombre: adminNombre,
+    condominioNombre: nombreCondominio,
+    trialEndsAt,
+    loginUrl: `${process.env.NEXTAUTH_URL ?? "https://gatekeeper-app.org"}/login`,
   })
 
   return NextResponse.json(

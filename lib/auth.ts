@@ -79,11 +79,17 @@ export const authOptions: NextAuthOptions = {
       if (condominioId && rol === "ADMIN" && (user || trigger === "update")) {
         const condominio = await prisma.condominio.findUnique({
           where: { id: condominioId },
-          select: { suscripcionEstado: true },
+          select: { suscripcionEstado: true, trialEndsAt: true },
         })
-        token.suscripcionEstado = condominio?.suscripcionEstado ?? "activa"
+        let estado = condominio?.suscripcionEstado ?? "activa"
+        if (estado === "trial" && condominio?.trialEndsAt && condominio.trialEndsAt < new Date()) {
+          estado = "trial_expirado"
+        }
+        token.suscripcionEstado = estado
+        token.trialEndsAt = condominio?.trialEndsAt?.toISOString() ?? null
       } else if (user) {
         token.suscripcionEstado = "activa"
+        token.trialEndsAt = null
       }
 
       return token

@@ -1,7 +1,8 @@
 "use client"
 
 import { signOut } from "next-auth/react"
-import { Shield, AlertTriangle, Mail, LogOut, RefreshCw } from "lucide-react"
+import { Shield, AlertTriangle, LogOut, RefreshCw, CreditCard } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -90,12 +91,12 @@ export function SuscripcionInactivaClient({ adminNombre, adminEmail, condominioN
 
           {/* Acciones */}
           <div className="space-y-3">
-            <a href={`mailto:soporte@gatekeeper.pe?subject=Reactivar suscripción — ${condominioNombre}&body=Hola, soy ${adminNombre} (${adminEmail}). Necesito reactivar mi suscripción al plan ${planLabel}.`}>
+            <Link href="/admin/suscripcion" className="block">
               <Button className="w-full">
-                <Mail className="h-4 w-4 mr-2" />
-                Contactar soporte
+                <CreditCard className="h-4 w-4 mr-2" />
+                Ver planes y suscribirme
               </Button>
-            </a>
+            </Link>
             <Button
               variant="outline"
               className="w-full"
@@ -107,8 +108,8 @@ export function SuscripcionInactivaClient({ adminNombre, adminEmail, condominioN
           </div>
 
           <p className="text-xs text-muted-foreground">
-            ¿Tienes dudas? Escríbenos a{" "}
-            <a href="mailto:soporte@gatekeeper.pe" className="underline">soporte@gatekeeper.pe</a>
+            ¿Necesitas ayuda? Escríbenos a{" "}
+            <a href="mailto:soporte@gatekeeper-app.org" className="underline">soporte@gatekeeper-app.org</a>
           </p>
         </div>
       </div>

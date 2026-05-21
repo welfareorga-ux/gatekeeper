@@ -41,6 +41,7 @@ model Condominio {
   activo              Boolean  @default(true)
   culqiSubscriptionId String?
   suscripcionEstado   String   @default("activa")
+  trialEndsAt         DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

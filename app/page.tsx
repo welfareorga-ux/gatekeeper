@@ -50,7 +50,7 @@ export default async function RootPage() {
           Todo desde una plataforma web, sin instalar nada.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/checkout?plan=ESTANDAR">
+          <Link href="/registro">
             <Button size="lg" className="w-full sm:w-auto px-8">
               Comenzar gratis — 14 días
             </Button>
