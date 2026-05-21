@@ -1,15 +1,27 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { enviarEmailRecuperarContrasena } from "@/lib/email"
+import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import crypto from "crypto"
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  const { allowed: ipOk } = checkRateLimit(`forgot:ip:${ip}`, 5, 60 * 60_000)
+  if (!ipOk) {
+    return NextResponse.json({ error: "Demasiadas solicitudes. Espera una hora." }, { status: 429 })
+  }
+
   const { email } = await req.json().catch(() => ({}))
   if (!email || typeof email !== "string") {
     return NextResponse.json({ error: "Email requerido" }, { status: 400 })
   }
 
   const normalizedEmail = email.toLowerCase().trim()
+
+  const { allowed: emailOk } = checkRateLimit(`forgot:email:${normalizedEmail}`, 3, 60 * 60_000)
+  if (!emailOk) {
+    return NextResponse.json({ ok: true })
+  }
 
   // Solo ADMINs pueden recuperar contraseña por este flujo
   const user = await prisma.user.findUnique({

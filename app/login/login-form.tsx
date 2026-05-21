@@ -42,6 +42,10 @@ export function LoginForm() {
         redirect: false,
       })
 
+      if (res?.error === "TooManyRequests") {
+        setError("Demasiados intentos fallidos. Espera 15 minutos antes de volver a intentarlo.")
+        return
+      }
       if (res?.error) {
         setError("Correo o contraseña incorrectos")
         return

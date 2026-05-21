@@ -7,13 +7,14 @@ export const metadata = { title: "Mi Turno — Gatekeeper" }
 
 export default async function TurnoPage() {
   const session = await getServerSession(authOptions)
+  const condominioId = session!.user.condominioId
 
   const turnoActivo = await prisma.turnoVigilante.findFirst({
-    where: { vigilanteId: session!.user.id, activo: true },
+    where: { vigilanteId: session!.user.id, condominioId, activo: true },
   })
 
   const ultimosTurnos = await prisma.turnoVigilante.findMany({
-    where: { vigilanteId: session!.user.id },
+    where: { vigilanteId: session!.user.id, condominioId },
     orderBy: { horaInicioTurno: "desc" },
     take: 5,
   })

@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { checkRateLimit } from "@/lib/rate-limit"
 import { Rol } from "@prisma/client"
 
 export const authOptions: NextAuthOptions = {
@@ -20,8 +21,17 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Correo", type: "email" },
         password: { label: "Contraseña", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null
+
+        const xff = req?.headers?.["x-forwarded-for"]
+        const ip = (Array.isArray(xff) ? xff[0] : xff?.split(",")[0])?.trim() ?? "unknown"
+        const emailKey = `login:email:${credentials.email.toLowerCase().trim()}`
+        const ipKey = `login:ip:${ip}`
+
+        const { allowed: ipOk } = checkRateLimit(ipKey, 20, 15 * 60_000)
+        const { allowed: emailOk } = checkRateLimit(emailKey, 5, 15 * 60_000)
+        if (!ipOk || !emailOk) throw new Error("TooManyRequests")
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email.toLowerCase().trim() },

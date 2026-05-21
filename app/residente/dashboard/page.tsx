@@ -18,19 +18,21 @@ export default async function DashboardPage() {
   const hoy = new Date()
   const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0)
   const finDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59)
+  const condominioId = session!.user.condominioId
 
   const [visitasHoy, visitasPendientes, visitasRecientes, totalMes] = await Promise.all([
     prisma.visita.count({
       where: {
         residenteId: session!.user.id,
+        condominioId,
         fechaProgramada: { gte: inicioDia, lte: finDia },
       },
     }),
     prisma.visita.count({
-      where: { residenteId: session!.user.id, estado: "PENDIENTE" },
+      where: { residenteId: session!.user.id, condominioId, estado: "PENDIENTE" },
     }),
     prisma.visita.findMany({
-      where: { residenteId: session!.user.id },
+      where: { residenteId: session!.user.id, condominioId },
       include: { vehiculos: { take: 1 } },
       orderBy: { createdAt: "desc" },
       take: 5,
@@ -38,6 +40,7 @@ export default async function DashboardPage() {
     prisma.visita.count({
       where: {
         residenteId: session!.user.id,
+        condominioId,
         createdAt: {
           gte: new Date(hoy.getFullYear(), hoy.getMonth(), 1),
         },
