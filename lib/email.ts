@@ -270,7 +270,7 @@ export async function enviarEmailTrialBienvenida({
           <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px">
             <table style="width:100%;border-collapse:collapse">
               <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:40%">Condominio</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${condominioNombre}</td></tr>
-              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Prueba gratuita</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#059669">14 días sin costo</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Acceso</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#059669">14 días gratis · Sin tarjeta</td></tr>
               <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Vence el</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${fechaFin}</td></tr>
               <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Email de acceso</td><td style="padding:8px 0;font-size:14px;color:#111827">${email}</td></tr>
             </table>

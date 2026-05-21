@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       data: {
         nombre: nombreCondominio,
         direccion,
-        plan: "ESTANDAR",
+        plan: "BASICO",
         suscripcionEstado: "trial",
         trialEndsAt,
       },
