@@ -223,6 +223,13 @@ export async function enviarEmailBienvenida({
             </p>
           </div>
 
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 16px;margin-bottom:16px">
+            <p style="color:#166534;font-size:13px;margin:0">
+              📖 Consulta el manual completo y compártelo con tu equipo:<br/>
+              <a href="https://gatekeeper-app.org/manual" style="color:#166534;font-weight:600;">gatekeeper-app.org/manual</a>
+            </p>
+          </div>
+
           <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">
             ¿Necesitas ayuda? Escríbenos a soporte@gatekeeper-app.org
           </p>
@@ -473,6 +480,13 @@ export async function enviarManualUso({
             <p style="color:#1e40af;font-size:13px;margin:0">
               💡 <strong>Tip inicial:</strong> Lo primero es crear tus vigilantes y residentes desde
               <strong>Usuarios</strong> en el panel de administración.
+            </p>
+          </div>
+
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 16px;margin-bottom:16px">
+            <p style="color:#166534;font-size:13px;margin:0">
+              📖 También puedes consultar el manual completo en línea y compartirlo con tu equipo:<br/>
+              <a href="https://gatekeeper-app.org/manual" style="color:#166534;font-weight:600;">gatekeeper-app.org/manual</a>
             </p>
           </div>
 

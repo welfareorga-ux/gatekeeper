@@ -21,7 +21,7 @@ const NAV_ITEMS = {
     { href: "/admin/reportes", label: "Reportes", icon: BarChart3 },
     { href: "/admin/auditoria", label: "Auditoría", icon: ScrollText },
     { href: "/admin/alertas", label: "Alertas", icon: AlertTriangle },
-    { href: "/admin/suscripcion", label: "Suscripción", icon: CreditCard },
+    { href: "/admin/suscripcion", label: "Suscripción y Servicios", icon: CreditCard },
   ],
   residente: [
     { href: "/residente/dashboard", label: "Dashboard", icon: LayoutDashboard },
