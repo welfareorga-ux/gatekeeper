@@ -5,18 +5,7 @@ import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { CreditCard, CheckCircle2, XCircle, Loader2 } from "lucide-react"
+import { CreditCard, CheckCircle2, XCircle, Loader2, AlertTriangle } from "lucide-react"
 
 const PLAN_INFO: Record<string, { label: string; precio: string; features: string[] }> = {
   BASICO: {
@@ -47,6 +36,7 @@ export default function SuscripcionPage() {
   const [data, setData] = useState<SuscripcionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancelando, setCancelando] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
 
   useEffect(() => {
     fetch("/api/admin/suscripcion")
@@ -137,32 +127,47 @@ export default function SuscripcionPage() {
             <p className="text-sm text-muted-foreground">
               Al cancelar, mantendrás acceso hasta el final del período pagado. No se realizarán más cobros.
             </p>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={cancelando}>
-                  {cancelando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Cancelar suscripción
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>¿Cancelar suscripción?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Tu plan {planInfo.label} será cancelado. Mantendrás acceso hasta el final del período actual.
-                    Esta acción no se puede deshacer.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Volver</AlertDialogCancel>
-                  <AlertDialogAction
+
+            {!confirmando ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setConfirmando(true)}
+              >
+                Cancelar suscripción
+              </Button>
+            ) : (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-destructive">¿Confirmas la cancelación?</p>
+                    <p className="text-muted-foreground mt-0.5">
+                      Tu plan <strong>{planInfo.label}</strong> será cancelado. Esta acción no se puede deshacer.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={cancelando}
                     onClick={handleCancelar}
-                    className="bg-destructive hover:bg-destructive/90"
                   >
+                    {cancelando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     Sí, cancelar
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={cancelando}
+                    onClick={() => setConfirmando(false)}
+                  >
+                    Volver
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
