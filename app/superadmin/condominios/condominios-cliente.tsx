@@ -8,7 +8,10 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
-import { RefreshCw, Building2, Users, FileText } from "lucide-react"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RefreshCw, Building2, Users, FileText, KeyRound } from "lucide-react"
 import { formatFecha } from "@/lib/utils"
 
 type Condominio = {
@@ -31,6 +34,9 @@ const PLAN_COLOR: Record<string, string> = {
 export function CondominiosCliente() {
   const [condominios, setCondominios] = useState<Condominio[]>([])
   const [loading, setLoading] = useState(true)
+  const [modalReset, setModalReset] = useState<Condominio | null>(null)
+  const [newPassword, setNewPassword] = useState("")
+  const [guardando, setGuardando] = useState(false)
 
   const cargar = useCallback(async () => {
     setLoading(true)
@@ -83,6 +89,27 @@ export function CondominiosCliente() {
     }
   }
 
+  async function resetAdminPassword() {
+    if (!modalReset || newPassword.length < 8) return
+    setGuardando(true)
+    try {
+      const res = await fetch(`/api/superadmin/condominios/${modalReset.id}/reset-admin-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error ?? "Error al resetear"); return }
+      toast.success(`Contraseña de ${data.adminNombre} actualizada`)
+      setModalReset(null)
+      setNewPassword("")
+    } catch {
+      toast.error("Error de conexión")
+    } finally {
+      setGuardando(false)
+    }
+  }
+
   // Stats
   const activos = condominios.filter((c) => c.activo).length
   const totalUsuarios = condominios.reduce((a, c) => a + c._count.usuarios, 0)
@@ -131,6 +158,7 @@ export function CondominiosCliente() {
                 <TableHead>Plan</TableHead>
                 <TableHead>Registro</TableHead>
                 <TableHead className="text-center">Activo</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,6 +189,15 @@ export function CondominiosCliente() {
                     <TableCell className="text-center">
                       <Switch checked={c.activo} onCheckedChange={() => toggleActivo(c)} />
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost" size="icon" className="h-8 w-8"
+                        title="Resetear contraseña del admin"
+                        onClick={() => { setModalReset(c); setNewPassword("") }}
+                      >
+                        <KeyRound className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -168,6 +205,45 @@ export function CondominiosCliente() {
           </Table>
         </div>
       )}
+
+      <Dialog open={!!modalReset} onOpenChange={(v) => { if (!v) setModalReset(null) }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4" />
+              Resetear contraseña del admin
+            </DialogTitle>
+          </DialogHeader>
+          {modalReset && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Condominio: <strong>{modalReset.nombre}</strong>
+              </p>
+              <div className="space-y-1.5">
+                <Label>Nueva contraseña</Label>
+                <Input
+                  type="password"
+                  placeholder="Mínimo 8 caracteres"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                {newPassword.length > 0 && newPassword.length < 8 && (
+                  <p className="text-xs text-destructive">{newPassword.length}/8 caracteres</p>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Comunica la nueva contraseña al administrador por teléfono o WhatsApp.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalReset(null)}>Cancelar</Button>
+            <Button onClick={resetAdminPassword} disabled={guardando || newPassword.length < 8}>
+              {guardando ? "Actualizando…" : "Actualizar contraseña"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
