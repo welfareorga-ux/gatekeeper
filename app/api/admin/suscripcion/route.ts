@@ -34,8 +34,15 @@ export async function GET() {
         `/recurrent/subscriptions/${condominio.culqiSubscriptionId}`,
         "GET",
         secretKey
-      ) as { current_period_end?: number }
-      currentPeriodEnd = sub?.current_period_end ?? null
+      ) as Record<string, unknown>
+      console.log("[suscripcion] Culqi response:", JSON.stringify(sub).slice(0, 600))
+      currentPeriodEnd = (
+        sub?.current_period_end ??
+        sub?.billing_date ??
+        sub?.next_billing_date ??
+        sub?.cancel_at ??
+        null
+      ) as number | null
     }
   }
 
