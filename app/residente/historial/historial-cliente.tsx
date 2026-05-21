@@ -16,7 +16,7 @@ import {
 import { VisitaQrDialog } from "@/components/visitas/visita-qr-dialog"
 import { EstadoBadge } from "@/components/visitas/estado-badge"
 import { formatFechaHora } from "@/lib/utils"
-import { Search, QrCode, XCircle, Filter } from "lucide-react"
+import { Search, QrCode, XCircle, Filter, ChevronLeft, ChevronRight } from "lucide-react"
 import type { EstadoVisita } from "@prisma/client"
 
 type Visita = {
@@ -44,19 +44,26 @@ export function HistorialCliente() {
   const [fechaHasta, setFechaHasta] = useState("")
   const [cancelando, setCancelando] = useState<string | null>(null)
   const [visitaQR, setVisitaQR] = useState<Visita | null>(null)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [pages, setPages] = useState(1)
 
-  const cargarVisitas = useCallback(async () => {
+  const cargarVisitas = useCallback(async (currentPage = 1) => {
     setLoading(true)
     const params = new URLSearchParams()
     if (estadoFiltro !== "TODOS") params.set("estado", estadoFiltro)
     if (placaFiltro) params.set("placa", placaFiltro)
     if (fechaDesde) params.set("fechaDesde", fechaDesde)
     if (fechaHasta) params.set("fechaHasta", fechaHasta)
+    params.set("page", String(currentPage))
 
     try {
       const res = await fetch(`/api/visitas?${params}`)
       if (!res.ok) throw new Error()
-      setVisitas(await res.json())
+      const data = await res.json()
+      setVisitas(data.visitas)
+      setTotal(data.total)
+      setPages(data.pages)
     } catch {
       toast.error("Error al cargar visitas")
     } finally {
@@ -64,7 +71,11 @@ export function HistorialCliente() {
     }
   }, [estadoFiltro, placaFiltro, fechaDesde, fechaHasta])
 
-  useEffect(() => { cargarVisitas() }, [cargarVisitas])
+  // Al cambiar filtros, vuelve a página 1
+  useEffect(() => {
+    setPage(1)
+    cargarVisitas(1)
+  }, [cargarVisitas])
 
   async function cancelarVisita(id: string) {
     try {
@@ -75,12 +86,17 @@ export function HistorialCliente() {
         return
       }
       toast.success("Visita cancelada")
-      cargarVisitas()
+      cargarVisitas(page)
     } catch {
       toast.error("Error de conexión")
     } finally {
       setCancelando(null)
     }
+  }
+
+  function irAPagina(p: number) {
+    setPage(p)
+    cargarVisitas(p)
   }
 
   function limpiarFiltros() {
@@ -217,6 +233,29 @@ export function HistorialCliente() {
               ))}
             </TableBody>
           </Table>
+        )}
+
+        {/* Paginación */}
+        {!loading && pages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
+            <span>{total} visita{total !== 1 ? "s" : ""} · página {page} de {pages}</span>
+            <div className="flex gap-1">
+              <Button
+                variant="outline" size="icon" className="h-8 w-8"
+                disabled={page <= 1}
+                onClick={() => irAPagina(page - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline" size="icon" className="h-8 w-8"
+                disabled={page >= pages}
+                onClick={() => irAPagina(page + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         )}
       </Card>
 

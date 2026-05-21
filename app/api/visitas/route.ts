@@ -16,27 +16,35 @@ export async function GET(req: NextRequest) {
   const placa = searchParams.get("placa")
   const fechaDesde = searchParams.get("fechaDesde")
   const fechaHasta = searchParams.get("fechaHasta")
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"))
+  const limit = 25
 
   const residenteFilter = session.user.rol === "ADMIN" ? {} : { residenteId: session.user.id }
 
-  const visitas = await prisma.visita.findMany({
-    where: {
-      condominioId,
-      ...residenteFilter,
-      ...(estado ? { estado } : {}),
-      ...(fechaDesde || fechaHasta ? { fechaProgramada: { ...(fechaDesde ? { gte: new Date(fechaDesde) } : {}), ...(fechaHasta ? { lte: new Date(fechaHasta + "T23:59:59") } : {}) } } : {}),
-      ...(placa ? { vehiculos: { some: { placa: { contains: placa.toUpperCase(), mode: "insensitive" } } } } : {}),
-    },
-    include: {
-      vehiculos: true,
-      residente: { select: { nombre: true, direccion: true } },
-      _count: { select: { registros: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  })
+  const where = {
+    condominioId,
+    ...residenteFilter,
+    ...(estado ? { estado } : {}),
+    ...(fechaDesde || fechaHasta ? { fechaProgramada: { ...(fechaDesde ? { gte: new Date(fechaDesde) } : {}), ...(fechaHasta ? { lte: new Date(fechaHasta + "T23:59:59") } : {}) } } : {}),
+    ...(placa ? { vehiculos: { some: { placa: { contains: placa.toUpperCase(), mode: "insensitive" } } } } : {}),
+  }
 
-  return NextResponse.json(visitas)
+  const [visitas, total] = await Promise.all([
+    prisma.visita.findMany({
+      where,
+      include: {
+        vehiculos: true,
+        residente: { select: { nombre: true, direccion: true } },
+        _count: { select: { registros: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.visita.count({ where }),
+  ])
+
+  return NextResponse.json({ visitas, total, page, pages: Math.ceil(total / limit) })
 }
 
 export async function POST(req: NextRequest) {
