@@ -23,6 +23,7 @@ const ACCION_LABEL: Record<string, string> = {
 
 export default async function AdminDashboardPage() {
   const session = await getServerSession(authOptions)
+  const condominioId = session?.user.condominioId
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
 
@@ -34,14 +35,15 @@ export default async function AdminDashboardPage() {
     turnosActivos,
     ultimosLogs,
   ] = await Promise.all([
-    prisma.user.count({ where: { rol: "RESIDENTE", activo: true } }),
-    prisma.user.count({ where: { rol: "VIGILANTE", activo: true } }),
-    prisma.visita.count({ where: { createdAt: { gte: hoy } } }),
-    prisma.registroIngreso.count({ where: { fechaHoraSalida: null } }),
-    prisma.turnoVigilante.count({ where: { activo: true } }),
+    prisma.user.count({ where: { rol: "RESIDENTE", activo: true, condominioId } }),
+    prisma.user.count({ where: { rol: "VIGILANTE", activo: true, condominioId } }),
+    prisma.visita.count({ where: { createdAt: { gte: hoy }, condominioId } }),
+    prisma.registroIngreso.count({ where: { fechaHoraSalida: null, visita: { condominioId } } }),
+    prisma.turnoVigilante.count({ where: { activo: true, condominioId } }),
     prisma.logActividad.findMany({
       take: 15,
       orderBy: { timestamp: "desc" },
+      where: { user: { condominioId } },
       include: { user: { select: { nombre: true, rol: true } } },
     }),
   ])
