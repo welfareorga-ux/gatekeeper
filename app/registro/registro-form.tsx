@@ -124,6 +124,9 @@ export function RegistroForm() {
               <User className="h-4 w-4" />
               Cuenta del administrador
             </div>
+            <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+              <strong>Esta será la cuenta principal del condominio.</strong> Con ella accedes al panel de administración para agregar vigilantes y residentes. Los demás usuarios ingresan con las credenciales que tú les asignes.
+            </div>
             <div className="space-y-1.5">
               <Label>Nombre completo *</Label>
               <Input {...campo("adminNombre")} placeholder="Juan Pérez García" required />
