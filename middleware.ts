@@ -24,11 +24,12 @@ export default withAuth(
 
     // Guard de suscripción: admin con suscripción inactiva → página de bloqueo
     const suscripcionEstado = token.suscripcionEstado as string | undefined
+    const ESTADOS_BLOQUEADOS = ["cancelada", "vencida", "fallida"]
     if (
       rol === "ADMIN" &&
       !isSuperAdmin &&
       suscripcionEstado &&
-      suscripcionEstado !== "activa" &&
+      ESTADOS_BLOQUEADOS.includes(suscripcionEstado) &&
       pathname.startsWith("/admin")
     ) {
       return NextResponse.redirect(new URL("/suscripcion-inactiva", req.url))

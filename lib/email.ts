@@ -127,3 +127,64 @@ export async function enviarNotificacionSalida({
     console.error("[email] Error al enviar notificación de salida:", err)
   }
 }
+
+export async function enviarEmailCobroFallido({
+  emailAdmin,
+  nombreAdmin,
+  condominioNombre,
+  planLabel,
+}: {
+  emailAdmin: string
+  nombreAdmin: string
+  condominioNombre: string
+  planLabel: string
+}) {
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: emailAdmin,
+      subject: `⚠️ Problema con tu pago — Gatekeeper`,
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
+          <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
+            <h1 style="color:#fff;font-size:20px;margin:0">🛡️ Gatekeeper</h1>
+            <p style="color:#9ca3af;font-size:13px;margin:4px 0 0">Sistema de control de acceso</p>
+          </div>
+
+          <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px 16px;margin-bottom:24px">
+            <p style="color:#92400e;font-size:14px;margin:0;font-weight:600">⚠️ No pudimos procesar tu pago</p>
+          </div>
+
+          <h2 style="color:#111827;font-size:18px;margin:0 0 8px">Acción requerida</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 24px">
+            Hola <strong>${nombreAdmin}</strong>, el cobro mensual de tu suscripción a Gatekeeper no pudo ser procesado.
+            El acceso al panel de <strong>${condominioNombre}</strong> ha sido suspendido temporalmente.
+          </p>
+
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:40%">Condominio</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${condominioNombre}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Plan</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${planLabel}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Estado</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#dc2626">Pago fallido</td></tr>
+            </table>
+          </div>
+
+          <p style="color:#6b7280;font-size:14px;margin:0 0 16px">
+            Para reactivar tu acceso, actualiza tu método de pago o contáctanos:
+          </p>
+
+          <a href="mailto:soporte@gatekeeper.pe?subject=Reactivar suscripción — ${condominioNombre}"
+             style="display:inline-block;background:#111827;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
+            Contactar soporte
+          </a>
+
+          <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">
+            Este es un mensaje automático de Gatekeeper — soporte@gatekeeper.pe
+          </p>
+        </div>
+      `,
+    })
+  } catch (err) {
+    console.error("[email] Error al enviar email de cobro fallido:", err)
+  }
+}
