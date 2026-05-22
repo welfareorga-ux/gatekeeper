@@ -1,8 +1,16 @@
 import { z } from "zod"
-import { placaSchema, dniSchema } from "./placa"
+import { normalizarPlacaInput, validarPlaca, dniSchema } from "./placa"
 
 export const vehiculoSchema = z.object({
-  placa: placaSchema,
+  placa: z
+    .string()
+    .transform((v) => {
+      const t = v.trim()
+      return t ? normalizarPlacaInput(t) : ""
+    })
+    .refine((v) => !v || validarPlaca(v), {
+      message: "Placa inválida. Formatos: A1B-234 (nueva), ABC-123 (antigua), A1-2345 (moto)",
+    }),
   marca: z.string().max(50).optional().or(z.literal("")),
   modelo: z.string().max(50).optional().or(z.literal("")),
   color: z.string().max(30).optional().or(z.literal("")),
@@ -23,8 +31,9 @@ export const nuevaVisitaSchema = z.object({
   horaFin: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Hora inválida"),
   vehiculos: z
     .array(vehiculoSchema)
-    .min(1, "Debe agregar al menos un vehículo")
-    .max(3, "Máximo 3 vehículos por visita"),
+    .max(3, "Máximo 3 vehículos por visita")
+    .optional()
+    .default([]),
   esRecurrente: z.boolean().optional().default(false),
   guardarComoPlantilla: z.boolean().optional().default(false),
   nombreAlias: z.string().max(80).optional(),
@@ -57,6 +66,6 @@ export const plantillaSchema = z.object({
     motivoVisita: z.string(),
   }),
   datosVehiculoJSON: z.array(
-    z.object({ placa: z.string(), marca: z.string().optional(), modelo: z.string().optional(), color: z.string().optional() })
+    z.object({ placa: z.string().optional().or(z.literal("")), marca: z.string().optional(), modelo: z.string().optional(), color: z.string().optional() })
   ),
 })

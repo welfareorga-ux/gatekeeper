@@ -9,8 +9,12 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { UserPlus, KeyRound, Pencil, Search } from "lucide-react"
+import { UserPlus, KeyRound, Pencil, Search, Trash2 } from "lucide-react"
 import { formatFecha } from "@/lib/utils"
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 type Usuario = {
   id: string
@@ -46,10 +50,12 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
   const [modalCrear, setModalCrear] = useState(false)
   const [modalEditar, setModalEditar] = useState<Usuario | null>(null)
   const [modalReset, setModalReset] = useState<Usuario | null>(null)
+  const [modalEliminar, setModalEliminar] = useState<Usuario | null>(null)
 
   const [form, setForm] = useState(FORM_INICIAL)
   const [newPassword, setNewPassword] = useState("")
   const [guardando, setGuardando] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
 
   const filtrados = usuarios.filter((u) => {
     if (filtroRol !== "TODOS" && u.rol !== filtroRol) return false
@@ -125,6 +131,19 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
       setModalEditar(null)
     } catch { toast.error("Error de conexión") }
     finally { setGuardando(false) }
+  }
+
+  async function eliminarUsuario() {
+    if (!modalEliminar) return
+    setEliminando(true)
+    try {
+      const res = await fetch(`/api/admin/usuarios/${modalEliminar.id}`, { method: "DELETE" })
+      if (!res.ok) { toast.error((await res.json()).error ?? "Error al eliminar"); return }
+      setUsuarios((prev) => prev.filter((u) => u.id !== modalEliminar.id))
+      toast.success(`${modalEliminar.nombre} eliminado correctamente`)
+      setModalEliminar(null)
+    } catch { toast.error("Error de conexión") }
+    finally { setEliminando(false) }
   }
 
   async function resetPassword() {
@@ -250,6 +269,16 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
                       >
                         <KeyRound className="h-3.5 w-3.5" />
                       </Button>
+                      {u.rol !== "ADMIN" && (
+                        <Button
+                          variant="ghost" size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Eliminar usuario"
+                          onClick={() => setModalEliminar(u)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -342,6 +371,37 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmar eliminación */}
+      <AlertDialog open={!!modalEliminar} onOpenChange={(v) => { if (!v) setModalEliminar(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar a {modalEliminar?.nombre}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  Esta acción eliminará permanentemente la cuenta de{" "}
+                  <strong className="text-foreground">{modalEliminar?.nombre}</strong> ({modalEliminar?.rol === "RESIDENTE" ? "Residente" : "Vigilante"}).
+                </p>
+                <p className="text-destructive font-medium">
+                  Se borrarán también todas sus visitas, vehículos y registros de ingreso/salida históricos. Esta acción no se puede deshacer.
+                </p>
+                <p>Si el usuario solo se mudó temporalmente, considera desactivarlo en su lugar.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={eliminando}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={eliminarUsuario}
+              disabled={eliminando}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              {eliminando ? "Eliminando…" : "Sí, eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Modal Reset Password */}
       <Dialog open={!!modalReset} onOpenChange={(v) => { if (!v) setModalReset(null) }}>

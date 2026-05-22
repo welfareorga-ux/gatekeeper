@@ -40,6 +40,7 @@ export async function GET(req: Request) {
   >()
 
   for (const v of vehiculos) {
+    if (!v.placa) continue
     const existing = placaMap.get(v.placa)
     if (existing) {
       existing.total++

@@ -111,7 +111,7 @@ model Vehiculo {
   id       String  @id @default(cuid())
   visitaId String
   visita   Visita  @relation(fields: [visitaId], references: [id], onDelete: Cascade)
-  placa    String
+  placa    String?
   marca    String?
   modelo   String?
   color    String?
@@ -126,8 +126,8 @@ model RegistroIngreso {
   id                 String    @id @default(cuid())
   visitaId           String
   visita             Visita    @relation(fields: [visitaId], references: [id])
-  vehiculoId         String
-  vehiculo           Vehiculo  @relation(fields: [vehiculoId], references: [id])
+  vehiculoId         String?
+  vehiculo           Vehiculo? @relation(fields: [vehiculoId], references: [id])
   vigilanteIngresoId String?
   vigilanteIngreso   User?     @relation("VigilanteIngreso", fields: [vigilanteIngresoId], references: [id])
   fechaHoraIngreso   DateTime  @default(now())

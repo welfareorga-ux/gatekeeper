@@ -15,7 +15,7 @@ import { Car, MapPin, Clock, LogOut, RefreshCw, Users } from "lucide-react"
 type RegistroDentro = {
   id: string
   fechaHoraIngreso: string
-  vehiculo: { id: string; placa: string; marca?: string; modelo?: string; color?: string }
+  vehiculo: { id: string; placa: string | null; marca?: string; modelo?: string; color?: string } | null
   visita: {
     id: string
     nombreVisitante: string
@@ -104,7 +104,7 @@ export function DentroCliente() {
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">
-            {registros.length} vehículo{registros.length !== 1 ? "s" : ""} dentro
+            {registros.length} visitante{registros.length !== 1 ? "s" : ""} dentro
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -130,15 +130,23 @@ export function DentroCliente() {
               <div className="flex items-start justify-between gap-4">
                 {/* Info */}
                 <div className="flex-1 space-y-3">
-                  {/* Placa grande */}
+                  {/* Placa / sin vehículo */}
                   <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="font-mono text-xl px-3 py-1.5 h-10">
-                      {r.vehiculo.placa}
-                    </Badge>
-                    {(r.vehiculo.marca || r.vehiculo.color) && (
-                      <span className="text-sm text-muted-foreground">
-                        {[r.vehiculo.marca, r.vehiculo.modelo, r.vehiculo.color].filter(Boolean).join(" · ")}
-                      </span>
+                    {r.vehiculo ? (
+                      <>
+                        <Badge variant="outline" className="font-mono text-xl px-3 py-1.5 h-10">
+                          {r.vehiculo.placa ?? "Sin placa"}
+                        </Badge>
+                        {(r.vehiculo.marca || r.vehiculo.color) && (
+                          <span className="text-sm text-muted-foreground">
+                            {[r.vehiculo.marca, r.vehiculo.modelo, r.vehiculo.color].filter(Boolean).join(" · ")}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <Badge variant="outline" className="text-sm px-3 py-1.5 h-10 text-muted-foreground">
+                        Sin vehículo
+                      </Badge>
                     )}
                   </div>
 

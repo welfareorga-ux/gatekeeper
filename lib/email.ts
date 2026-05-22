@@ -501,6 +501,81 @@ export async function enviarManualUso({
   }
 }
 
+export async function enviarCredencialesUsuario({
+  email,
+  nombre,
+  password,
+  rol,
+  condominioNombre,
+}: {
+  email: string
+  nombre: string
+  password: string
+  rol: "RESIDENTE" | "VIGILANTE" | "ADMIN"
+  condominioNombre: string
+}) {
+  const rolLabel = rol === "RESIDENTE" ? "Residente" : rol === "VIGILANTE" ? "Vigilante" : "Administrador"
+  const loginUrl = "https://gatekeeper-app.org"
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: `🛡️ Tu cuenta en Gatekeeper está lista — ${condominioNombre}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
+          <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
+            <h1 style="color:#fff;font-size:20px;margin:0">🛡️ Gatekeeper</h1>
+            <p style="color:#9ca3af;font-size:13px;margin:4px 0 0">Sistema de control de acceso</p>
+          </div>
+
+          <h2 style="color:#111827;font-size:18px;margin:0 0 8px">¡Hola, ${nombre}!</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 24px">
+            El administrador de <strong>${condominioNombre}</strong> creó tu cuenta en Gatekeeper.
+            Usa las credenciales de abajo para ingresar a la plataforma.
+          </p>
+
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:35%">Condominio</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${condominioNombre}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Rol</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${rolLabel}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Usuario</td><td style="padding:8px 0;font-size:14px;color:#111827;font-family:monospace">${email}</td></tr>
+              <tr>
+                <td style="padding:8px 0;color:#6b7280;font-size:13px">Contraseña</td>
+                <td style="padding:8px 0">
+                  <span style="background:#f3f4f6;border:1px solid #d1d5db;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:14px;font-weight:600;color:#111827;letter-spacing:0.05em">${password}</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <a href="${loginUrl}"
+             style="display:inline-block;background:#111827;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;margin-bottom:24px">
+            Ingresar a Gatekeeper →
+          </a>
+
+          <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px 16px;margin-bottom:16px">
+            <p style="color:#92400e;font-size:13px;margin:0">
+              🔒 Por seguridad, cambia tu contraseña una vez que ingreses por primera vez.
+            </p>
+          </div>
+
+          <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:14px 16px">
+            <p style="color:#1e40af;font-size:13px;margin:0">
+              📖 Consulta la guía de uso en
+              <a href="https://gatekeeper-app.org/manual" style="color:#1e40af;font-weight:600;">gatekeeper-app.org/manual</a>
+            </p>
+          </div>
+
+          <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">Este es un mensaje automático de Gatekeeper — no responder.</p>
+        </div>
+      `,
+    })
+  } catch (err) {
+    console.error("[email] Error al enviar credenciales de usuario:", err)
+  }
+}
+
 export async function enviarEmailCobroFallido({
   emailAdmin,
   nombreAdmin,

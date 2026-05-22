@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
+import { enviarCredencialesUsuario } from "@/lib/email"
 
 const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
   BASICO:   { residentes: 20,         vigilantes: 1          },
@@ -79,12 +80,13 @@ export async function POST(req: Request) {
 
   const { nombre, email, password, rol, telefono, direccion } = result.data
 
+  const condominio = await prisma.condominio.findUnique({
+    where: { id: condominioId },
+    select: { plan: true, nombre: true },
+  })
+
   // Verificar límites del plan antes de crear
   if (rol === "RESIDENTE" || rol === "VIGILANTE") {
-    const condominio = await prisma.condominio.findUnique({
-      where: { id: condominioId },
-      select: { plan: true },
-    })
     const limites = LIMITES_PLAN[condominio?.plan ?? "BASICO"]
     const campo = rol === "RESIDENTE" ? "residentes" : "vigilantes"
     const limite = limites[campo]
@@ -117,6 +119,14 @@ export async function POST(req: Request) {
       accion: "CREAR_USUARIO",
       detalle: JSON.stringify({ email, rol }),
     },
+  })
+
+  void enviarCredencialesUsuario({
+    email,
+    nombre,
+    password,
+    rol,
+    condominioNombre: condominio?.nombre ?? "",
   })
 
   return NextResponse.json(usuario, { status: 201 })

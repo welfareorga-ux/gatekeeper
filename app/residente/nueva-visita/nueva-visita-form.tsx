@@ -59,7 +59,7 @@ export function NuevaVisitaForm() {
   })
   const [horaInicio, setHoraInicio] = useState("09:00")
   const [horaFin, setHoraFin] = useState("11:00")
-  const [vehiculos, setVehiculos] = useState<VehiculoForm[]>([vehVacio()])
+  const [vehiculos, setVehiculos] = useState<VehiculoForm[]>([])
   const [esRecurrente, setEsRecurrente] = useState(false)
   const [guardarComoPlantilla, setGuardarComoPlantilla] = useState(false)
   const [nombreAlias, setNombreAlias] = useState("")
@@ -248,7 +248,7 @@ export function NuevaVisitaForm() {
               <CardTitle className="text-base flex items-center gap-2">
                 <Car className="h-4 w-4" /> Vehículo(s)
                 <span className="text-xs font-normal text-muted-foreground ml-1">
-                  ({vehiculos.length}/3)
+                  {vehiculos.length === 0 ? "(opcional)" : `(${vehiculos.length}/3)`}
                 </span>
               </CardTitle>
               {vehiculos.length < 3 && (
@@ -263,14 +263,22 @@ export function NuevaVisitaForm() {
             {errors.vehiculos && (
               <p className="text-sm text-destructive">{errors.vehiculos}</p>
             )}
-            {vehiculos.map((veh, i) => (
-              <div key={i} className="space-y-3">
-                {i > 0 && <Separator />}
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Vehículo {i + 1}
-                  </p>
-                  {i > 0 && (
+            {vehiculos.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-muted-foreground/25 bg-muted/10 p-6 text-center">
+                <Car className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground">Sin vehículo</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Si el visitante llega en auto, moto u otro vehículo, usa el botón de arriba
+                </p>
+              </div>
+            ) : (
+              vehiculos.map((veh, i) => (
+                <div key={i} className="space-y-3">
+                  {i > 0 && <Separator />}
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Vehículo {i + 1}
+                    </p>
                     <Button
                       type="button"
                       variant="ghost"
@@ -280,66 +288,66 @@ export function NuevaVisitaForm() {
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
-                  )}
-                </div>
+                  </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="col-span-2 sm:col-span-1 space-y-1.5">
-                    <Label className="text-xs">Placa *</Label>
-                    <div className="relative">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="col-span-2 sm:col-span-1 space-y-1.5">
+                      <Label className="text-xs">Placa <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                      <div className="relative">
+                        <Input
+                          placeholder="A1B-234"
+                          value={veh.placa}
+                          onChange={(e) => actualizarVehiculo(i, "placa", e.target.value)}
+                          className={`font-mono uppercase ${
+                            veh.placa && !placaValida(veh.placa)
+                              ? "border-destructive focus-visible:ring-destructive"
+                              : veh.placa && placaValida(veh.placa)
+                              ? "border-green-500 focus-visible:ring-green-500"
+                              : ""
+                          }`}
+                          maxLength={9}
+                        />
+                      </div>
+                      {errors[`vehiculos.${i}.placa`] && (
+                        <p className="text-xs text-destructive">{errors[`vehiculos.${i}.placa`]}</p>
+                      )}
+                      {veh.placa && !validarPlaca(veh.placa) && (
+                        <p className="text-xs text-muted-foreground">
+                          Formatos válidos: A1B-234 / ABC-123 / A1-2345
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Marca</Label>
                       <Input
-                        placeholder="A1B-234"
-                        value={veh.placa}
-                        onChange={(e) => actualizarVehiculo(i, "placa", e.target.value)}
-                        className={`font-mono uppercase ${
-                          veh.placa && !placaValida(veh.placa)
-                            ? "border-destructive focus-visible:ring-destructive"
-                            : veh.placa && placaValida(veh.placa)
-                            ? "border-green-500 focus-visible:ring-green-500"
-                            : ""
-                        }`}
-                        maxLength={9}
+                        placeholder="Toyota"
+                        value={veh.marca}
+                        onChange={(e) => actualizarVehiculo(i, "marca", e.target.value)}
                       />
                     </div>
-                    {errors[`vehiculos.${i}.placa`] && (
-                      <p className="text-xs text-destructive">{errors[`vehiculos.${i}.placa`]}</p>
-                    )}
-                    {veh.placa && !validarPlaca(veh.placa) && (
-                      <p className="text-xs text-muted-foreground">
-                        Formatos válidos: A1B-234 / ABC-123 / A1-2345
-                      </p>
-                    )}
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Marca</Label>
-                    <Input
-                      placeholder="Toyota"
-                      value={veh.marca}
-                      onChange={(e) => actualizarVehiculo(i, "marca", e.target.value)}
-                    />
-                  </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Modelo</Label>
+                      <Input
+                        placeholder="Yaris"
+                        value={veh.modelo}
+                        onChange={(e) => actualizarVehiculo(i, "modelo", e.target.value)}
+                      />
+                    </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Modelo</Label>
-                    <Input
-                      placeholder="Yaris"
-                      value={veh.modelo}
-                      onChange={(e) => actualizarVehiculo(i, "modelo", e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Color</Label>
-                    <Input
-                      placeholder="Blanco"
-                      value={veh.color}
-                      onChange={(e) => actualizarVehiculo(i, "color", e.target.value)}
-                    />
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Color</Label>
+                      <Input
+                        placeholder="Blanco"
+                        value={veh.color}
+                        onChange={(e) => actualizarVehiculo(i, "color", e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 

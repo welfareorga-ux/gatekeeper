@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     nombreResidente: visita.residente.nombre,
     nombreVisitante: visita.nombreVisitante,
     placa: visita.vehiculos[0]?.placa ?? "",
-    condominioNombre: visita.condominio.nombre,
+    condominioNombre: visita.condominio?.nombre ?? "",
     horaIngreso: registroAbierto.fechaHoraIngreso,
     horaSalida,
   })

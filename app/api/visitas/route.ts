@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     ...residenteFilter,
     ...(estado ? { estado } : {}),
     ...(fechaDesde || fechaHasta ? { fechaProgramada: { ...(fechaDesde ? { gte: new Date(fechaDesde) } : {}), ...(fechaHasta ? { lte: new Date(fechaHasta + "T23:59:59") } : {}) } } : {}),
-    ...(placa ? { vehiculos: { some: { placa: { contains: placa.toUpperCase(), mode: "insensitive" } } } } : {}),
+    ...(placa ? { vehiculos: { some: { placa: { contains: placa.toUpperCase(), mode: "insensitive" as const } } } } : {}),
   }
 
   const [visitas, total] = await Promise.all([
@@ -79,14 +79,16 @@ export async function POST(req: NextRequest) {
         nombreVisitante, dniVisitante, motivoVisita,
         fechaProgramada: fechaBase, horaInicio: fechaInicioFull, horaFin: fechaFinFull,
         esRecurrente: esRecurrente ?? false,
-        vehiculos: { create: vehiculos.map((veh) => ({ placa: veh.placa, marca: veh.marca || null, modelo: veh.modelo || null, color: veh.color || null })) },
+        ...(vehiculos.length > 0 ? {
+          vehiculos: { create: vehiculos.map((veh) => ({ placa: veh.placa || null, marca: veh.marca || null, modelo: veh.modelo || null, color: veh.color || null })) },
+        } : {}),
       },
       include: { vehiculos: true },
     })
     if (guardarComoPlantilla && nombreAlias) {
       await tx.plantillaVisita.create({ data: { residenteId: session.user.id, condominioId, nombreAlias, datosVisitanteJSON: { nombreVisitante, dniVisitante, motivoVisita }, datosVehiculoJSON: vehiculos } })
     }
-    await tx.logActividad.create({ data: { userId: session.user.id, accion: "CREAR_VISITA", detalle: `Visita para ${nombreVisitante} | ${vehiculos.map((v) => v.placa).join(", ")}` } })
+    await tx.logActividad.create({ data: { userId: session.user.id, accion: "CREAR_VISITA", detalle: `Visita para ${nombreVisitante}${vehiculos.length > 0 ? ` | ${vehiculos.map((v) => v.placa || "sin placa").join(", ")}` : " | sin vehículo"}` } })
     return v
   })
 

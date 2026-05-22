@@ -8,7 +8,7 @@ import { EstadoVisita } from "@prisma/client"
 
 const schema = z.object({
   visitaId: z.string().min(1),
-  vehiculoId: z.string().min(1),
+  vehiculoId: z.string().min(1).optional(),
   notasVigilante: z.string().max(500).optional(),
 })
 
@@ -52,8 +52,8 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const vehiculo = visita.vehiculos.find((v) => v.id === vehiculoId)
-  if (!vehiculo) {
+  const vehiculo = vehiculoId ? visita.vehiculos.find((v) => v.id === vehiculoId) : undefined
+  if (vehiculoId && !vehiculo) {
     return NextResponse.json({ error: "El vehículo no pertenece a esta visita" }, { status: 400 })
   }
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     const r = await tx.registroIngreso.create({
       data: {
         visitaId,
-        vehiculoId,
+        ...(vehiculoId ? { vehiculoId } : {}),
         vigilanteIngresoId: session.user.id,
         fechaHoraIngreso: horaIngreso,
         notasVigilante: notasVigilante ?? null,
@@ -91,8 +91,8 @@ export async function POST(req: NextRequest) {
     emailResidente: visita.residente.email,
     nombreResidente: visita.residente.nombre,
     nombreVisitante: visita.nombreVisitante,
-    placa: vehiculo.placa,
-    condominioNombre: visita.condominio.nombre,
+    placa: vehiculo?.placa ?? "",
+    condominioNombre: visita.condominio?.nombre ?? "",
     horaIngreso,
   })
 

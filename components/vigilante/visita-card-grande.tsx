@@ -14,7 +14,7 @@ import {
 import { formatFechaHora } from "@/lib/utils"
 import type { EstadoVisita } from "@prisma/client"
 
-type Vehiculo = { id: string; placa: string; marca?: string; modelo?: string; color?: string }
+type Vehiculo = { id: string; placa: string | null; marca?: string; modelo?: string; color?: string }
 type Visita = {
   id: string; codigoQR: string; estado: EstadoVisita
   nombreVisitante: string; dniVisitante: string; motivoVisita: string
@@ -146,18 +146,22 @@ export function VisitaCardGrande({ visita, onAccionCompletada }: Props) {
           <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-2">
             <Car className="h-3 w-3" /> Vehículo(s)
           </p>
-          <div className="flex flex-wrap gap-2">
-            {visita.vehiculos.map((v) => (
-              <div key={v.id} className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
-                <span className="font-mono font-bold text-lg">{v.placa}</span>
-                {(v.marca || v.modelo || v.color) && (
-                  <span className="text-sm text-muted-foreground">
-                    {[v.marca, v.modelo, v.color].filter(Boolean).join(" · ")}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+          {visita.vehiculos.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">Sin vehículo registrado</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {visita.vehiculos.map((v) => (
+                <div key={v.id} className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                  <span className="font-mono font-bold text-lg">{v.placa ?? "Sin placa"}</span>
+                  {(v.marca || v.modelo || v.color) && (
+                    <span className="text-sm text-muted-foreground">
+                      {[v.marca, v.modelo, v.color].filter(Boolean).join(" · ")}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Horario */}
