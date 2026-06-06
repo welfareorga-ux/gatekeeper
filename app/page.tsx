@@ -5,9 +5,17 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { LandingNav } from "@/components/layout/landing-nav"
 import {
-  Shield, Car, Users, BarChart3, CheckCircle2,
-  Bell, FileSpreadsheet, Phone, Mail, MapPin, Building2,
+  Shield, ShieldCheck, Lock, Car, Users, BarChart3, CheckCircle2,
+  Bell, FileSpreadsheet, Phone, Mail, MapPin, Building2, QrCode,
+  ScanLine, Clock, MessageCircle, Database, ClipboardList, KeyRound,
+  Zap, Headset, X,
 } from "lucide-react"
+
+const WHATSAPP = "https://wa.me/51964462645"
+const WHATSAPP_DEMO =
+  "https://wa.me/51964462645?text=Hola%2C%20quiero%20agendar%20una%20demo%20de%20Gatekeeper%20para%20mi%20condominio"
+const WHATSAPP_ADMIN =
+  "https://wa.me/51964462645?text=Hola%2C%20administro%20varios%20edificios%20y%20quiero%20conocer%20Gatekeeper"
 
 export default async function RootPage() {
   const session = await getServerSession(authOptions)
@@ -23,7 +31,7 @@ export default async function RootPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="border-b">
+      <header className="border-b sticky top-0 z-40 bg-background/90 backdrop-blur">
         <div className="container max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-8 h-8 bg-primary rounded-lg">
@@ -35,109 +43,250 @@ export default async function RootPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="container max-w-6xl mx-auto px-4 py-24 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm text-primary font-medium">
-          <Shield className="h-3.5 w-3.5" />
-          Sistema de control de acceso vehicular
-        </div>
-        <h1 className="text-4xl sm:text-6xl font-bold leading-tight">
-          Gestiona los accesos<br />
-          <span className="text-primary">de tu condominio</span>
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Registra visitas, controla el ingreso de vehículos y mantén un historial completo.
-          Todo desde una plataforma web, sin instalar nada.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/registro">
-            <Button size="lg" className="w-full sm:w-auto px-8">
-              Comenzar gratis — 14 días
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto px-8">
-              Ya tengo cuenta
-            </Button>
-          </Link>
+      {/* HERO */}
+      <section className="relative overflow-hidden bg-slate-900 text-white">
+        <div className="absolute -top-24 -right-24 w-[420px] h-[420px] rounded-full bg-orange-500/20 blur-3xl" />
+        <div className="container max-w-6xl mx-auto px-4 py-20 sm:py-24 relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium">
+                <ShieldCheck className="h-3.5 w-3.5 text-orange-400" />
+                Control de visitas y accesos para condominios
+              </div>
+              <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
+                Más seguridad y menos conflictos{" "}
+                <span className="text-orange-400">en la puerta de tu condominio.</span>
+              </h1>
+              <p className="text-lg text-slate-300 max-w-xl">
+                Reemplaza el cuaderno de la garita por una plataforma simple: registra visitas,
+                controla el ingreso de vehículos y ten todo el historial a un clic. Sin instalar nada.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/registro">
+                  <Button size="lg" className="w-full sm:w-auto px-8 bg-orange-600 hover:bg-orange-700 text-white">
+                    Comenzar gratis — 14 días
+                  </Button>
+                </Link>
+                <a href={WHATSAPP_DEMO} target="_blank" rel="noopener noreferrer">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white">
+                    <MessageCircle className="h-4 w-4" /> Agendar una demo
+                  </Button>
+                </a>
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400">
+                <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-orange-400" /> Sin tarjeta</span>
+                <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-orange-400" /> Sin permanencia</span>
+                <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-orange-400" /> Datos protegidos</span>
+              </div>
+            </div>
+
+            {/* Mockup */}
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-5 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-white/90">Garita · Registro de ingreso</span>
+                <span className="text-xs font-bold text-orange-300 bg-orange-500/20 px-2.5 py-1 rounded-full">En turno</span>
+              </div>
+              <div className="rounded-xl bg-white text-slate-900 p-4 space-y-3">
+                <div className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm text-slate-500">
+                  <ScanLine className="h-4 w-4" /> Buscar por placa o DNI…
+                </div>
+                <div className="flex items-center gap-3 rounded-lg bg-slate-50 border p-3">
+                  <div className="w-9 h-9 rounded-lg bg-green-500/15 flex items-center justify-center">
+                    <Car className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold leading-tight">ABC-123 · Juan Pérez</p>
+                    <p className="text-xs text-slate-500">Visita a Dpto. 402</p>
+                  </div>
+                  <span className="text-[11px] font-bold text-green-700 bg-green-500/15 px-2 py-1 rounded-full">Autorizado</span>
+                </div>
+                <div className="w-full rounded-lg bg-orange-600 text-white text-center text-sm font-semibold py-2.5">
+                  Registrar ingreso
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-xs text-white/70">
+                <Bell className="h-3.5 w-3.5 text-orange-300" /> El residente recibe un aviso automático del ingreso.
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="container max-w-6xl mx-auto px-4 pb-20">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {/* PARA QUIÉN */}
+      <section className="border-b bg-muted/30">
+        <div className="container max-w-6xl mx-auto px-4 py-8">
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            Pensado para
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-medium text-foreground/80">
+            <span className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /> Condominios cerrados</span>
+            <span className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /> Edificios multifamiliares</span>
+            <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> Urbanizaciones</span>
+            <span className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> Empresas administradoras</span>
+          </div>
+        </div>
+      </section>
+
+      {/* PROBLEMA */}
+      <section className="container max-w-6xl mx-auto px-4 py-20">
+        <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
+          <h2 className="text-3xl font-bold">El cuaderno de la garita ya no alcanza</h2>
+          <p className="text-muted-foreground">
+            Anotar a mano genera colas, errores y cero trazabilidad cuando algo pasa.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-6">
           {[
-            {
-              icon: Users,
-              title: "Portal del Residente",
-              description: "Registra visitas con anticipación, genera códigos QR y compártelos por WhatsApp.",
-              color: "text-blue-500 bg-blue-500/10",
-            },
-            {
-              icon: Car,
-              title: "Control del Vigilante",
-              description: "Búsqueda instantánea por placa, registro de ingreso/salida con un toque. Funciona en móvil.",
-              color: "text-green-500 bg-green-500/10",
-            },
-            {
-              icon: BarChart3,
-              title: "Panel Administrativo",
-              description: "Reportes con gráficas, auditoría completa, exportación a Excel y PDF.",
-              color: "text-purple-500 bg-purple-500/10",
-            },
-          ].map((f) => {
-            const Icon = f.icon
-            const [textColor, bgColor] = f.color.split(" ")
+            { icon: ClipboardList, t: "Registro en papel", d: "Datos ilegibles, hojas que se pierden y ninguna forma de buscar quién entró y cuándo." },
+            { icon: Clock, t: "Colas en la puerta", d: "Cada visita toma tiempo. En hora punta se forman filas y crece la incomodidad." },
+            { icon: Shield, t: "Sin control ni respaldo", d: "Ante un incidente no hay historial confiable que respalde a la administración ni a los residentes." },
+          ].map((p) => {
+            const Icon = p.icon
             return (
-              <div key={f.title} className="rounded-xl border p-6 space-y-4">
-                <div className={`inline-flex p-3 rounded-lg ${bgColor}`}>
-                  <Icon className={`h-6 w-6 ${textColor}`} />
+              <div key={p.t} className="rounded-xl border p-6 space-y-3">
+                <div className="inline-flex p-3 rounded-lg bg-red-500/10">
+                  <Icon className="h-6 w-6 text-red-500" />
                 </div>
-                <h3 className="font-semibold text-lg">{f.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{f.description}</p>
+                <h3 className="font-semibold text-lg">{p.t}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{p.d}</p>
               </div>
             )
           })}
         </div>
       </section>
 
-      {/* Planes */}
+      {/* CÓMO FUNCIONA / ROLES */}
+      <section className="border-t bg-muted/30">
+        <div className="container max-w-6xl mx-auto px-4 py-20 space-y-12">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <h2 className="text-3xl font-bold">Una plataforma, tres roles</h2>
+            <p className="text-muted-foreground">
+              Cada quien hace lo suyo en segundos, desde el celular o la computadora.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Users, color: "text-blue-500 bg-blue-500/10",
+                title: "Residente",
+                description: "Registra a su visita con anticipación y comparte un código QR por WhatsApp. Recibe avisos cuando entra y sale.",
+              },
+              {
+                icon: Car, color: "text-green-500 bg-green-500/10",
+                title: "Vigilante",
+                description: "Busca por placa o DNI, o escanea el QR con la cámara. Registra ingreso y salida con un toque. Funciona en el móvil.",
+              },
+              {
+                icon: BarChart3, color: "text-purple-500 bg-purple-500/10",
+                title: "Administrador",
+                description: "Ve reportes con gráficas, auditoría completa, alertas y exporta a Excel o PDF para la junta.",
+              },
+            ].map((f) => {
+              const Icon = f.icon
+              const [textColor, bgColor] = f.color.split(" ")
+              return (
+                <div key={f.title} className="rounded-xl border bg-background p-6 space-y-4">
+                  <div className={`inline-flex p-3 rounded-lg ${bgColor}`}>
+                    <Icon className={`h-6 w-6 ${textColor}`} />
+                  </div>
+                  <h3 className="font-semibold text-lg">{f.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{f.description}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* DIFERENCIADORES */}
+      <section className="container max-w-6xl mx-auto px-4 py-20">
+        <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
+          <h2 className="text-3xl font-bold">Por qué Gatekeeper</h2>
+          <p className="text-muted-foreground">Lo que hace tu cuaderno, pero rápido, seguro y sin papeles.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { icon: ScanLine, t: "Por placa o DNI", d: "Admite visitas en auto o a pie. Búsqueda al instante." },
+            { icon: QrCode, t: "QR por WhatsApp", d: "El residente envía el pase al visitante. La garita solo escanea." },
+            { icon: Zap, t: "Sin hardware", d: "100% en la nube. Funciona desde cualquier celular o PC." },
+            { icon: Building2, t: "Multi-edificio", d: "Administra varios condominios desde una sola cuenta." },
+          ].map((d) => {
+            const Icon = d.icon
+            return (
+              <div key={d.t} className="rounded-xl border p-6 space-y-3">
+                <div className="inline-flex p-3 rounded-lg bg-orange-500/10">
+                  <Icon className="h-6 w-6 text-orange-600" />
+                </div>
+                <h3 className="font-semibold">{d.t}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{d.d}</p>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* SEGURIDAD Y DATOS */}
+      <section className="border-t bg-slate-900 text-white">
+        <div className="container max-w-6xl mx-auto px-4 py-20">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-5">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium">
+                <Lock className="h-3.5 w-3.5 text-orange-400" /> Seguridad y protección de datos
+              </div>
+              <h2 className="text-3xl font-bold">Tu información y la de tus residentes, protegidas</h2>
+              <p className="text-slate-300">
+                Manejas datos sensibles como DNI y placas. Gatekeeper está construido para cuidarlos y
+                cumplir con la Ley N° 29733 de Protección de Datos Personales del Perú.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { icon: ShieldCheck, t: "Cumplimiento Ley 29733", d: "Tratamiento responsable de datos personales." },
+                { icon: KeyRound, t: "Accesos por rol", d: "Cada usuario ve solo lo que le corresponde." },
+                { icon: Database, t: "Datos en la nube", d: "Respaldados y disponibles cuando los necesitas." },
+                { icon: ClipboardList, t: "Auditoría completa", d: "Historial de cada acción para respaldar a la administración." },
+              ].map((s) => {
+                const Icon = s.icon
+                return (
+                  <div key={s.t} className="rounded-xl border border-white/15 bg-white/5 p-5 space-y-2">
+                    <Icon className="h-6 w-6 text-orange-400" />
+                    <h3 className="font-semibold">{s.t}</h3>
+                    <p className="text-slate-400 text-sm">{s.d}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PLANES */}
       <section className="border-t" id="planes">
         <div className="container max-w-6xl mx-auto px-4 py-20 space-y-10">
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-bold">Planes simples y transparentes</h2>
-            <p className="text-muted-foreground">Sin contratos. Cancela cuando quieras.</p>
+            <p className="text-muted-foreground">
+              14 días gratis, sin tarjeta. Sin contratos ni permanencia. Cancela cuando quieras.
+            </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
               {
-                nombre: "Básico",
-                precio: "S/ 49",
-                periodo: "/mes",
-                slug: "BASICO",
-                gradient: "from-blue-500 to-blue-700",
-                icon: Shield,
+                nombre: "Básico", precio: "S/ 49", periodo: "/mes", slug: "BASICO",
+                gradient: "from-blue-500 to-blue-700", icon: Shield,
                 descripcion: "Ideal para condominios pequeños que necesitan digitalizar su control de acceso.",
                 features: ["Hasta 20 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"],
               },
               {
-                nombre: "Estándar",
-                precio: "S/ 89",
-                periodo: "/mes",
-                slug: "ESTANDAR",
-                gradient: "from-primary to-primary/70",
-                icon: BarChart3,
+                nombre: "Estándar", precio: "S/ 89", periodo: "/mes", slug: "ESTANDAR",
+                gradient: "from-primary to-primary/70", icon: BarChart3,
                 descripcion: "El más elegido. Perfecto para condominios medianos con múltiples vigilantes.",
                 features: ["Hasta 50 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación", "Soporte prioritario"],
                 destacado: true,
               },
               {
-                nombre: "Premium",
-                precio: "S/ 149",
-                periodo: "/mes",
-                slug: "PREMIUM",
-                gradient: "from-purple-500 to-purple-800",
-                icon: Building2,
+                nombre: "Premium", precio: "S/ 149", periodo: "/mes", slug: "PREMIUM",
+                gradient: "from-purple-500 to-purple-800", icon: Building2,
                 descripcion: "Sin límites. Para grandes edificios y urbanizaciones con operación intensiva.",
                 features: ["Residentes ilimitados", "Vigilantes ilimitados", "Historial ilimitado", "Reportes avanzados", "Soporte dedicado"],
               },
@@ -148,7 +297,6 @@ export default async function RootPage() {
                   key={plan.nombre}
                   className={`rounded-xl border overflow-hidden ${plan.destacado ? "border-primary shadow-lg shadow-primary/10" : ""}`}
                 >
-                  {/* Visual del plan */}
                   <div className={`bg-gradient-to-br ${plan.gradient} p-6 flex flex-col items-center justify-center gap-3 min-h-[120px]`}>
                     {plan.destacado && (
                       <span className="text-xs font-semibold text-white/80 uppercase tracking-wide bg-white/20 px-3 py-1 rounded-full">
@@ -162,8 +310,6 @@ export default async function RootPage() {
                       <span className="text-white/70 text-sm mb-1">{plan.periodo}</span>
                     </div>
                   </div>
-
-                  {/* Contenido */}
                   <div className="p-6 space-y-4">
                     <p className="text-muted-foreground text-sm leading-relaxed">{plan.descripcion}</p>
                     <ul className="space-y-2">
@@ -174,13 +320,13 @@ export default async function RootPage() {
                         </li>
                       ))}
                     </ul>
-                    <Link href={`/checkout?plan=${plan.slug}`} className="block">
-                      <Button
-                        variant={plan.destacado ? "default" : "outline"}
-                        className="w-full"
-                      >
-                        Comprar plan
+                    <Link href="/registro" className="block">
+                      <Button variant={plan.destacado ? "default" : "outline"} className="w-full">
+                        Probar 14 días gratis
                       </Button>
+                    </Link>
+                    <Link href={`/checkout?plan=${plan.slug}`} className="block text-center text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      o contratar directamente
                     </Link>
                   </div>
                 </div>
@@ -191,25 +337,19 @@ export default async function RootPage() {
           {/* Servicios adicionales */}
           <div className="max-w-4xl mx-auto space-y-4">
             <h3 className="text-center text-xl font-semibold pt-4">Servicios adicionales</h3>
-            <p className="text-center text-muted-foreground text-sm">Complementa tu plan con servicios de implementación y capacitación.</p>
+            <p className="text-center text-muted-foreground text-sm">
+              Te acompañamos en la puesta en marcha para que arranques sin complicaciones.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
                 {
-                  icon: Bell,
-                  gradient: "from-amber-400 to-amber-600",
-                  slug: "onboarding",
-                  nombre: "Onboarding y Configuración",
-                  precio: "S/ 99",
-                  periodo: "pago único",
+                  icon: Bell, gradient: "from-amber-400 to-amber-600", slug: "onboarding",
+                  nombre: "Onboarding y Configuración", precio: "S/ 99", periodo: "pago único",
                   descripcion: "Configuramos Gatekeeper en tu condominio: carga de residentes, creación de usuarios y puesta en marcha. Incluye 1 sesión de acompañamiento remoto.",
                 },
                 {
-                  icon: FileSpreadsheet,
-                  gradient: "from-teal-500 to-teal-700",
-                  slug: "capacitacion",
-                  nombre: "Capacitación del Personal",
-                  precio: "S/ 79",
-                  periodo: "pago único",
+                  icon: FileSpreadsheet, gradient: "from-teal-500 to-teal-700", slug: "capacitacion",
+                  nombre: "Capacitación del Personal", precio: "S/ 79", periodo: "pago único",
                   descripcion: "Capacitamos a tus vigilantes, residentes y administradores en el uso de la plataforma. Incluye sesión de preguntas en vivo.",
                 },
               ].map((srv) => {
@@ -242,7 +382,120 @@ export default async function RootPage() {
         </div>
       </section>
 
-      {/* Contacto */}
+      {/* EMPRESAS ADMINISTRADORAS */}
+      <section className="container max-w-6xl mx-auto px-4 py-20">
+        <div className="rounded-2xl bg-slate-900 text-white p-8 sm:p-12 grid lg:grid-cols-2 gap-10 items-center">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium">
+              <Building2 className="h-3.5 w-3.5 text-orange-400" /> Para empresas administradoras
+            </div>
+            <h2 className="text-3xl font-bold">¿Administras varios edificios?</h2>
+            <p className="text-slate-300">
+              Gestiona todos tus condominios desde una sola cuenta, con reportes consolidados y
+              un plan a la medida de tu operación. Profesionaliza la seguridad de toda tu cartera.
+            </p>
+            <a href={WHATSAPP_ADMIN} target="_blank" rel="noopener noreferrer">
+              <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white">
+                <MessageCircle className="h-4 w-4" /> Hablar con el equipo
+              </Button>
+            </a>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[
+              { icon: Building2, t: "Multi-edificio", d: "Todos tus condominios en un solo lugar." },
+              { icon: BarChart3, t: "Reportes consolidados", d: "Visión clara de toda tu cartera." },
+              { icon: Headset, t: "Soporte dedicado", d: "Acompañamiento para tu equipo." },
+              { icon: KeyRound, t: "Plan a medida", d: "Precios según tu volumen." },
+            ].map((a) => {
+              const Icon = a.icon
+              return (
+                <div key={a.t} className="rounded-xl border border-white/15 bg-white/5 p-5 space-y-2">
+                  <Icon className="h-6 w-6 text-orange-400" />
+                  <h3 className="font-semibold text-sm">{a.t}</h3>
+                  <p className="text-slate-400 text-xs">{a.d}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* GARANTÍAS / RIESGO */}
+      <section className="border-t bg-muted/30">
+        <div className="container max-w-6xl mx-auto px-4 py-16">
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto text-center">
+            {[
+              { icon: Clock, t: "14 días gratis", d: "Prueba todo sin ingresar tarjeta." },
+              { icon: X, t: "Sin permanencia", d: "Cancela cuando quieras, sin penalidades." },
+              { icon: Headset, t: "Te acompañamos", d: "Onboarding y capacitación para tu equipo." },
+            ].map((g) => {
+              const Icon = g.icon
+              return (
+                <div key={g.t} className="space-y-2">
+                  <div className="inline-flex p-3 rounded-full bg-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold">{g.t}</h3>
+                  <p className="text-muted-foreground text-sm">{g.d}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="container max-w-3xl mx-auto px-4 py-20">
+        <div className="text-center space-y-3 mb-10">
+          <h2 className="text-3xl font-bold">Preguntas frecuentes</h2>
+          <p className="text-muted-foreground">Lo que suelen consultarnos las administraciones.</p>
+        </div>
+        <div className="space-y-3">
+          {[
+            { q: "¿Necesito comprar algún equipo o instalar algo?", a: "No. Gatekeeper funciona 100% en la nube desde el navegador. Tu vigilante puede usarlo desde un celular con internet." },
+            { q: "¿Qué pasa con los datos de los visitantes?", a: "Se tratan de forma responsable y conforme a la Ley N° 29733. Cada usuario accede solo a lo que le corresponde y queda registro de las acciones." },
+            { q: "¿Capacitan a mi personal?", a: "Sí. Ofrecemos onboarding y capacitación para vigilantes, residentes y administradores, para que arranquen sin complicaciones." },
+            { q: "¿Hay contrato de permanencia?", a: "No. Empiezas con 14 días gratis sin tarjeta y luego eliges un plan mensual. Puedes cancelar cuando quieras." },
+            { q: "¿Sirve para edificios y urbanizaciones, no solo condominios?", a: "Sí. Funciona para condominios cerrados, edificios multifamiliares, urbanizaciones y empresas que administran varios inmuebles." },
+            { q: "¿Cómo registra el vigilante a una visita?", a: "Por placa o DNI, o escaneando el código QR que el residente envió por WhatsApp. Registra ingreso y salida con un toque." },
+          ].map((item) => (
+            <details key={item.q} className="rounded-xl border px-5 bg-background group">
+              <summary className="flex items-center justify-between cursor-pointer py-4 font-semibold list-none">
+                {item.q}
+                <span className="text-primary text-xl group-open:hidden">+</span>
+                <span className="text-primary text-xl hidden group-open:inline">−</span>
+              </summary>
+              <p className="text-muted-foreground text-sm pb-4 leading-relaxed">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA FINAL */}
+      <section className="border-t">
+        <div className="container max-w-6xl mx-auto px-4 py-20">
+          <div className="rounded-2xl bg-gradient-to-br from-orange-600 to-orange-500 text-white text-center p-12 space-y-5">
+            <h2 className="text-3xl sm:text-4xl font-bold">Digitaliza la seguridad de tu condominio hoy</h2>
+            <p className="text-white/90 max-w-xl mx-auto">
+              Empieza gratis en minutos. Sin tarjeta, sin instalaciones, sin complicaciones.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/registro">
+                <Button size="lg" className="w-full sm:w-auto px-8 bg-white text-orange-600 hover:bg-white/90">
+                  Comenzar gratis — 14 días
+                </Button>
+              </Link>
+              <a href={WHATSAPP_DEMO} target="_blank" rel="noopener noreferrer">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 border-white/60 bg-transparent text-white hover:bg-white/10 hover:text-white">
+                  <MessageCircle className="h-4 w-4" /> Agendar una demo
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACTO */}
       <section className="border-t bg-muted/30">
         <div className="container max-w-6xl mx-auto px-4 py-16 space-y-8">
           <div className="text-center space-y-2">
@@ -250,24 +503,20 @@ export default async function RootPage() {
             <p className="text-muted-foreground text-sm">Estamos disponibles para atender tus consultas.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            <div className="flex flex-col items-center gap-2 text-center">
+            <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center">
               <div className="bg-primary/10 p-3 rounded-full">
                 <Phone className="h-5 w-5 text-primary" />
               </div>
               <p className="font-medium text-sm">Teléfono / WhatsApp</p>
-              <a href="tel:+51964462645" className="text-muted-foreground text-sm hover:text-foreground transition-colors">
-                +51 964 462 645
-              </a>
-            </div>
-            <div className="flex flex-col items-center gap-2 text-center">
+              <span className="text-muted-foreground text-sm hover:text-foreground transition-colors">+51 964 462 645</span>
+            </a>
+            <a href="mailto:soporte@gatekeeper-app.org" className="flex flex-col items-center gap-2 text-center">
               <div className="bg-primary/10 p-3 rounded-full">
                 <Mail className="h-5 w-5 text-primary" />
               </div>
               <p className="font-medium text-sm">Correo electrónico</p>
-              <a href="mailto:welfareorga@gmail.com" className="text-muted-foreground text-sm hover:text-foreground transition-colors">
-                welfareorga@gmail.com
-              </a>
-            </div>
+              <span className="text-muted-foreground text-sm hover:text-foreground transition-colors">soporte@gatekeeper-app.org</span>
+            </a>
             <div className="flex flex-col items-center gap-2 text-center">
               <div className="bg-primary/10 p-3 rounded-full">
                 <MapPin className="h-5 w-5 text-primary" />
@@ -279,7 +528,7 @@ export default async function RootPage() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* FOOTER */}
       <footer className="border-t py-10">
         <div className="container max-w-6xl mx-auto px-4 space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -296,6 +545,7 @@ export default async function RootPage() {
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <Link href="/login" className="hover:text-foreground transition-colors">Iniciar sesión</Link>
               <Link href="/registro" className="hover:text-foreground transition-colors">Registrarse</Link>
+              <Link href="/manual" className="hover:text-foreground transition-colors">Manual</Link>
               <Link href="/terminos" className="hover:text-foreground transition-colors">Términos y condiciones</Link>
               <Link href="/politica-devoluciones" className="hover:text-foreground transition-colors">Política de devoluciones</Link>
               <Link href="/libro-reclamaciones" className="hover:text-foreground transition-colors">Libro de reclamaciones</Link>
@@ -306,6 +556,17 @@ export default async function RootPage() {
           </div>
         </div>
       </footer>
+
+      {/* WhatsApp flotante */}
+      <a
+        href={WHATSAPP}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Escríbenos por WhatsApp"
+        className="fixed bottom-5 right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 transition-colors"
+      >
+        <MessageCircle className="h-7 w-7" />
+      </a>
     </div>
   )
 }
