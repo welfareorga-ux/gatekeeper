@@ -1,6 +1,7 @@
 import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
 import type { NextRequestWithAuth } from "next-auth/middleware"
+import { estaBloqueada } from "@/lib/subscription"
 
 export default withAuth(
   function middleware(req: NextRequestWithAuth) {
@@ -24,12 +25,10 @@ export default withAuth(
 
     // Guard de suscripción: admin con suscripción inactiva → página de bloqueo
     const suscripcionEstado = token.suscripcionEstado as string | undefined
-    const ESTADOS_BLOQUEADOS = ["vencida", "fallida", "trial_expirado"]
     if (
       rol === "ADMIN" &&
       !isSuperAdmin &&
-      suscripcionEstado &&
-      ESTADOS_BLOQUEADOS.includes(suscripcionEstado) &&
+      estaBloqueada(suscripcionEstado) &&
       pathname.startsWith("/admin") &&
       pathname !== "/admin/suscripcion"
     ) {

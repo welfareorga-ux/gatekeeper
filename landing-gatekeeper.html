@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gatekeeper — Deja el cuaderno de la garita. Controla el acceso de tu condominio o edificio</title>
+  <meta name="description" content="Registra visitas por DNI o placa, avisa al residente y mantén un historial completo. Plataforma web para condominios y edificios multifamiliares en Perú. 14 días gratis, sin tarjeta." />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Gatekeeper — Control de acceso para condominios y multifamiliares" />
+  <meta property="og:description" content="Deja el cuaderno de la garita. Registro de visitas por DNI o placa, avisos al residente y reportes. 14 días gratis, sin tarjeta." />
+  <meta property="og:url" content="https://gatekeeper-app.org" />
+  <meta property="og:locale" content="es_PE" />
+  <meta property="og:image" content="https://gatekeeper-app.org/og-gatekeeper.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gatekeeper — Control de acceso para condominios y multifamiliares" />
+  <meta name="twitter:description" content="Deja el cuaderno de la garita. Registro por DNI o placa, avisos al residente y reportes. 14 días gratis." />
+  <meta name="twitter:image" content="https://gatekeeper-app.org/og-gatekeeper.png" />
+
+  <link rel="canonical" href="https://gatekeeper-app.org" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#f97316', dark: '#ea580c', light: '#fb923c' },
+            ink: { DEFAULT: '#0f172a', soft: '#1e293b' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    .grid-bg {
+      background-image:
+        radial-gradient(circle at 50% 0, rgba(249,115,22,.18), transparent 55%),
+        linear-gradient(to right, rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 100% 100%, 44px 44px, 44px 44px;
+    }
+    @keyframes float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+    .float { animation: float 5s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-white text-slate-900 antialiased">
+
+  <!-- ===== Header ===== -->
+  <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur">
+    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+      <a href="#top" class="flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand">
+          <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7l7-4z"/></svg>
+        </span>
+        <span class="text-lg font-bold">Gatekeeper</span>
+      </a>
+      <nav class="flex items-center gap-1 text-sm sm:gap-3">
+        <a href="#como-funciona" class="hidden rounded-lg px-3 py-2 text-slate-600 hover:text-slate-900 md:inline">Cómo funciona</a>
+        <a href="#beneficios" class="hidden rounded-lg px-3 py-2 text-slate-600 hover:text-slate-900 md:inline">Beneficios</a>
+        <a href="#planes" class="hidden rounded-lg px-3 py-2 text-slate-600 hover:text-slate-900 md:inline">Planes</a>
+        <a href="https://gatekeeper-app.org/login" class="rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100">Iniciar sesión</a>
+        <a href="https://gatekeeper-app.org/registro" class="rounded-lg bg-brand px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-brand-dark">Probar gratis</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section id="top" class="relative overflow-hidden bg-ink text-white">
+    <div class="absolute inset-0 grid-bg"></div>
+    <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-2 lg:py-28">
+      <!-- Texto -->
+      <div>
+        <span class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm font-medium text-orange-200">
+          <span class="relative flex h-2 w-2"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span><span class="relative inline-flex h-2 w-2 rounded-full bg-orange-400"></span></span>
+          Para condominios y edificios multifamiliares del Perú
+        </span>
+        <h1 class="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+          Deja el cuaderno<br />de la garita.
+          <span class="bg-gradient-to-r from-orange-400 to-brand bg-clip-text text-transparent">Controla cada acceso.</span>
+        </h1>
+        <p class="mt-6 max-w-lg text-lg text-slate-300">
+          Registra cada visita por <strong class="font-semibold text-white">DNI o placa</strong>, avisa al residente cuando llega y ten el historial completo de quién entró y salió. Todo desde el celular, sin instalar nada.
+        </p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <a href="https://gatekeeper-app.org/registro" class="rounded-xl bg-brand px-7 py-3.5 text-center font-semibold text-white shadow-lg shadow-brand/25 transition hover:bg-brand-dark hover:shadow-brand/40">
+            Empieza gratis — 14 días
+          </a>
+          <a href="#como-funciona" class="rounded-xl border border-white/20 px-7 py-3.5 text-center font-semibold text-white transition hover:bg-white/10">
+            Ver cómo funciona
+          </a>
+        </div>
+        <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-400">
+          <span class="flex items-center gap-1.5"><svg class="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Sin tarjeta de crédito</span>
+          <span class="flex items-center gap-1.5"><svg class="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Listo en 10 minutos</span>
+          <span class="flex items-center gap-1.5"><svg class="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Cancela cuando quieras</span>
+        </div>
+      </div>
+
+      <!-- Visual mockup -->
+      <div class="relative float">
+        <div class="absolute -inset-4 rounded-3xl bg-gradient-to-br from-brand/30 to-purple-500/20 blur-2xl"></div>
+        <div class="relative rounded-2xl border border-white/10 bg-ink-soft/80 p-5 shadow-2xl backdrop-blur">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand"><svg class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13l2-5a2 2 0 012-1.5h10A2 2 0 0119 8l2 5m-18 0v5a1 1 0 001 1h1a1 1 0 001-1v-1h12v1a1 1 0 001 1h1a1 1 0 001-1v-5m-18 0h18"/></svg></span>
+              <span class="text-sm font-semibold text-white">Garita · Turno noche</span>
+            </div>
+            <span class="rounded-full bg-green-500/15 px-2.5 py-0.5 text-xs font-medium text-green-400">En línea</span>
+          </div>
+          <div class="space-y-2.5 pt-4">
+            <div class="flex items-center justify-between rounded-xl bg-white/5 p-3">
+              <div>
+                <p class="font-mono text-lg font-bold text-white">A1B-234</p>
+                <p class="text-xs text-slate-400">Visita · Dpto 502</p>
+              </div>
+              <span class="rounded-full bg-green-500/15 px-3 py-1 text-xs font-semibold text-green-400">Ingresó 21:14</span>
+            </div>
+            <div class="flex items-center justify-between rounded-xl bg-white/5 p-3">
+              <div>
+                <p class="font-mono text-lg font-bold text-white">B7C-908</p>
+                <p class="text-xs text-slate-400">Delivery · Dpto 301</p>
+              </div>
+              <span class="rounded-full bg-orange-500/15 px-3 py-1 text-xs font-semibold text-orange-300">En garita</span>
+            </div>
+            <div class="flex items-center justify-between rounded-xl bg-white/5 p-3 opacity-70">
+              <div>
+                <p class="font-mono text-lg font-bold text-white">DNI 7654••32</p>
+                <p class="text-xs text-slate-400">Visita a pie · Dpto 1404</p>
+              </div>
+              <span class="rounded-full bg-slate-500/20 px-3 py-1 text-xs font-semibold text-slate-300">Salió 20:02</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center gap-2 rounded-xl border border-brand/30 bg-brand/10 p-3 text-sm text-orange-100">
+            <svg class="h-5 w-5 shrink-0 text-brand-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            Se avisó al residente del Dpto 502 por correo.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Stats strip ===== -->
+  <section class="border-b border-slate-200 bg-slate-50">
+    <div class="mx-auto grid max-w-5xl grid-cols-2 gap-6 px-4 py-10 text-center sm:grid-cols-4">
+      <div><p class="text-3xl font-extrabold text-brand">3</p><p class="mt-1 text-sm text-slate-500">roles: residente, vigilante, admin</p></div>
+      <div><p class="text-3xl font-extrabold text-brand">&lt;10s</p><p class="mt-1 text-sm text-slate-500">para registrar un ingreso</p></div>
+      <div><p class="text-3xl font-extrabold text-brand">100%</p><p class="mt-1 text-sm text-slate-500">historial digital y respaldado</p></div>
+      <div><p class="text-3xl font-extrabold text-brand">S/49</p><p class="mt-1 text-sm text-slate-500">desde, al mes</p></div>
+    </div>
+  </section>
+
+  <!-- ===== Problema ===== -->
+  <section class="mx-auto max-w-5xl px-4 py-20">
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="text-sm font-semibold uppercase tracking-wide text-brand">¿Te suena familiar?</p>
+      <h2 class="mt-2 text-3xl font-bold sm:text-4xl">El control con cuaderno ya no da</h2>
+    </div>
+    <div class="mt-12 grid gap-6 sm:grid-cols-3">
+      <div class="reveal rounded-2xl border border-slate-200 p-6">
+        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-500"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9l-8 14A2 2 0 004 21h16a2 2 0 001.7-3l-8-14a2 2 0 00-3.4 0z"/></svg></div>
+        <h3 class="mt-4 font-semibold">Anotaciones que nadie revisa</h3>
+        <p class="mt-2 text-sm text-slate-600">El cuaderno se pierde, se moja o se llena. Cuando pasa algo, no hay forma de saber quién entró.</p>
+      </div>
+      <div class="reveal rounded-2xl border border-slate-200 p-6">
+        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-500"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <h3 class="mt-4 font-semibold">Llamadas al residente para todo</h3>
+        <p class="mt-2 text-sm text-slate-600">El vigilante interrumpe a cada rato para confirmar visitas. La cola en la entrada crece.</p>
+      </div>
+      <div class="reveal rounded-2xl border border-slate-200 p-6">
+        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-500"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h4M9 7h6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+        <h3 class="mt-4 font-semibold">Cero reportes para la junta</h3>
+        <p class="mt-2 text-sm text-slate-600">A fin de mes no hay datos: cuántas visitas, a qué horas, qué placas. Todo es de memoria.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Cómo funciona ===== -->
+  <section id="como-funciona" class="bg-slate-50 py-20">
+    <div class="mx-auto max-w-5xl px-4">
+      <div class="reveal mx-auto max-w-2xl text-center">
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand">Cómo funciona</p>
+        <h2 class="mt-2 text-3xl font-bold sm:text-4xl">Operativo en 3 pasos</h2>
+        <p class="mt-3 text-slate-600">Sin equipos caros, sin obras, sin manuales gruesos.</p>
+      </div>
+      <div class="mt-12 grid gap-8 sm:grid-cols-3">
+        <div class="reveal relative">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white shadow-lg shadow-brand/25">1</div>
+          <h3 class="mt-4 text-lg font-semibold">Registra tu condominio</h3>
+          <p class="mt-2 text-sm text-slate-600">Crea la cuenta del administrador, carga a tus residentes y crea los usuarios de tus vigilantes.</p>
+        </div>
+        <div class="reveal relative">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white shadow-lg shadow-brand/25">2</div>
+          <h3 class="mt-4 text-lg font-semibold">El residente anuncia su visita</h3>
+          <p class="mt-2 text-sm text-slate-600">Registra la visita con su DNI (y la placa si viene en auto) y le envía un código QR por WhatsApp para que lo presente en la entrada.</p>
+        </div>
+        <div class="reveal relative">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white shadow-lg shadow-brand/25">3</div>
+          <h3 class="mt-4 text-lg font-semibold">El vigilante da el ingreso</h3>
+          <p class="mt-2 text-sm text-slate-600">Ubica la visita buscando por placa o DNI, marca el ingreso o la salida con un toque y el residente recibe el aviso al instante.</p>
+        </div>
+      </div>
+      <div class="reveal mt-12 text-center">
+        <a href="https://gatekeeper-app.org/registro" class="inline-block rounded-xl bg-brand px-7 py-3.5 font-semibold text-white shadow-lg shadow-brand/25 transition hover:bg-brand-dark">Crear mi cuenta gratis</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Beneficios por rol ===== -->
+  <section id="beneficios" class="mx-auto max-w-6xl px-4 py-20">
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="text-sm font-semibold uppercase tracking-wide text-brand">Para toda tu comunidad</p>
+      <h2 class="mt-2 text-3xl font-bold sm:text-4xl">Cada rol gana algo</h2>
+    </div>
+    <div class="mt-12 grid gap-6 lg:grid-cols-3">
+      <!-- Residente -->
+      <div class="reveal overflow-hidden rounded-2xl border border-slate-200">
+        <div class="flex items-center gap-3 bg-gradient-to-br from-blue-500 to-blue-700 p-5 text-white">
+          <div class="rounded-xl bg-white/20 p-2.5"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-1a4 4 0 00-4-4M9 20H4v-1a4 4 0 014-4h4a4 4 0 014 4v1m-6-9a3 3 0 100-6 3 3 0 000 6z"/></svg></div>
+          <h3 class="text-lg font-bold">Residente</h3>
+        </div>
+        <ul class="space-y-3 p-6 text-sm text-slate-600">
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Anuncia visitas (con DNI o placa) con anticipación.</li>
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Envía un código QR a su visitante por WhatsApp.</li>
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Recibe aviso cuando llega y cuando se va.</li>
+        </ul>
+      </div>
+      <!-- Vigilante -->
+      <div class="reveal overflow-hidden rounded-2xl border-2 border-brand shadow-lg shadow-brand/10">
+        <div class="flex items-center gap-3 bg-gradient-to-br from-brand to-orange-400 p-5 text-white">
+          <div class="rounded-xl bg-white/20 p-2.5"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13l2-5a2 2 0 012-1.5h10A2 2 0 0119 8l2 5m-18 0v5a1 1 0 001 1h1a1 1 0 001-1v-1h12v1a1 1 0 001 1h1a1 1 0 001-1v-5m-18 0h18"/></svg></div>
+          <h3 class="text-lg font-bold">Vigilante</h3>
+        </div>
+        <ul class="space-y-3 p-6 text-sm text-slate-600">
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Busca por placa o DNI al instante.</li>
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Marca ingreso y salida con un toque.</li>
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Funciona en el celular, sin llamar a nadie.</li>
+        </ul>
+      </div>
+      <!-- Admin -->
+      <div class="reveal overflow-hidden rounded-2xl border border-slate-200">
+        <div class="flex items-center gap-3 bg-gradient-to-br from-purple-500 to-purple-800 p-5 text-white">
+          <div class="rounded-xl bg-white/20 p-2.5"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6m4 6V9m4 10V5M5 19h14"/></svg></div>
+          <h3 class="text-lg font-bold">Administrador</h3>
+        </div>
+        <ul class="space-y-3 p-6 text-sm text-slate-600">
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Reportes con gráficas para la junta.</li>
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Auditoría completa de cada acción.</li>
+          <li class="flex gap-2"><svg class="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Exporta a Excel y PDF en un clic.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Antes / Después ===== -->
+  <section class="bg-ink py-20 text-white">
+    <div class="mx-auto max-w-4xl px-4">
+      <div class="reveal mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold sm:text-4xl">El cambio se nota desde el primer día</h2>
+      </div>
+      <div class="mt-12 grid gap-6 sm:grid-cols-2">
+        <div class="reveal rounded-2xl border border-white/10 bg-white/5 p-7">
+          <p class="text-sm font-semibold uppercase tracking-wide text-slate-400">Antes</p>
+          <ul class="mt-4 space-y-3 text-slate-300">
+            <li class="flex gap-3"><span class="text-red-400">✕</span> Cuaderno y lapicero en la garita</li>
+            <li class="flex gap-3"><span class="text-red-400">✕</span> Llamadas para confirmar cada visita</li>
+            <li class="flex gap-3"><span class="text-red-400">✕</span> Sin saber quién está adentro ahora</li>
+            <li class="flex gap-3"><span class="text-red-400">✕</span> Cero reportes a fin de mes</li>
+          </ul>
+        </div>
+        <div class="reveal rounded-2xl border border-brand/40 bg-brand/10 p-7">
+          <p class="text-sm font-semibold uppercase tracking-wide text-orange-300">Con Gatekeeper</p>
+          <ul class="mt-4 space-y-3 text-white">
+            <li class="flex gap-3"><span class="text-green-400">✓</span> Registro digital por DNI o placa en segundos</li>
+            <li class="flex gap-3"><span class="text-green-400">✓</span> El residente anuncia y se le avisa solo</li>
+            <li class="flex gap-3"><span class="text-green-400">✓</span> Tablero en vivo de quién está adentro</li>
+            <li class="flex gap-3"><span class="text-green-400">✓</span> Reportes y exportación con un clic</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Planes ===== -->
+  <section id="planes" class="py-20">
+    <div class="mx-auto max-w-6xl px-4">
+      <div class="reveal mx-auto max-w-2xl text-center">
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand">Planes</p>
+        <h2 class="mt-2 text-3xl font-bold sm:text-4xl">Simples y transparentes</h2>
+        <p class="mt-3 text-slate-600">Empieza con 14 días gratis. Sin contratos, cancela cuando quieras.</p>
+      </div>
+
+      <div class="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
+        <!-- Básico -->
+        <div class="reveal flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
+          <p class="font-semibold text-slate-900">Básico</p>
+          <p class="mt-3 flex items-end gap-1"><span class="text-4xl font-extrabold">S/ 49</span><span class="mb-1 text-sm text-slate-500">/mes</span></p>
+          <p class="mt-2 text-sm text-slate-600">Para condominios pequeños que recién digitalizan su control.</p>
+          <ul class="mt-5 flex-1 space-y-2.5 text-sm">
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Hasta 20 residentes</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>1 vigilante</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Historial 30 días</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Soporte por email</li>
+          </ul>
+          <a href="https://gatekeeper-app.org/registro" class="mt-6 rounded-xl border border-slate-300 px-4 py-2.5 text-center font-semibold text-slate-700 transition hover:bg-slate-50">Empezar gratis</a>
+        </div>
+
+        <!-- Estándar (destacado) -->
+        <div class="reveal relative flex flex-col rounded-2xl border-2 border-brand bg-white p-6 shadow-xl shadow-brand/15">
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">Más elegido</span>
+          <p class="font-semibold text-slate-900">Estándar</p>
+          <p class="mt-3 flex items-end gap-1"><span class="text-4xl font-extrabold">S/ 89</span><span class="mb-1 text-sm text-slate-500">/mes</span></p>
+          <p class="mt-2 text-sm text-slate-600">Para condominios medianos con varios vigilantes.</p>
+          <ul class="mt-5 flex-1 space-y-2.5 text-sm">
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Hasta 50 residentes</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>3 vigilantes</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Historial 90 días</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Reportes y exportación</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Soporte prioritario</li>
+          </ul>
+          <a href="https://gatekeeper-app.org/registro" class="mt-6 rounded-xl bg-brand px-4 py-2.5 text-center font-semibold text-white shadow-lg shadow-brand/25 transition hover:bg-brand-dark">Empezar gratis</a>
+        </div>
+
+        <!-- Premium -->
+        <div class="reveal flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
+          <p class="font-semibold text-slate-900">Premium</p>
+          <p class="mt-3 flex items-end gap-1"><span class="text-4xl font-extrabold">S/ 149</span><span class="mb-1 text-sm text-slate-500">/mes</span></p>
+          <p class="mt-2 text-sm text-slate-600">Sin límites, para edificios y urbanizaciones grandes.</p>
+          <ul class="mt-5 flex-1 space-y-2.5 text-sm">
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Residentes ilimitados</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Vigilantes ilimitados</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Historial ilimitado</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Reportes avanzados</li>
+            <li class="flex items-center gap-2"><svg class="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Soporte dedicado</li>
+          </ul>
+          <a href="https://gatekeeper-app.org/registro" class="mt-6 rounded-xl border border-slate-300 px-4 py-2.5 text-center font-semibold text-slate-700 transition hover:bg-slate-50">Empezar gratis</a>
+        </div>
+      </div>
+      <p class="reveal mt-6 text-center text-sm text-slate-500">¿Necesitas implementación o capacitación? <a href="https://gatekeeper-app.org/contratar-servicio?tipo=onboarding" class="font-medium text-brand hover:underline">Mira los servicios adicionales →</a></p>
+    </div>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <section class="bg-slate-50 py-20">
+    <div class="mx-auto max-w-3xl px-4">
+      <div class="reveal text-center">
+        <h2 class="text-3xl font-bold sm:text-4xl">Preguntas frecuentes</h2>
+      </div>
+      <div class="mt-10 space-y-3">
+        <details class="reveal group rounded-xl border border-slate-200 bg-white p-5 [&_svg]:open:rotate-180">
+          <summary class="flex cursor-pointer list-none items-center justify-between font-semibold">¿Necesito comprar equipos o instalar algo?<svg class="h-5 w-5 text-slate-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></summary>
+          <p class="mt-3 text-sm text-slate-600">No. Gatekeeper funciona desde el navegador del celular o la PC. El vigilante solo necesita un smartphone con internet.</p>
+        </details>
+        <details class="reveal group rounded-xl border border-slate-200 bg-white p-5 [&_svg]:open:rotate-180">
+          <summary class="flex cursor-pointer list-none items-center justify-between font-semibold">¿Tengo que poner mi tarjeta para la prueba?<svg class="h-5 w-5 text-slate-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></summary>
+          <p class="mt-3 text-sm text-slate-600">No. Son 14 días gratis sin tarjeta. Al terminar la prueba eliges el plan que mejor se adapte a tu condominio.</p>
+        </details>
+        <details class="reveal group rounded-xl border border-slate-200 bg-white p-5 [&_svg]:open:rotate-180">
+          <summary class="flex cursor-pointer list-none items-center justify-between font-semibold">¿Puedo cambiar de plan o cancelar después?<svg class="h-5 w-5 text-slate-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></summary>
+          <p class="mt-3 text-sm text-slate-600">Sí. No hay contratos de permanencia. Subes, bajas o cancelas tu plan cuando quieras desde el panel de administración.</p>
+        </details>
+        <details class="reveal group rounded-xl border border-slate-200 bg-white p-5 [&_svg]:open:rotate-180">
+          <summary class="flex cursor-pointer list-none items-center justify-between font-semibold">¿Sirve para edificios multifamiliares y urbanizaciones grandes?<svg class="h-5 w-5 text-slate-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></summary>
+          <p class="mt-3 text-sm text-slate-600">Sí. Funciona igual en condominios, edificios multifamiliares y urbanizaciones. El plan Premium no tiene límite de residentes ni de vigilantes, ideal para operaciones intensivas.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA final ===== -->
+  <section class="relative overflow-hidden bg-brand">
+    <div class="absolute inset-0 grid-bg opacity-40"></div>
+    <div class="relative mx-auto max-w-3xl px-4 py-20 text-center text-white">
+      <h2 class="text-3xl font-extrabold sm:text-4xl">Tu garita digital, lista hoy</h2>
+      <p class="mx-auto mt-4 max-w-xl text-white/90">Crea tu condominio y empieza a controlar los accesos en minutos. 14 días gratis, sin tarjeta de crédito.</p>
+      <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+        <a href="https://gatekeeper-app.org/registro" class="rounded-xl bg-white px-8 py-3.5 font-bold text-brand-dark shadow-lg transition hover:bg-orange-50">Empieza gratis — 14 días</a>
+        <a href="https://wa.me/51964462645" class="rounded-xl border border-white/40 px-8 py-3.5 font-semibold text-white transition hover:bg-white/10">Hablar por WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="border-t border-slate-200 py-12">
+    <div class="mx-auto max-w-6xl space-y-8 px-4">
+      <div class="grid gap-8 sm:grid-cols-2">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand"><svg class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7l7-4z"/></svg></span>
+            <span class="font-bold">Gatekeeper</span>
+          </div>
+          <p class="max-w-sm text-sm text-slate-600">Control de acceso para condominios y edificios multifamiliares del Perú. Registro por DNI o placa, avisos al residente y reportes.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-6 text-sm">
+          <div class="space-y-2">
+            <p class="font-semibold text-slate-900">Producto</p>
+            <a href="#como-funciona" class="block text-slate-600 hover:text-slate-900">Cómo funciona</a>
+            <a href="#planes" class="block text-slate-600 hover:text-slate-900">Planes</a>
+            <a href="https://gatekeeper-app.org/manual" class="block text-slate-600 hover:text-slate-900">Manual de uso</a>
+            <a href="https://gatekeeper-app.org/registro" class="block text-slate-600 hover:text-slate-900">Crear cuenta</a>
+          </div>
+          <div class="space-y-2">
+            <p class="font-semibold text-slate-900">Contacto y legal</p>
+            <a href="https://wa.me/51964462645" class="block text-slate-600 hover:text-slate-900">WhatsApp +51 964 462 645</a>
+            <a href="mailto:soporte@gatekeeper-app.org" class="block text-slate-600 hover:text-slate-900">soporte@gatekeeper-app.org</a>
+            <a href="https://gatekeeper-app.org/terminos" class="block text-slate-600 hover:text-slate-900">Términos y condiciones</a>
+            <a href="https://gatekeeper-app.org/politica-devoluciones" class="block text-slate-600 hover:text-slate-900">Política de devoluciones</a>
+            <a href="https://gatekeeper-app.org/libro-reclamaciones" class="block text-slate-600 hover:text-slate-900">Libro de reclamaciones</a>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col items-start justify-between gap-2 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center">
+        <p>© 2026 Gatekeeper · Josue Antonio Medina Bocanegra — RUC 10460632027 · Calle 39 Nº 111, Lima, Perú</p>
+        <p>Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== CTA flotante móvil ===== -->
+  <div class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 backdrop-blur md:hidden">
+    <a href="https://gatekeeper-app.org/registro" class="block rounded-xl bg-brand py-3 text-center font-semibold text-white shadow-lg shadow-brand/25">Empieza gratis — 14 días</a>
+  </div>
+  <div class="h-20 md:hidden"></div>
+
+  <script>
+    // Reveal on scroll
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  </script>
+</body>
+</html>

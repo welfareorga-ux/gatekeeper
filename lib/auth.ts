@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { checkRateLimit } from "@/lib/rate-limit"
+import { resolverEstadoSuscripcion } from "@/lib/subscription"
 import { Rol } from "@prisma/client"
 
 export const authOptions: NextAuthOptions = {
@@ -81,10 +82,7 @@ export const authOptions: NextAuthOptions = {
           where: { id: condominioId },
           select: { suscripcionEstado: true, trialEndsAt: true },
         })
-        let estado = condominio?.suscripcionEstado ?? "activa"
-        if (estado === "trial" && condominio?.trialEndsAt && condominio.trialEndsAt < new Date()) {
-          estado = "trial_expirado"
-        }
+        const estado = resolverEstadoSuscripcion(condominio?.suscripcionEstado, condominio?.trialEndsAt)
         token.suscripcionEstado = estado
         token.trialEndsAt = condominio?.trialEndsAt?.toISOString() ?? null
       } else if (user) {

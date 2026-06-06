@@ -1,13 +1,28 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
+import dynamic from "next/dynamic"
 import { toast } from "sonner"
 import { normalizarPlacaInput, validarPlaca } from "@/lib/validations/placa"
 import { Button } from "@/components/ui/button"
 import { VisitaCardGrande } from "@/components/vigilante/visita-card-grande"
 import { EmergenciaDialog } from "@/components/vigilante/emergencia-dialog"
-import { Loader2, Search, AlertCircle, Car, User } from "lucide-react"
+import { Loader2, Search, AlertCircle, Car, User, QrCode } from "lucide-react"
 import type { EstadoVisita } from "@prisma/client"
+
+// El escáner (con la librería de cámara html5-qrcode) se carga sólo al entrar al modo QR,
+// no en la carga inicial de /vigilante. ssr:false porque usa APIs del navegador.
+const QrScanner = dynamic(
+  () => import("@/components/vigilante/qr-scanner").then((m) => m.QrScanner),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mx-auto flex h-[280px] w-full max-w-sm items-center justify-center rounded-2xl border-2 border-border bg-black/90 text-white">
+        <Loader2 className="h-7 w-7 animate-spin" />
+      </div>
+    ),
+  }
+)
 
 type VehiculoResult = { id: string; placa: string | null; marca?: string; modelo?: string; color?: string }
 type VisitaResult = {
@@ -19,12 +34,14 @@ type VisitaResult = {
   registros: Array<{ id: string; fechaHoraIngreso: string }>
 }
 
-type ModoBusqueda = "placa" | "dni"
+type ModoBusqueda = "placa" | "dni" | "qr"
 
 export function BuscarCliente() {
   const [modoBusqueda, setModoBusqueda] = useState<ModoBusqueda>("placa")
   const [placa, setPlaca] = useState("")
   const [dni, setDni] = useState("")
+  const [codigo, setCodigo] = useState("")
+  const [scanKey, setScanKey] = useState(0) // bump para reiniciar la cámara del escáner
   const [buscando, setBuscando] = useState(false)
   const [resultado, setResultado] = useState<{
     encontrado: boolean; visitas?: VisitaResult[]; mensaje?: string
@@ -121,7 +138,46 @@ export function BuscarCliente() {
     }
   }, [dni])
 
-  const buscar = modoBusqueda === "placa" ? buscarPorPlaca : buscarPorDni
+  const buscarPorCodigo = useCallback(async (codigoValor?: string) => {
+    const c = (codigoValor ?? codigo).trim()
+    if (!c) return
+
+    setBuscando(true)
+    setResultado(null)
+
+    try {
+      const res = await fetch(`/api/visitas/codigo/${encodeURIComponent(c)}`)
+
+      if (res.status === 429) {
+        toast.error("Demasiados escaneos. Espera un momento.")
+        return
+      }
+      if (res.status === 400) {
+        toast.error("El código QR no es válido.")
+        return
+      }
+      if (!res.ok) {
+        toast.error("Error al verificar. Intenta de nuevo.")
+        return
+      }
+
+      const data = await res.json()
+      setResultado(data)
+      setPlacaBuscada(c)
+
+      if (data.encontrado) { vibrar(true); beep(true) }
+      else { vibrar(false); beep(false); setScanKey((k) => k + 1) } // no hallado → reactiva cámara para reintentar
+    } catch {
+      toast.error("Error de conexión")
+    } finally {
+      setBuscando(false)
+    }
+  }, [codigo])
+
+  const buscar =
+    modoBusqueda === "placa" ? buscarPorPlaca
+    : modoBusqueda === "dni" ? buscarPorDni
+    : buscarPorCodigo
 
   function handlePlacaChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9\-]/g, "")
@@ -139,21 +195,34 @@ export function BuscarCliente() {
     if (e.key === "Enter") {
       if (modoBusqueda === "placa" && placa.trim()) buscarPorPlaca()
       if (modoBusqueda === "dni" && dni.length === 8) buscarPorDni()
+      if (modoBusqueda === "qr" && codigo.trim()) buscarPorCodigo()
     }
+  }
+
+  // La cámara decodificó un QR → buscamos directo con ese código.
+  function onEscaneo(texto: string) {
+    setCodigo(texto)
+    buscarPorCodigo(texto)
   }
 
   function limpiar() {
     setPlaca("")
     setDni("")
+    setCodigo("")
     setResultado(null)
     setPlacaBuscada("")
+    setScanKey((k) => k + 1)
     inputRef.current?.focus()
   }
 
   function cambiarModo(modo: ModoBusqueda) {
     setModoBusqueda(modo)
+    setPlaca("")
+    setDni("")
+    setCodigo("")
     setResultado(null)
     setPlacaBuscada("")
+    setScanKey((k) => k + 1)
   }
 
   function onAccionCompletada() {
@@ -179,7 +248,7 @@ export function BuscarCliente() {
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
-          <Car className="h-4 w-4" /> Por placa
+          <Car className="h-4 w-4" /> Placa
         </button>
         <button
           type="button"
@@ -190,7 +259,18 @@ export function BuscarCliente() {
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
-          <User className="h-4 w-4" /> Por DNI
+          <User className="h-4 w-4" /> DNI
+        </button>
+        <button
+          type="button"
+          onClick={() => cambiarModo("qr")}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
+            modoBusqueda === "qr"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+        >
+          <QrCode className="h-4 w-4" /> QR
         </button>
       </div>
 
@@ -233,7 +313,7 @@ export function BuscarCliente() {
               <span className="text-foreground font-medium">últimos 3 dígitos</span>
             </p>
           </>
-        ) : (
+        ) : modoBusqueda === "dni" ? (
           <>
             <p className="text-center text-muted-foreground text-sm tracking-widest uppercase">
               Ingresa el DNI del visitante
@@ -270,19 +350,52 @@ export function BuscarCliente() {
               <span className="text-foreground font-medium">sin vehículo</span>
             </p>
           </>
+        ) : (
+          <>
+            <p className="text-center text-muted-foreground text-sm tracking-widest uppercase">
+              Escanea el QR de la visita
+            </p>
+
+            {/* Cámara: al detectar el QR busca solo */}
+            <QrScanner key={scanKey} onScan={onEscaneo} />
+
+            {/* Fallback: tecleo manual del código */}
+            <div className="space-y-2">
+              <p className="text-center text-xs text-muted-foreground">
+                ¿La cámara no lee? Escribe el{" "}
+                <span className="text-foreground font-medium">código de la visita</span>
+              </p>
+              <input
+                ref={inputRef}
+                type="text"
+                value={codigo}
+                onChange={(e) => { setCodigo(e.target.value.trim()); setResultado(null) }}
+                onKeyDown={handleKeyDown}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Código de visita"
+                aria-label="Código de la visita"
+                className="w-full rounded-2xl border-2 border-border bg-card text-center font-mono font-bold tracking-widest outline-none transition-all text-xl h-[64px] placeholder:text-muted-foreground/30 focus:border-primary focus:ring-4 focus:ring-primary/20"
+              />
+            </div>
+          </>
         )}
 
         {/* Botón BUSCAR */}
         <Button
           onClick={() => buscar()}
-          disabled={modoBusqueda === "placa" ? (!placa.trim() || buscando) : (!dniEsValido || buscando)}
+          disabled={
+            modoBusqueda === "placa" ? (!placa.trim() || buscando)
+            : modoBusqueda === "dni" ? (!dniEsValido || buscando)
+            : (!codigo.trim() || buscando)
+          }
           size="2xl"
           className="w-full h-[70px] text-xl font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg"
         >
           {buscando ? (
-            <><Loader2 className="h-6 w-6 mr-3 animate-spin" /> Buscando...</>
+            <><Loader2 className="h-6 w-6 mr-3 animate-spin" /> {modoBusqueda === "qr" ? "Verificando..." : "Buscando..."}</>
           ) : (
-            <><Search className="h-6 w-6 mr-3" /> BUSCAR</>
+            <><Search className="h-6 w-6 mr-3" /> {modoBusqueda === "qr" ? "VERIFICAR CÓDIGO" : "BUSCAR"}</>
           )}
         </Button>
       </div>
@@ -307,17 +420,25 @@ export function BuscarCliente() {
                 <div className="flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10">
                   {modoBusqueda === "placa" ? (
                     <Car className="h-8 w-8 text-destructive" />
-                  ) : (
+                  ) : modoBusqueda === "dni" ? (
                     <User className="h-8 w-8 text-destructive" />
+                  ) : (
+                    <QrCode className="h-8 w-8 text-destructive" />
                   )}
                 </div>
               </div>
               <div>
                 <p className="text-xl font-bold text-destructive">
-                  {modoBusqueda === "placa" ? "Placa no registrada" : "DNI no registrado"}
+                  {modoBusqueda === "placa" ? "Placa no registrada"
+                    : modoBusqueda === "dni" ? "DNI no registrado"
+                    : "Código no válido"}
                 </p>
                 <p className="text-muted-foreground text-sm mt-1">
-                  <span className="font-mono font-bold">{placaBuscada}</span> no tiene visita activa o pendiente
+                  {modoBusqueda === "qr" ? (
+                    "El código no corresponde a una visita activa o pendiente"
+                  ) : (
+                    <><span className="font-mono font-bold">{placaBuscada}</span> no tiene visita activa o pendiente</>
+                  )}
                 </p>
               </div>
               <Button

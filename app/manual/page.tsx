@@ -8,8 +8,6 @@ export const metadata = {
 
 const MANUAL_URL = "https://gatekeeper-app.org/manual"
 
-export { MANUAL_URL }
-
 function Section({
   icon: Icon,
   color,
