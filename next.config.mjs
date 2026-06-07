@@ -2,9 +2,9 @@
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
-  // URL limpia para el landing estático servido desde /public
-  async rewrites() {
-    return [{ source: "/landing", destination: "/landing.html" }]
+  // La landing estática /landing fue eliminada; redirige a la home unificada.
+  async redirects() {
+    return [{ source: "/landing", destination: "/", permanent: true }]
   },
   // Headers de seguridad
   async headers() {
@@ -29,11 +29,10 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // cdn.tailwindcss.com + fonts.googleapis/gstatic: usados por /landing (página de marketing estática)
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.culqi.com https://cdn.tailwindcss.com",
-              "style-src 'self' 'unsafe-inline' https://checkout.culqi.com https://fonts.googleapis.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.culqi.com",
+              "style-src 'self' 'unsafe-inline' https://checkout.culqi.com",
               "img-src 'self' data: blob: https://checkout.culqi.com",
-              "font-src 'self' https://checkout.culqi.com https://fonts.gstatic.com",
+              "font-src 'self' https://checkout.culqi.com",
               "connect-src 'self' https://api.culqi.com https://checkout.culqi.com",
               "frame-src https://checkout.culqi.com",
               "frame-ancestors 'none'",
