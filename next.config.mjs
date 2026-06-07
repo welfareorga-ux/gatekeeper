@@ -1,7 +1,11 @@
+import { withSentryConfig } from "@sentry/nextjs"
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
+  // Habilita instrumentation.ts (carga la config de Sentry según runtime).
+  experimental: { instrumentationHook: true },
   // La landing estática /landing fue eliminada; redirige a la home unificada.
   async redirects() {
     return [{ source: "/landing", destination: "/", permanent: true }]
@@ -33,7 +37,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://checkout.culqi.com",
               "img-src 'self' data: blob: https://checkout.culqi.com",
               "font-src 'self' https://checkout.culqi.com",
-              "connect-src 'self' https://api.culqi.com https://checkout.culqi.com",
+              "connect-src 'self' https://api.culqi.com https://checkout.culqi.com https://*.sentry.io",
               "frame-src https://checkout.culqi.com",
               "frame-ancestors 'none'",
             ].join("; "),
@@ -44,4 +48,18 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+// Solo envolvemos con Sentry si hay DSN configurado. Sin DSN, el build queda
+// idéntico al actual (el plugin de Sentry ni siquiera se ejecuta).
+const sentryEnabled = Boolean(
+  process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN
+)
+
+export default sentryEnabled
+  ? withSentryConfig(nextConfig, {
+      silent: true,
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN, // opcional: para subir source maps
+      widenClientFileUpload: true,
+    })
+  : nextConfig
