@@ -18,11 +18,23 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.gatekeeper-app.org"),
   title: {
     default: "Gatekeeper — Control de Visitas",
     template: "%s — Gatekeeper",
   },
   description: "Sistema de gestión de visitas vehiculares para condominios cerrados",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_PE",
+    url: "https://www.gatekeeper-app.org",
+    siteName: "Gatekeeper",
+    title: "Gatekeeper — Control de visitas y accesos para condominios",
+    description: "Más seguridad y menos conflictos en la puerta de tu condominio. Sin instalar nada.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
