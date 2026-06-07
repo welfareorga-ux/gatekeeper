@@ -3,6 +3,7 @@ import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { enviarEmailBienvenida } from "@/lib/email"
+import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 
 const PLAN_CODES: Record<string, string> = {
   BASICO: "plan-basico-2026",
@@ -57,6 +58,14 @@ async function culqiPost(endpoint: string, secretKey: string, body: object) {
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  if (!checkRateLimit(`pago:ip:${ip}`, 8, 60 * 60_000).allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos de pago. Intenta de nuevo más tarde." },
+      { status: 429 }
+    )
+  }
+
   const body = await req.json()
   const result = schema.safeParse(body)
   if (!result.success) {

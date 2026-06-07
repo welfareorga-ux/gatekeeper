@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { enviarEmailTrialBienvenida, enviarManualUso } from "@/lib/email"
+import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 
 const registroSchema = z.object({
   nombreCondominio: z.string().min(3, "Mínimo 3 caracteres").max(100),
@@ -13,6 +14,14 @@ const registroSchema = z.object({
 })
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  if (!checkRateLimit(`registro:ip:${ip}`, 5, 60 * 60_000).allowed) {
+    return NextResponse.json(
+      { error: "Demasiados registros desde esta red. Intenta de nuevo en una hora." },
+      { status: 429 }
+    )
+  }
+
   const body = await req.json()
   const result = registroSchema.safeParse(body)
   if (!result.success) {

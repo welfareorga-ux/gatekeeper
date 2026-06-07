@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req)
+  if (!checkRateLimit(`reset:ip:${ip}`, 10, 15 * 60_000).allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera unos minutos." },
+      { status: 429 }
+    )
+  }
+
   const { token, password } = await req.json().catch(() => ({}))
 
   if (!token || !password || password.length < 8) {
