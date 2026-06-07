@@ -17,7 +17,7 @@ export async function GET(req: NextRequest, { params }: { params: { dni: string 
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
 
   const ip = getClientIP(req)
-  const { allowed, remaining } = checkRateLimit(`dni:${ip}`, 30, 60_000)
+  const { allowed, remaining } = await checkRateLimit(`dni:${ip}`, 30, 60_000)
   if (!allowed) {
     return NextResponse.json(
       { error: "Demasiadas búsquedas. Espera un momento." },

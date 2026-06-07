@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: { placa: strin
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
 
   const ip = getClientIP(req)
-  const { allowed, remaining } = checkRateLimit(`placa:${ip}`, 30, 60_000)
+  const { allowed, remaining } = await checkRateLimit(`placa:${ip}`, 30, 60_000)
   if (!allowed) {
     return NextResponse.json({ error: "Demasiadas búsquedas. Espera un momento." }, { status: 429, headers: { "Retry-After": "60", "X-RateLimit-Remaining": "0" } })
   }

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: { codigoQR: st
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
 
   const ip = getClientIP(req)
-  const { allowed, remaining } = checkRateLimit(`codigo:${ip}`, 30, 60_000)
+  const { allowed, remaining } = await checkRateLimit(`codigo:${ip}`, 30, 60_000)
   if (!allowed) {
     return NextResponse.json(
       { error: "Demasiados escaneos. Espera un momento." },

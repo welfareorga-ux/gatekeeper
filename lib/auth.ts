@@ -30,8 +30,8 @@ export const authOptions: NextAuthOptions = {
         const emailKey = `login:email:${credentials.email.toLowerCase().trim()}`
         const ipKey = `login:ip:${ip}`
 
-        const { allowed: ipOk } = checkRateLimit(ipKey, 20, 15 * 60_000)
-        const { allowed: emailOk } = checkRateLimit(emailKey, 5, 15 * 60_000)
+        const { allowed: ipOk } = await checkRateLimit(ipKey, 20, 15 * 60_000)
+        const { allowed: emailOk } = await checkRateLimit(emailKey, 5, 15 * 60_000)
         if (!ipOk || !emailOk) throw new Error("TooManyRequests")
 
         const user = await prisma.user.findUnique({

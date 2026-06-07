@@ -6,7 +6,7 @@ import crypto from "crypto"
 
 export async function POST(req: Request) {
   const ip = getClientIP(req)
-  const { allowed: ipOk } = checkRateLimit(`forgot:ip:${ip}`, 5, 60 * 60_000)
+  const { allowed: ipOk } = await checkRateLimit(`forgot:ip:${ip}`, 5, 60 * 60_000)
   if (!ipOk) {
     return NextResponse.json({ error: "Demasiadas solicitudes. Espera una hora." }, { status: 429 })
   }
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
   const normalizedEmail = email.toLowerCase().trim()
 
-  const { allowed: emailOk } = checkRateLimit(`forgot:email:${normalizedEmail}`, 3, 60 * 60_000)
+  const { allowed: emailOk } = await checkRateLimit(`forgot:email:${normalizedEmail}`, 3, 60 * 60_000)
   if (!emailOk) {
     return NextResponse.json({ ok: true })
   }

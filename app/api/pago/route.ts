@@ -59,7 +59,7 @@ async function culqiPost(endpoint: string, secretKey: string, body: object) {
 
 export async function POST(req: Request) {
   const ip = getClientIP(req)
-  if (!checkRateLimit(`pago:ip:${ip}`, 8, 60 * 60_000).allowed) {
+  if (!(await checkRateLimit(`pago:ip:${ip}`, 8, 60 * 60_000)).allowed) {
     return NextResponse.json(
       { error: "Demasiados intentos de pago. Intenta de nuevo más tarde." },
       { status: 429 }

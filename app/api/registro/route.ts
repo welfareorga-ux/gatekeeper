@@ -15,7 +15,7 @@ const registroSchema = z.object({
 
 export async function POST(req: Request) {
   const ip = getClientIP(req)
-  if (!checkRateLimit(`registro:ip:${ip}`, 5, 60 * 60_000).allowed) {
+  if (!(await checkRateLimit(`registro:ip:${ip}`, 5, 60 * 60_000)).allowed) {
     return NextResponse.json(
       { error: "Demasiados registros desde esta red. Intenta de nuevo en una hora." },
       { status: 429 }
