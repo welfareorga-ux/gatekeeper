@@ -42,9 +42,13 @@ de Postgres. Es la capa 3, encima del filtrado de la app (`lib/tenant.ts`).
    ```
 4. **Sembrar datos** (el seed ya activa bypass):
    ```bash
-   npm run db:seed        # crea 1 condominio + usuarios demo
-   # Idealmente crear un 2º condominio (registro o seed-demo) para probar fugas.
+   npm run db:seed        # crea el condominio A "Los Pinos" + usuarios demo
+   npm run db:seed-demo   # AGREGA el condominio B "Las Palmeras" (aditivo, idempotente)
    ```
+   `db:seed-demo` crea el 2º condominio para la prueba de fugas, con un dato
+   distintivo: **placa `ZZZ-999` / DNI `99999999`** que NO existe en A.
+   Credenciales B: `adminb@gatekeeper.pe` / `AdminB123!`,
+   `vigilanteb@gatekeeper.pe` / `VigilanteB1!`, `residenteb@gatekeeper.pe` / `ResidenteB1!`.
 5. **Levantar la app** apuntando a la rama:
    ```bash
    npm run dev
