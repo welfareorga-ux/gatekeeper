@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 import { plantillaSchema } from "@/lib/validations/visita"
 
 // ─── GET /api/plantillas ──────────────────────────────────────────────────────
@@ -10,9 +10,10 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
-  const plantillas = await prisma.plantillaVisita.findMany({
-    where: { residenteId: session.user.id, condominioId },
+  const plantillas = await db.plantillaVisita.findMany({
+    where: { residenteId: session.user.id },
     orderBy: { createdAt: "desc" },
   })
 
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   let body: unknown
   try {
@@ -41,10 +43,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos", details: parsed.error.issues }, { status: 422 })
   }
 
-  const plantilla = await prisma.plantillaVisita.create({
+  const plantilla = await db.plantillaVisita.create({
     data: {
       residenteId: session.user.id,
-      condominioId,
       nombreAlias: parsed.data.nombreAlias,
       datosVisitanteJSON: parsed.data.datosVisitanteJSON,
       datosVehiculoJSON: parsed.data.datosVehiculoJSON,
@@ -60,12 +61,15 @@ export async function DELETE(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   const id = req.nextUrl.searchParams.get("id")
   if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 })
 
-  const plantilla = await prisma.plantillaVisita.findFirst({
-    where: { id, condominioId },
+  // findFirst (con tenant inyectado) verifica que la plantilla sea del condominio
+  // antes de borrarla por id único.
+  const plantilla = await db.plantillaVisita.findFirst({
+    where: { id },
     select: { residenteId: true },
   })
   if (!plantilla) return NextResponse.json({ error: "No encontrada" }, { status: 404 })
@@ -74,6 +78,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   }
 
-  await prisma.plantillaVisita.delete({ where: { id } })
+  await db.plantillaVisita.delete({ where: { id } })
   return NextResponse.json({ ok: true })
 }

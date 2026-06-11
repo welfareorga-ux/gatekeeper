@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import { EstadoVisita } from "@prisma/client"
 
@@ -15,6 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: { dni: string 
   if (session.user.rol === "RESIDENTE") return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   const ip = getClientIP(req)
   const { allowed, remaining } = await checkRateLimit(`dni:${ip}`, 30, 60_000)
@@ -32,9 +33,8 @@ export async function GET(req: NextRequest, { params }: { params: { dni: string 
 
   let visitas
   try {
-    visitas = await prisma.visita.findMany({
+    visitas = await db.visita.findMany({
       where: {
-        condominioId,
         dniVisitante: dni,
         estado: { notIn: [EstadoVisita.CANCELADO] },
       },

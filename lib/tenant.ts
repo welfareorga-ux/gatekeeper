@@ -1,0 +1,119 @@
+import type { Session } from "next-auth"
+import { prisma } from "@/lib/prisma"
+
+/**
+ * Aislamiento multi-tenant por `condominioId`.
+ *
+ * GateKeeper es SaaS multi-tenant: todos los condominios comparten la misma DB,
+ * separados por el campo `condominioId`. Olvidar el filtro en una sola query =
+ * fuga cross-tenant (Ley N° 29733 — datos personales: nombres, DNI, placas).
+ *
+ * Este módulo centraliza el aislamiento en dos capas:
+ *   1. `requireCondominioId` / `tenantWhere`: guardas reutilizables para las rutas.
+ *   2. `forTenant(condominioId)`: cliente Prisma que inyecta el `condominioId`
+ *      automáticamente, para que ninguna ruta futura pueda olvidarlo.
+ */
+
+/** Se lanza cuando una sesión no tiene condominio asociado (SuperAdmin o cuenta huérfana). */
+export class SinCondominioError extends Error {
+  constructor() {
+    super("Sin condominio asociado")
+    this.name = "SinCondominioError"
+  }
+}
+
+/**
+ * Devuelve el `condominioId` de la sesión o lanza `SinCondominioError`.
+ * Úsalo en TODA ruta tenant-scoped tras validar la sesión.
+ */
+export function requireCondominioId(session: Session | null): string {
+  const id = session?.user?.condominioId
+  if (!id) throw new SinCondominioError()
+  return id
+}
+
+/** Cláusula `where` con el tenant; sólo para modelos con `condominioId` directo. */
+export function tenantWhere(session: Session | null): { condominioId: string } {
+  return { condominioId: requireCondominioId(session) }
+}
+
+/**
+ * Modelos con columna `condominioId` propia → `forTenant` puede aislarlos solo.
+ *
+ * ⚠️ Modelos SIN columna propia (`Vehiculo`, `RegistroIngreso`, `LogActividad`)
+ * NO los cubre la extensión: filtra a mano por relación
+ * (p.ej. `where: { visita: { condominioId } }`, `where: { user: { condominioId } }`).
+ */
+export const MODELOS_TENANT = new Set(["User", "Visita", "TurnoVigilante", "PlantillaVisita"])
+
+/** Operaciones cuyo aislamiento va en `args.where`. */
+const OPS_FILTRO = new Set([
+  "findFirst",
+  "findFirstOrThrow",
+  "findMany",
+  "count",
+  "aggregate",
+  "groupBy",
+  "updateMany",
+  "deleteMany",
+])
+
+/**
+ * Lógica pura de inyección (testeable sin Prisma).
+ *
+ * - reads / `updateMany` / `deleteMany` → fija `where.condominioId`.
+ * - `create` / `createMany` → fija `data.condominioId`.
+ * - `findUnique` / `update` / `delete` / `upsert` por id único: NO se tocan
+ *   (Prisma rechaza `condominioId` en un `where` único). Para acceso por id en
+ *   un tenant, usa `findFirst` con `tenantWhere` y verifica propiedad antes de mutar.
+ */
+export function inyectarTenant(
+  model: string | undefined,
+  operation: string,
+  args: unknown,
+  condominioId: string,
+): unknown {
+  if (!model || !MODELOS_TENANT.has(model)) return args
+  const a = (args ?? {}) as Record<string, unknown>
+
+  if (OPS_FILTRO.has(operation)) {
+    return { ...a, where: { ...(a.where as object), condominioId } }
+  }
+  if (operation === "create") {
+    return { ...a, data: { ...(a.data as object), condominioId } }
+  }
+  if (operation === "createMany") {
+    if (Array.isArray(a.data)) {
+      return { ...a, data: a.data.map((d) => ({ ...(d as object), condominioId })) }
+    }
+    if (a.data) {
+      return { ...a, data: { ...(a.data as object), condominioId } }
+    }
+  }
+  return args
+}
+
+/**
+ * Cliente Prisma acotado a un condominio. Inyecta `condominioId` automáticamente
+ * en los modelos de `MODELOS_TENANT`. Crea uno por request:
+ *
+ *   const db = forTenant(requireCondominioId(session))
+ *   await db.visita.findMany()          // ← where.condominioId implícito
+ *   await db.visita.create({ data })    // ← data.condominioId implícito
+ *
+ * Propaga al `tx` dentro de `db.$transaction(async (tx) => ...)`.
+ */
+export function forTenant(condominioId: string) {
+  return prisma.$extends({
+    name: "tenant-isolation",
+    query: {
+      $allModels: {
+        async $allOperations({ model, operation, args, query }) {
+          return query(inyectarTenant(model, operation, args, condominioId) as typeof args)
+        },
+      },
+    },
+  })
+}
+
+export type TenantPrisma = ReturnType<typeof forTenant>

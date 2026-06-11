@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 import { NextResponse } from "next/server"
 
 export async function GET(req: Request) {
@@ -10,6 +10,7 @@ export async function GET(req: Request) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   const { searchParams } = new URL(req.url)
   const dias = Math.min(90, Math.max(7, parseInt(searchParams.get("dias") ?? "30")))
@@ -18,8 +19,8 @@ export async function GET(req: Request) {
   fechaDesde.setDate(fechaDesde.getDate() - (dias - 1))
   fechaDesde.setHours(0, 0, 0, 0)
 
-  const visitas = await prisma.visita.findMany({
-    where: { condominioId, createdAt: { gte: fechaDesde } },
+  const visitas = await db.visita.findMany({
+    where: { createdAt: { gte: fechaDesde } },
     select: { createdAt: true, estado: true },
   })
 

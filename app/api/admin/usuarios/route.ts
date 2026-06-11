@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
@@ -19,15 +19,15 @@ export async function GET(req: Request) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   const { searchParams } = new URL(req.url)
   const rol = searchParams.get("rol")
   const buscar = searchParams.get("buscar") ?? ""
   const activoParam = searchParams.get("activo")
 
-  const usuarios = await prisma.user.findMany({
+  const usuarios = await db.user.findMany({
     where: {
-      condominioId,
       ...(rol && rol !== "TODOS" ? { rol: rol as "RESIDENTE" | "VIGILANTE" | "ADMIN" } : {}),
       ...(activoParam !== null && activoParam !== "" ? { activo: activoParam === "true" } : {}),
       ...(buscar
@@ -71,6 +71,7 @@ export async function POST(req: Request) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   const body = await req.json()
   const result = crearSchema.safeParse(body)
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
 
   const { nombre, email, password, rol, telefono, direccion } = result.data
 
-  const condominio = await prisma.condominio.findUnique({
+  const condominio = await db.condominio.findUnique({
     where: { id: condominioId },
     select: { plan: true, nombre: true },
   })
@@ -92,8 +93,8 @@ export async function POST(req: Request) {
     const limite = limites[campo]
 
     if (limite !== Infinity) {
-      const actual = await prisma.user.count({
-        where: { condominioId, rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
+      const actual = await db.user.count({
+        where: { rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
       })
       if (actual >= limite) {
         const planLabel = condominio?.plan === "BASICO" ? "Básico" : condominio?.plan === "ESTANDAR" ? "Estándar" : "Premium"
@@ -104,16 +105,17 @@ export async function POST(req: Request) {
     }
   }
 
-  const existe = await prisma.user.findUnique({ where: { email } })
+  // findUnique global: email es único en toda la plataforma (no por condominio).
+  const existe = await db.user.findUnique({ where: { email } })
   if (existe) return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 })
 
   const hash = await bcrypt.hash(password, 12)
-  const usuario = await prisma.user.create({
-    data: { nombre, email, password: hash, rol, telefono, direccion, condominioId },
+  const usuario = await db.user.create({
+    data: { nombre, email, password: hash, rol, telefono, direccion },
     select: { id: true, nombre: true, email: true, rol: true, activo: true, createdAt: true },
   })
 
-  await prisma.logActividad.create({
+  await db.logActividad.create({
     data: {
       userId: session.user.id,
       accion: "CREAR_USUARIO",

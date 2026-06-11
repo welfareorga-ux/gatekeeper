@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import { EstadoVisita } from "@prisma/client"
 
@@ -11,6 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { codigoQR: st
   if (session.user.rol === "RESIDENTE") return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   const ip = getClientIP(req)
   const { allowed, remaining } = await checkRateLimit(`codigo:${ip}`, 30, 60_000)
@@ -30,10 +31,9 @@ export async function GET(req: NextRequest, { params }: { params: { codigoQR: st
 
   let visita
   try {
-    // findFirst (no findUnique) para poder filtrar por condominioId y aislar el tenant.
-    visita = await prisma.visita.findFirst({
+    // findFirst (no findUnique) para que forTenant inyecte condominioId y aísle el tenant.
+    visita = await db.visita.findFirst({
       where: {
-        condominioId,
         codigoQR: codigo,
         estado: { notIn: [EstadoVisita.CANCELADO] },
       },

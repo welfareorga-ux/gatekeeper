@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 
 export async function POST() {
   const session = await getServerSession(authOptions)
@@ -11,9 +11,10 @@ export async function POST() {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
-  const turnoActivo = await prisma.turnoVigilante.findFirst({
-    where: { vigilanteId: session.user.id, condominioId, activo: true },
+  const turnoActivo = await db.turnoVigilante.findFirst({
+    where: { vigilanteId: session.user.id, activo: true },
   })
 
   if (!turnoActivo) {
@@ -21,12 +22,12 @@ export async function POST() {
   }
 
   const ahora = new Date()
-  const turno = await prisma.turnoVigilante.update({
+  const turno = await db.turnoVigilante.update({
     where: { id: turnoActivo.id },
     data: { activo: false, horaFinTurno: ahora },
   })
 
-  await prisma.logActividad.create({
+  await db.logActividad.create({
     data: {
       userId: session.user.id,
       accion: "FINALIZAR_TURNO",

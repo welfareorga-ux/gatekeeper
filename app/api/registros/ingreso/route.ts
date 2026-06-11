@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 import { enviarNotificacionIngreso } from "@/lib/email"
 import { z } from "zod"
 import { EstadoVisita } from "@prisma/client"
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   let body: unknown
   try { body = await req.json() } catch {
@@ -33,8 +34,8 @@ export async function POST(req: NextRequest) {
 
   const { visitaId, vehiculoId, notasVigilante } = parsed.data
 
-  const visita = await prisma.visita.findFirst({
-    where: { id: visitaId, condominioId },
+  const visita = await db.visita.findFirst({
+    where: { id: visitaId },
     select: {
       estado: true,
       nombreVisitante: true,
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
 
   const horaIngreso = new Date()
 
-  const registro = await prisma.$transaction(async (tx) => {
+  const registro = await db.$transaction(async (tx) => {
     const r = await tx.registroIngreso.create({
       data: {
         visitaId,

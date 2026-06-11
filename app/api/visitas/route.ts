@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 import { nuevaVisitaSchema } from "@/lib/validations/visita"
 import { EstadoVisita } from "@prisma/client"
 
@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   const { searchParams } = req.nextUrl
   const estado = searchParams.get("estado") as EstadoVisita | null
@@ -22,7 +23,6 @@ export async function GET(req: NextRequest) {
   const residenteFilter = session.user.rol === "ADMIN" ? {} : { residenteId: session.user.id }
 
   const where = {
-    condominioId,
     ...residenteFilter,
     ...(estado ? { estado } : {}),
     ...(fechaDesde || fechaHasta ? { fechaProgramada: { ...(fechaDesde ? { gte: new Date(fechaDesde) } : {}), ...(fechaHasta ? { lte: new Date(fechaHasta + "T23:59:59") } : {}) } } : {}),
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   }
 
   const [visitas, total] = await Promise.all([
-    prisma.visita.findMany({
+    db.visita.findMany({
       where,
       include: {
         vehiculos: true,
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.visita.count({ where }),
+    db.visita.count({ where }),
   ])
 
   return NextResponse.json({ visitas, total, page, pages: Math.ceil(total / limit) })
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
   let body: unknown
   try { body = await req.json() } catch { return NextResponse.json({ error: "Cuerpo inválido" }, { status: 400 }) }
@@ -71,11 +72,10 @@ export async function POST(req: NextRequest) {
   const fechaInicioFull = new Date(aniof, mesf - 1, diaf, hiH, hiM)
   const fechaFinFull = new Date(aniof, mesf - 1, diaf, hfH, hfM)
 
-  const visita = await prisma.$transaction(async (tx) => {
+  const visita = await db.$transaction(async (tx) => {
     const v = await tx.visita.create({
       data: {
         residenteId: session.user.id,
-        condominioId,
         nombreVisitante, dniVisitante, motivoVisita,
         fechaProgramada: fechaBase, horaInicio: fechaInicioFull, horaFin: fechaFinFull,
         esRecurrente: esRecurrente ?? false,
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       include: { vehiculos: true },
     })
     if (guardarComoPlantilla && nombreAlias) {
-      await tx.plantillaVisita.create({ data: { residenteId: session.user.id, condominioId, nombreAlias, datosVisitanteJSON: { nombreVisitante, dniVisitante, motivoVisita }, datosVehiculoJSON: vehiculos } })
+      await tx.plantillaVisita.create({ data: { residenteId: session.user.id, nombreAlias, datosVisitanteJSON: { nombreVisitante, dniVisitante, motivoVisita }, datosVehiculoJSON: vehiculos } })
     }
     await tx.logActividad.create({ data: { userId: session.user.id, accion: "CREAR_VISITA", detalle: `Visita para ${nombreVisitante}${vehiculos.length > 0 ? ` | ${vehiculos.map((v) => v.placa || "sin placa").join(", ")}` : " | sin vehículo"}` } })
     return v

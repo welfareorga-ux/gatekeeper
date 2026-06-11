@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { forTenant } from "@/lib/tenant"
 import { EstadoVisita } from "@prisma/client"
 
 export async function PATCH(
@@ -12,9 +12,10 @@ export async function PATCH(
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  const db = forTenant(condominioId)
 
-  const visita = await prisma.visita.findFirst({
-    where: { id: params.id, condominioId },
+  const visita = await db.visita.findFirst({
+    where: { id: params.id },
     select: { id: true, residenteId: true, estado: true },
   })
 
@@ -31,12 +32,12 @@ export async function PATCH(
     )
   }
 
-  const actualizada = await prisma.visita.update({
+  const actualizada = await db.visita.update({
     where: { id: params.id },
     data: { estado: EstadoVisita.CANCELADO },
   })
 
-  await prisma.logActividad.create({
+  await db.logActividad.create({
     data: {
       userId: session.user.id,
       accion: "CANCELAR_VISITA",
