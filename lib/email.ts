@@ -1,6 +1,13 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Inicialización perezosa: el constructor de Resend lanza si falta la API key.
+// Crearlo al importar el módulo rompía `next build` (page-data collection) sin la
+// env var. Lo instanciamos en el primer envío, ya en runtime, donde la clave existe.
+let _resend: Resend | null = null
+function getResend(): Resend {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY)
+  return _resend
+}
 const FROM = "Gatekeeper <noreply@gatekeeper-app.org>"
 
 function formatHora(date: Date) {
@@ -31,7 +38,7 @@ export async function enviarNotificacionIngreso({
   horaIngreso: Date
 }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: emailResidente,
       subject: `🚗 ${nombreVisitante} ingresó a ${condominioNombre}`,
@@ -90,7 +97,7 @@ export async function enviarNotificacionSalida({
     : `${Math.floor(minutos / 60)}h ${minutos % 60}min`
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: emailResidente,
       subject: `👋 ${nombreVisitante} salió de ${condominioNombre}`,
@@ -138,7 +145,7 @@ export async function enviarEmailRecuperarContrasena({
   resetUrl: string
 }) {
   // No atrapar el error — dejar que suba para que aparezca en los logs de Vercel
-  await resend.emails.send({
+  await getResend().emails.send({
       from: FROM,
       to: email,
       subject: `🔑 Recuperar contraseña — Gatekeeper`,
@@ -188,7 +195,7 @@ export async function enviarEmailBienvenida({
   loginUrl: string
 }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: email,
       subject: `¡Bienvenido a Gatekeeper! Tu cuenta está lista`,
@@ -258,7 +265,7 @@ export async function enviarEmailTrialBienvenida({
     day: "numeric", month: "long", year: "numeric", timeZone: "America/Lima",
   })
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: email,
       subject: `¡Bienvenido a Gatekeeper! Tu prueba gratuita de 14 días ha comenzado`,
@@ -322,7 +329,7 @@ export async function enviarNotificacionServicioContratado({
     day: "numeric", month: "long", year: "numeric", timeZone: "America/Lima",
   })
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: "welfareorga@gmail.com",
       subject: `💼 Nuevo servicio contratado: ${servicioNombre}`,
@@ -372,7 +379,7 @@ export async function enviarManualUso({
   loginUrl: string
 }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: email,
       subject: `📋 Manual de uso de Gatekeeper — ${condominioNombre}`,
@@ -518,7 +525,7 @@ export async function enviarCredencialesUsuario({
   const loginUrl = "https://gatekeeper-app.org"
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: email,
       subject: `🛡️ Tu cuenta en Gatekeeper está lista — ${condominioNombre}`,
@@ -588,7 +595,7 @@ export async function enviarEmailCobroFallido({
   planLabel: string
 }) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: emailAdmin,
       subject: `⚠️ Problema con tu pago — Gatekeeper`,
