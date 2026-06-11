@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 import { NextResponse } from "next/server"
 
 export async function GET(req: Request) {
@@ -18,14 +18,14 @@ export async function GET(req: Request) {
   fechaDesde.setDate(fechaDesde.getDate() - (dias - 1))
   fechaDesde.setHours(0, 0, 0, 0)
 
-  const registros = await prisma.registroIngreso.findMany({
+  const registros = await withTenant(condominioId, (tx) => tx.registroIngreso.findMany({
     where: {
       fechaHoraSalida: { not: null },
       fechaHoraIngreso: { gte: fechaDesde },
       visita: { condominioId },
     },
     select: { fechaHoraIngreso: true, fechaHoraSalida: true },
-  })
+  }))
 
   const buckets: { fecha: string; promedio: number; cantidad: number }[] = []
 

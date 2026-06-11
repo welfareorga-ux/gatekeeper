@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { runAsAdmin } from "@/lib/tenant"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { resolverEstadoSuscripcion } from "@/lib/subscription"
 import { Rol } from "@prisma/client"
@@ -34,9 +35,10 @@ export const authOptions: NextAuthOptions = {
         const { allowed: emailOk } = await checkRateLimit(emailKey, 5, 15 * 60_000)
         if (!ipOk || !emailOk) throw new Error("TooManyRequests")
 
-        const user = await prisma.user.findUnique({
+        // Login no tiene contexto de tenant aún → bypass RLS para buscar por email.
+        const user = await runAsAdmin((tx) => tx.user.findUnique({
           where: { email: credentials.email.toLowerCase().trim() },
-        })
+        }))
 
         if (!user || !user.activo) return null
 

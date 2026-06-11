@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 import { NextResponse } from "next/server"
 
 export async function GET(req: Request) {
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
   fechaDesde.setDate(fechaDesde.getDate() - (dias - 1))
   fechaDesde.setHours(0, 0, 0, 0)
 
-  const vehiculos = await prisma.vehiculo.findMany({
+  const vehiculos = await withTenant(condominioId, (tx) => tx.vehiculo.findMany({
     where: { visita: { condominioId, createdAt: { gte: fechaDesde } } },
     select: {
       placa: true,
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
         },
       },
     },
-  })
+  }))
 
   const placaMap = new Map<
     string,

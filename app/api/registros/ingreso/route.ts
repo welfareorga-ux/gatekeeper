@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { forTenant } from "@/lib/tenant"
+import { withTenant } from "@/lib/tenant"
 import { enviarNotificacionIngreso } from "@/lib/email"
 import { z } from "zod"
 import { EstadoVisita } from "@prisma/client"
@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   let body: unknown
   try { body = await req.json() } catch {
@@ -33,35 +32,36 @@ export async function POST(req: NextRequest) {
   }
 
   const { visitaId, vehiculoId, notasVigilante } = parsed.data
-
-  const visita = await db.visita.findFirst({
-    where: { id: visitaId },
-    select: {
-      estado: true,
-      nombreVisitante: true,
-      vehiculos: { select: { id: true, placa: true } },
-      residente: { select: { email: true, nombre: true } },
-      condominio: { select: { nombre: true } },
-    },
-  })
-
-  if (!visita) return NextResponse.json({ error: "Visita no encontrada" }, { status: 404 })
-  if (visita.estado !== EstadoVisita.PENDIENTE) {
-    return NextResponse.json(
-      { error: `La visita está en estado ${visita.estado}. Solo se puede registrar ingreso si está PENDIENTE.` },
-      { status: 409 }
-    )
-  }
-
-  const vehiculo = vehiculoId ? visita.vehiculos.find((v) => v.id === vehiculoId) : undefined
-  if (vehiculoId && !vehiculo) {
-    return NextResponse.json({ error: "El vehículo no pertenece a esta visita" }, { status: 400 })
-  }
-
   const horaIngreso = new Date()
 
-  const registro = await db.$transaction(async (tx) => {
-    const r = await tx.registroIngreso.create({
+  // Toda la lógica de DB ocurre en una transacción con el contexto de tenant
+  // (condominioId) fijado para RLS. El email se envía DESPUÉS, fuera de la tx.
+  const result = await withTenant(condominioId, async (tx) => {
+    const visita = await tx.visita.findFirst({
+      where: { id: visitaId },
+      select: {
+        estado: true,
+        nombreVisitante: true,
+        vehiculos: { select: { id: true, placa: true } },
+        residente: { select: { email: true, nombre: true } },
+        condominio: { select: { nombre: true } },
+      },
+    })
+
+    if (!visita) return { error: NextResponse.json({ error: "Visita no encontrada" }, { status: 404 }) }
+    if (visita.estado !== EstadoVisita.PENDIENTE) {
+      return { error: NextResponse.json(
+        { error: `La visita está en estado ${visita.estado}. Solo se puede registrar ingreso si está PENDIENTE.` },
+        { status: 409 }
+      ) }
+    }
+
+    const vehiculo = vehiculoId ? visita.vehiculos.find((v) => v.id === vehiculoId) : undefined
+    if (vehiculoId && !vehiculo) {
+      return { error: NextResponse.json({ error: "El vehículo no pertenece a esta visita" }, { status: 400 }) }
+    }
+
+    const registro = await tx.registroIngreso.create({
       data: {
         visitaId,
         ...(vehiculoId ? { vehiculoId } : {}),
@@ -84,18 +84,20 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return r
+    return { registro, visita, placa: vehiculo?.placa ?? "" }
   })
+
+  if ("error" in result) return result.error
 
   // Envío de email en background — no bloquea la respuesta
   void enviarNotificacionIngreso({
-    emailResidente: visita.residente.email,
-    nombreResidente: visita.residente.nombre,
-    nombreVisitante: visita.nombreVisitante,
-    placa: vehiculo?.placa ?? "",
-    condominioNombre: visita.condominio?.nombre ?? "",
+    emailResidente: result.visita.residente.email,
+    nombreResidente: result.visita.residente.nombre,
+    nombreVisitante: result.visita.nombreVisitante,
+    placa: result.placa,
+    condominioNombre: result.visita.condominio?.nombre ?? "",
     horaIngreso,
   })
 
-  return NextResponse.json(registro, { status: 201 })
+  return NextResponse.json(result.registro, { status: 201 })
 }

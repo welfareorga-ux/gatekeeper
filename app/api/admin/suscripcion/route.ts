@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 import { z } from "zod"
 
 const CULQI_BASE = "https://api.culqi.com/v2"
@@ -95,11 +96,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Configuración de pagos incompleta" }, { status: 500 })
   }
 
-  // Obtener datos del admin y condominio
-  const adminUser = await prisma.user.findUnique({
+  const condominioId = session.user.condominioId
+  if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+
+  // Obtener datos del admin (su propio usuario) — User tiene RLS → withTenant.
+  const adminUser = await withTenant(condominioId, (tx) => tx.user.findUnique({
     where: { id: session.user.id },
     select: { nombre: true, email: true },
-  })
+  }))
   if (!adminUser) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
 
   const nameParts = adminUser.nombre.trim().split(" ")

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { runAsAdmin } from "@/lib/tenant"
 import { enviarEmailRecuperarContrasena } from "@/lib/email"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import crypto from "crypto"
@@ -23,11 +24,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  // Solo ADMINs pueden recuperar contraseña por este flujo
-  const user = await prisma.user.findUnique({
+  // Solo ADMINs pueden recuperar contraseña por este flujo. Sin contexto de
+  // tenant (público) → bypass RLS para buscar por email.
+  const user = await runAsAdmin((tx) => tx.user.findUnique({
     where: { email: normalizedEmail },
     select: { id: true, nombre: true, activo: true, rol: true },
-  })
+  }))
 
   if (user && user.activo && user.rol === "ADMIN") {
     await prisma.passwordResetToken.deleteMany({ where: { email: normalizedEmail } })

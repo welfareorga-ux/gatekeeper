@@ -117,3 +117,44 @@ export function forTenant(condominioId: string) {
 }
 
 export type TenantPrisma = ReturnType<typeof forTenant>
+
+/** Cliente transaccional acotado al tenant (con inyección de condominioId). */
+export type TenantTx = Parameters<Parameters<TenantPrisma["$transaction"]>[0]>[0]
+/** Cliente transaccional sin acotar (acceso cross-tenant). */
+export type AdminTx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+
+/**
+ * Ejecuta `fn` dentro de UNA transacción con `app.condominio_id` fijado
+ * (SET LOCAL, scope de transacción → seguro con el pool de Neon). Combina:
+ *   - Capa 2: inyección automática de condominioId en los args (forTenant).
+ *   - Capa 3: Row-Level Security en Postgres usa app.condominio_id para filtrar.
+ *
+ * Úsalo en TODA ruta tenant-scoped. Mantén el cómputo pesado / llamadas a APIs
+ * externas (email, Culqi) FUERA del callback para no alargar la transacción:
+ *
+ *   const visitas = await withTenant(condominioId, (tx) => tx.visita.findMany())
+ *   void enviarEmail(...)  // ← fuera
+ */
+export async function withTenant<T>(
+  condominioId: string,
+  fn: (tx: TenantTx) => Promise<T>,
+): Promise<T> {
+  return forTenant(condominioId).$transaction(async (tx) => {
+    // set_config(..., true) = SET LOCAL: vive solo en esta transacción.
+    await tx.$executeRaw`SELECT set_config('app.condominio_id', ${condominioId}, true)`
+    return fn(tx as TenantTx)
+  })
+}
+
+/**
+ * Ejecuta `fn` con RLS en modo bypass (acceso a TODOS los condominios).
+ * SOLO para operaciones legítimamente cross-tenant o sin contexto de tenant:
+ * login (buscar usuario por email), registro (crear condominio), cron,
+ * webhooks, panel SuperAdmin y el seed. NUNCA en rutas de un condominio.
+ */
+export async function runAsAdmin<T>(fn: (tx: AdminTx) => Promise<T>): Promise<T> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`
+    return fn(tx as AdminTx)
+  })
+}

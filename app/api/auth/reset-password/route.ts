@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { runAsAdmin } from "@/lib/tenant"
 import bcrypt from "bcryptjs"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 
@@ -31,10 +32,11 @@ export async function POST(req: Request) {
 
   const hash = await bcrypt.hash(password, 12)
 
-  await prisma.user.update({
+  // Sin contexto de tenant (público, por token) → bypass RLS para actualizar por email.
+  await runAsAdmin((tx) => tx.user.update({
     where: { email: resetToken.email },
     data: { password: hash },
-  })
+  }))
 
   await prisma.passwordResetToken.delete({ where: { token } })
 

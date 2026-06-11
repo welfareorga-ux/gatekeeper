@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { forTenant } from "@/lib/tenant"
+import { withTenant } from "@/lib/tenant"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import { EstadoVisita } from "@prisma/client"
 
@@ -11,7 +11,6 @@ export async function GET(req: NextRequest, { params }: { params: { codigoQR: st
   if (session.user.rol === "RESIDENTE") return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   const ip = getClientIP(req)
   const { allowed, remaining } = await checkRateLimit(`codigo:${ip}`, 30, 60_000)
@@ -31,8 +30,8 @@ export async function GET(req: NextRequest, { params }: { params: { codigoQR: st
 
   let visita
   try {
-    // findFirst (no findUnique) para que forTenant inyecte condominioId y aísle el tenant.
-    visita = await db.visita.findFirst({
+    // findFirst (no findUnique) + withTenant: condominioId inyectado y RLS por contexto.
+    visita = await withTenant(condominioId, (tx) => tx.visita.findFirst({
       where: {
         codigoQR: codigo,
         estado: { notIn: [EstadoVisita.CANCELADO] },
@@ -42,7 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: { codigoQR: st
         residente: { select: { id: true, nombre: true, direccion: true, telefono: true } },
         registros: { where: { fechaHoraSalida: null }, take: 1, orderBy: { fechaHoraIngreso: "desc" } },
       },
-    })
+    }))
   } catch (err) {
     console.error("[codigo] DB error:", err)
     return NextResponse.json({ error: "Error de base de datos", detail: String(err) }, { status: 500 })

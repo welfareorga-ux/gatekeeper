@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Users, Car, Clock, FileText, ShieldCheck } from "lucide-react"
@@ -24,6 +25,7 @@ const ACCION_LABEL: Record<string, string> = {
 export default async function AdminDashboardPage() {
   const session = await getServerSession(authOptions)
   const condominioId = session?.user.condominioId
+  if (!condominioId) redirect("/no-autorizado")
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
 
@@ -34,19 +36,19 @@ export default async function AdminDashboardPage() {
     vehiculosDentro,
     turnosActivos,
     ultimosLogs,
-  ] = await Promise.all([
-    prisma.user.count({ where: { rol: "RESIDENTE", activo: true, condominioId } }),
-    prisma.user.count({ where: { rol: "VIGILANTE", activo: true, condominioId } }),
-    prisma.visita.count({ where: { createdAt: { gte: hoy }, condominioId } }),
-    prisma.registroIngreso.count({ where: { fechaHoraSalida: null, visita: { condominioId } } }),
-    prisma.turnoVigilante.count({ where: { activo: true, condominioId } }),
-    prisma.logActividad.findMany({
+  ] = await withTenant(condominioId, (tx) => Promise.all([
+    tx.user.count({ where: { rol: "RESIDENTE", activo: true } }),
+    tx.user.count({ where: { rol: "VIGILANTE", activo: true } }),
+    tx.visita.count({ where: { createdAt: { gte: hoy } } }),
+    tx.registroIngreso.count({ where: { fechaHoraSalida: null, visita: { condominioId } } }),
+    tx.turnoVigilante.count({ where: { activo: true } }),
+    tx.logActividad.findMany({
       take: 15,
       orderBy: { timestamp: "desc" },
       where: { user: { condominioId } },
       include: { user: { select: { nombre: true, rol: true } } },
     }),
-  ])
+  ]))
 
   const stats = [
     { label: "Residentes activos", value: totalResidentes, icon: Users, color: "text-blue-500 bg-blue-500/10" },

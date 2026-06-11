@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { forTenant } from "@/lib/tenant"
+import { withTenant } from "@/lib/tenant"
 import { NextResponse } from "next/server"
 
 export async function GET(req: Request) {
@@ -10,7 +10,6 @@ export async function GET(req: Request) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   const { searchParams } = new URL(req.url)
   const dias = Math.min(90, Math.max(7, parseInt(searchParams.get("dias") ?? "30")))
@@ -19,10 +18,10 @@ export async function GET(req: Request) {
   fechaDesde.setDate(fechaDesde.getDate() - (dias - 1))
   fechaDesde.setHours(0, 0, 0, 0)
 
-  const visitas = await db.visita.findMany({
+  const visitas = await withTenant(condominioId, (tx) => tx.visita.findMany({
     where: { createdAt: { gte: fechaDesde } },
     select: { createdAt: true, estado: true },
-  })
+  }))
 
   const buckets: { fecha: string; total: number; ingresados: number; cancelados: number }[] = []
 

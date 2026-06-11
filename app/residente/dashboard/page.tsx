@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,35 +19,35 @@ export default async function DashboardPage() {
   const hoy = new Date()
   const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0)
   const finDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59)
-  const condominioId = session!.user.condominioId
+  const condominioId = session?.user.condominioId
+  if (!condominioId) redirect("/login")
+  const residenteId = session!.user.id
 
-  const [visitasHoy, visitasPendientes, visitasRecientes, totalMes] = await Promise.all([
-    prisma.visita.count({
+  const [visitasHoy, visitasPendientes, visitasRecientes, totalMes] = await withTenant(condominioId, (tx) => Promise.all([
+    tx.visita.count({
       where: {
-        residenteId: session!.user.id,
-        condominioId,
+        residenteId,
         fechaProgramada: { gte: inicioDia, lte: finDia },
       },
     }),
-    prisma.visita.count({
-      where: { residenteId: session!.user.id, condominioId, estado: "PENDIENTE" },
+    tx.visita.count({
+      where: { residenteId, estado: "PENDIENTE" },
     }),
-    prisma.visita.findMany({
-      where: { residenteId: session!.user.id, condominioId },
+    tx.visita.findMany({
+      where: { residenteId },
       include: { vehiculos: { take: 1 } },
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
-    prisma.visita.count({
+    tx.visita.count({
       where: {
-        residenteId: session!.user.id,
-        condominioId,
+        residenteId,
         createdAt: {
           gte: new Date(hoy.getFullYear(), hoy.getMonth(), 1),
         },
       },
     }),
-  ])
+  ]))
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { runAsAdmin } from "@/lib/tenant"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 
 export async function GET(req: Request) {
@@ -18,6 +18,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Email requerido" }, { status: 400 })
   }
 
-  const existe = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+  // Chequeo público de existencia por email → bypass RLS.
+  const existe = await runAsAdmin((tx) => tx.user.findUnique({ where: { email }, select: { id: true } }))
   return NextResponse.json({ registrado: !!existe })
 }

@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 import { NextResponse } from "next/server"
 
 export async function GET(req: Request) {
@@ -33,16 +33,17 @@ export async function GET(req: Request) {
       : {}),
   }
 
-  const [logs, total] = await Promise.all([
-    prisma.logActividad.findMany({
+  // LogActividad no tiene RLS propio; el join a User sí. withTenant fija el contexto.
+  const [logs, total] = await withTenant(condominioId, (tx) => Promise.all([
+    tx.logActividad.findMany({
       where,
       include: { user: { select: { nombre: true, rol: true } } },
       orderBy: { timestamp: "desc" },
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.logActividad.count({ where }),
-  ])
+    tx.logActividad.count({ where }),
+  ]))
 
   return NextResponse.json({ logs, total, page, pages: Math.ceil(total / limit) })
 }

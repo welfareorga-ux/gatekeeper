@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, Car, User, Clock } from "lucide-react"
@@ -11,13 +12,14 @@ export const metadata = { title: "Alertas — Gatekeeper Admin" }
 export default async function AlertasPage() {
   const session = await getServerSession(authOptions)
   const condominioId = session?.user.condominioId
+  if (!condominioId) redirect("/no-autorizado")
 
-  const alertas = await prisma.logActividad.findMany({
+  const alertas = await withTenant(condominioId, (tx) => tx.logActividad.findMany({
     where: { accion: "EMERGENCIA_INGRESO", user: { condominioId } },
     include: { user: { select: { nombre: true } } },
     orderBy: { timestamp: "desc" },
     take: 100,
-  })
+  }))
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 import { UsuariosCliente } from "./usuarios-cliente"
 
 export const metadata = { title: "Usuarios — Gatekeeper Admin" }
@@ -14,18 +15,18 @@ const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> =
 export default async function UsuariosPage() {
   const session = await getServerSession(authOptions)
   const condominioId = session?.user.condominioId
+  if (!condominioId) redirect("/no-autorizado")
 
-  const [usuarios, condominio] = await Promise.all([
-    prisma.user.findMany({
-      where: { condominioId },
+  const [usuarios, condominio] = await withTenant(condominioId, (tx) => Promise.all([
+    tx.user.findMany({
       select: { id: true, nombre: true, email: true, telefono: true, rol: true, direccion: true, activo: true, createdAt: true },
       orderBy: [{ rol: "asc" }, { nombre: "asc" }],
     }),
-    prisma.condominio.findUnique({
-      where: { id: condominioId ?? "" },
+    tx.condominio.findUnique({
+      where: { id: condominioId },
       select: { plan: true },
     }),
-  ])
+  ]))
 
   const plan = condominio?.plan ?? "BASICO"
   const limites = LIMITES_PLAN[plan]

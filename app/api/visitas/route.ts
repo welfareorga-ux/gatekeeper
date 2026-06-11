@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { forTenant } from "@/lib/tenant"
+import { withTenant } from "@/lib/tenant"
 import { nuevaVisitaSchema } from "@/lib/validations/visita"
 import { EstadoVisita } from "@prisma/client"
 
@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   const { searchParams } = req.nextUrl
   const estado = searchParams.get("estado") as EstadoVisita | null
@@ -29,8 +28,8 @@ export async function GET(req: NextRequest) {
     ...(placa ? { vehiculos: { some: { placa: { contains: placa.toUpperCase(), mode: "insensitive" as const } } } } : {}),
   }
 
-  const [visitas, total] = await Promise.all([
-    db.visita.findMany({
+  const [visitas, total] = await withTenant(condominioId, (tx) => Promise.all([
+    tx.visita.findMany({
       where,
       include: {
         vehiculos: true,
@@ -41,8 +40,8 @@ export async function GET(req: NextRequest) {
       skip: (page - 1) * limit,
       take: limit,
     }),
-    db.visita.count({ where }),
-  ])
+    tx.visita.count({ where }),
+  ]))
 
   return NextResponse.json({ visitas, total, page, pages: Math.ceil(total / limit) })
 }
@@ -55,7 +54,6 @@ export async function POST(req: NextRequest) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   let body: unknown
   try { body = await req.json() } catch { return NextResponse.json({ error: "Cuerpo inválido" }, { status: 400 }) }
@@ -72,7 +70,7 @@ export async function POST(req: NextRequest) {
   const fechaInicioFull = new Date(aniof, mesf - 1, diaf, hiH, hiM)
   const fechaFinFull = new Date(aniof, mesf - 1, diaf, hfH, hfM)
 
-  const visita = await db.$transaction(async (tx) => {
+  const visita = await withTenant(condominioId, async (tx) => {
     const v = await tx.visita.create({
       data: {
         residenteId: session.user.id,

@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { forTenant } from "@/lib/tenant"
+import { withTenant, runAsAdmin } from "@/lib/tenant"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
@@ -19,14 +19,13 @@ export async function GET(req: Request) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   const { searchParams } = new URL(req.url)
   const rol = searchParams.get("rol")
   const buscar = searchParams.get("buscar") ?? ""
   const activoParam = searchParams.get("activo")
 
-  const usuarios = await db.user.findMany({
+  const usuarios = await withTenant(condominioId, (tx) => tx.user.findMany({
     where: {
       ...(rol && rol !== "TODOS" ? { rol: rol as "RESIDENTE" | "VIGILANTE" | "ADMIN" } : {}),
       ...(activoParam !== null && activoParam !== "" ? { activo: activoParam === "true" } : {}),
@@ -50,7 +49,7 @@ export async function GET(req: Request) {
       createdAt: true,
     },
     orderBy: [{ rol: "asc" }, { nombre: "asc" }],
-  })
+  }))
 
   return NextResponse.json(usuarios)
 }
@@ -71,7 +70,6 @@ export async function POST(req: Request) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   const body = await req.json()
   const result = crearSchema.safeParse(body)
@@ -81,55 +79,64 @@ export async function POST(req: Request) {
 
   const { nombre, email, password, rol, telefono, direccion } = result.data
 
-  const condominio = await db.condominio.findUnique({
-    where: { id: condominioId },
-    select: { plan: true, nombre: true },
-  })
-
-  // Verificar límites del plan antes de crear
-  if (rol === "RESIDENTE" || rol === "VIGILANTE") {
-    const limites = LIMITES_PLAN[condominio?.plan ?? "BASICO"]
-    const campo = rol === "RESIDENTE" ? "residentes" : "vigilantes"
-    const limite = limites[campo]
-
-    if (limite !== Infinity) {
-      const actual = await db.user.count({
-        where: { rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
-      })
-      if (actual >= limite) {
-        const planLabel = condominio?.plan === "BASICO" ? "Básico" : condominio?.plan === "ESTANDAR" ? "Estándar" : "Premium"
-        return NextResponse.json({
-          error: `Tu plan ${planLabel} permite máximo ${limite} ${campo}. Actualiza tu plan para agregar más.`,
-        }, { status: 403 })
-      }
-    }
-  }
-
-  // findUnique global: email es único en toda la plataforma (no por condominio).
-  const existe = await db.user.findUnique({ where: { email } })
+  // El email es único en TODA la plataforma (no por condominio). El chequeo debe
+  // ser global → runAsAdmin (bypass RLS), o un email de otro condominio pasaría
+  // el filtro y reventaría en la restricción unique al insertar.
+  const existe = await runAsAdmin((tx) => tx.user.findUnique({ where: { email }, select: { id: true } }))
   if (existe) return NextResponse.json({ error: "El email ya está registrado" }, { status: 409 })
 
   const hash = await bcrypt.hash(password, 12)
-  const usuario = await db.user.create({
-    data: { nombre, email, password: hash, rol, telefono, direccion },
-    select: { id: true, nombre: true, email: true, rol: true, activo: true, createdAt: true },
+
+  const out = await withTenant(condominioId, async (tx) => {
+    const condominio = await tx.condominio.findUnique({
+      where: { id: condominioId },
+      select: { plan: true, nombre: true },
+    })
+
+    // Verificar límites del plan antes de crear
+    if (rol === "RESIDENTE" || rol === "VIGILANTE") {
+      const limites = LIMITES_PLAN[condominio?.plan ?? "BASICO"]
+      const campo = rol === "RESIDENTE" ? "residentes" : "vigilantes"
+      const limite = limites[campo]
+
+      if (limite !== Infinity) {
+        const actual = await tx.user.count({
+          where: { rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
+        })
+        if (actual >= limite) {
+          const planLabel = condominio?.plan === "BASICO" ? "Básico" : condominio?.plan === "ESTANDAR" ? "Estándar" : "Premium"
+          return { error: NextResponse.json({
+            error: `Tu plan ${planLabel} permite máximo ${limite} ${campo}. Actualiza tu plan para agregar más.`,
+          }, { status: 403 }) }
+        }
+      }
+    }
+
+    const usuario = await tx.user.create({
+      data: { nombre, email, password: hash, rol, telefono, direccion },
+      select: { id: true, nombre: true, email: true, rol: true, activo: true, createdAt: true },
+    })
+
+    await tx.logActividad.create({
+      data: {
+        userId: session.user.id,
+        accion: "CREAR_USUARIO",
+        detalle: JSON.stringify({ email, rol }),
+      },
+    })
+
+    return { usuario, condominioNombre: condominio?.nombre ?? "" }
   })
 
-  await db.logActividad.create({
-    data: {
-      userId: session.user.id,
-      accion: "CREAR_USUARIO",
-      detalle: JSON.stringify({ email, rol }),
-    },
-  })
+  if ("error" in out) return out.error
 
   void enviarCredencialesUsuario({
     email,
     nombre,
     password,
     rol,
-    condominioNombre: condominio?.nombre ?? "",
+    condominioNombre: out.condominioNombre,
   })
 
-  return NextResponse.json(usuario, { status: 201 })
+  return NextResponse.json(out.usuario, { status: 201 })
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { runAsAdmin } from "@/lib/tenant"
 import { enviarEmailCobroFallido } from "@/lib/email"
 
 const PLAN_LABEL: Record<string, string> = {
@@ -81,10 +82,11 @@ export async function POST(req: Request) {
     })
 
     if (condominio) {
-      const admin = await prisma.user.findFirst({
+      // User tiene RLS; el webhook no tiene contexto de tenant → bypass.
+      const admin = await runAsAdmin((tx) => tx.user.findFirst({
         where: { condominioId: condominio.id, rol: "ADMIN" },
         select: { nombre: true, email: true },
-      })
+      }))
       if (admin) {
         await enviarEmailCobroFallido({
           emailAdmin: admin.email,

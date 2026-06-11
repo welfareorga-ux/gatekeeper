@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/prisma"
+import { runAsAdmin } from "@/lib/tenant"
 import { enviarEmailBienvenida } from "@/lib/email"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 
@@ -80,7 +80,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Configuración de pagos incompleta" }, { status: 500 })
   }
 
-  const existe = await prisma.user.findUnique({ where: { email: adminEmail.toLowerCase() } })
+  // Registro público (crea un condominio nuevo) → bypass RLS en todo el flujo de DB.
+  const existe = await runAsAdmin((tx) => tx.user.findUnique({ where: { email: adminEmail.toLowerCase() }, select: { id: true } }))
   if (existe) {
     return NextResponse.json({ error: "Este email ya está registrado" }, { status: 409 })
   }
@@ -153,7 +154,7 @@ export async function POST(req: Request) {
   const hash = await bcrypt.hash(adminPassword, 12)
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await runAsAdmin(async (tx) => {
       const condominio = await tx.condominio.create({
         data: {
           nombre: nombreCondominio,

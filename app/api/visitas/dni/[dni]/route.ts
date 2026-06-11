@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { forTenant } from "@/lib/tenant"
+import { withTenant } from "@/lib/tenant"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import { EstadoVisita } from "@prisma/client"
 
@@ -15,7 +15,6 @@ export async function GET(req: NextRequest, { params }: { params: { dni: string 
   if (session.user.rol === "RESIDENTE") return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   const ip = getClientIP(req)
   const { allowed, remaining } = await checkRateLimit(`dni:${ip}`, 30, 60_000)
@@ -33,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: { dni: string 
 
   let visitas
   try {
-    visitas = await db.visita.findMany({
+    visitas = await withTenant(condominioId, (tx) => tx.visita.findMany({
       where: {
         dniVisitante: dni,
         estado: { notIn: [EstadoVisita.CANCELADO] },
@@ -45,7 +44,7 @@ export async function GET(req: NextRequest, { params }: { params: { dni: string 
       },
       orderBy: { createdAt: "desc" },
       take: 10,
-    })
+    }))
   } catch (err) {
     console.error("[dni] DB error:", err)
     return NextResponse.json({ error: "Error de base de datos", detail: String(err) }, { status: 500 })

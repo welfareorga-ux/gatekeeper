@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -12,7 +12,9 @@ export async function GET() {
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
 
-  const dentro = await prisma.registroIngreso.findMany({
+  // RegistroIngreso no tiene RLS propio; el join a Visita sí. withTenant fija el
+  // contexto para que el join no quede vacío. Mantenemos el filtro relacional.
+  const dentro = await withTenant(condominioId, (tx) => tx.registroIngreso.findMany({
     where: { fechaHoraSalida: null, visita: { condominioId } },
     include: {
       vehiculo: true,
@@ -24,7 +26,7 @@ export async function GET() {
       vigilanteIngreso: { select: { nombre: true } },
     },
     orderBy: { fechaHoraIngreso: "asc" },
-  })
+  }))
 
   return NextResponse.json(dentro)
 }

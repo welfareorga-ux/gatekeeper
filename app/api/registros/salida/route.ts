@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { forTenant } from "@/lib/tenant"
+import { withTenant } from "@/lib/tenant"
 import { enviarNotificacionSalida } from "@/lib/email"
 import { z } from "zod"
 import { EstadoVisita } from "@prisma/client"
@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
-  const db = forTenant(condominioId)
 
   let body: unknown
   try { body = await req.json() } catch {
@@ -32,39 +31,38 @@ export async function POST(req: NextRequest) {
   }
 
   const { visitaId, notasVigilante } = parsed.data
-
-  const visita = await db.visita.findFirst({
-    where: { id: visitaId },
-    select: {
-      estado: true,
-      nombreVisitante: true,
-      vehiculos: { select: { placa: true }, take: 1 },
-      residente: { select: { email: true, nombre: true } },
-      condominio: { select: { nombre: true } },
-    },
-  })
-
-  if (!visita) return NextResponse.json({ error: "Visita no encontrada" }, { status: 404 })
-  if (visita.estado !== EstadoVisita.INGRESADO) {
-    return NextResponse.json(
-      { error: `La visita no está dentro (estado: ${visita.estado})` },
-      { status: 409 }
-    )
-  }
-
-  const registroAbierto = await db.registroIngreso.findFirst({
-    where: { visitaId, fechaHoraSalida: null },
-    orderBy: { fechaHoraIngreso: "desc" },
-  })
-
-  if (!registroAbierto) {
-    return NextResponse.json({ error: "No hay registro de ingreso abierto" }, { status: 404 })
-  }
-
   const horaSalida = new Date()
 
-  const registro = await db.$transaction(async (tx) => {
-    const r = await tx.registroIngreso.update({
+  // DB en transacción con contexto de tenant (RLS). Email DESPUÉS, fuera de la tx.
+  const result = await withTenant(condominioId, async (tx) => {
+    const visita = await tx.visita.findFirst({
+      where: { id: visitaId },
+      select: {
+        estado: true,
+        nombreVisitante: true,
+        vehiculos: { select: { placa: true }, take: 1 },
+        residente: { select: { email: true, nombre: true } },
+        condominio: { select: { nombre: true } },
+      },
+    })
+
+    if (!visita) return { error: NextResponse.json({ error: "Visita no encontrada" }, { status: 404 }) }
+    if (visita.estado !== EstadoVisita.INGRESADO) {
+      return { error: NextResponse.json(
+        { error: `La visita no está dentro (estado: ${visita.estado})` },
+        { status: 409 }
+      ) }
+    }
+
+    const registroAbierto = await tx.registroIngreso.findFirst({
+      where: { visitaId, fechaHoraSalida: null },
+      orderBy: { fechaHoraIngreso: "desc" },
+    })
+    if (!registroAbierto) {
+      return { error: NextResponse.json({ error: "No hay registro de ingreso abierto" }, { status: 404 }) }
+    }
+
+    const registro = await tx.registroIngreso.update({
       where: { id: registroAbierto.id },
       data: {
         fechaHoraSalida: horaSalida,
@@ -86,19 +84,21 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return r
+    return { registro, visita, horaIngreso: registroAbierto.fechaHoraIngreso }
   })
+
+  if ("error" in result) return result.error
 
   // Envío de email en background — no bloquea la respuesta
   void enviarNotificacionSalida({
-    emailResidente: visita.residente.email,
-    nombreResidente: visita.residente.nombre,
-    nombreVisitante: visita.nombreVisitante,
-    placa: visita.vehiculos[0]?.placa ?? "",
-    condominioNombre: visita.condominio?.nombre ?? "",
-    horaIngreso: registroAbierto.fechaHoraIngreso,
+    emailResidente: result.visita.residente.email,
+    nombreResidente: result.visita.residente.nombre,
+    nombreVisitante: result.visita.nombreVisitante,
+    placa: result.visita.vehiculos[0]?.placa ?? "",
+    condominioNombre: result.visita.condominio?.nombre ?? "",
+    horaIngreso: result.horaIngreso,
     horaSalida,
   })
 
-  return NextResponse.json(registro)
+  return NextResponse.json(result.registro)
 }

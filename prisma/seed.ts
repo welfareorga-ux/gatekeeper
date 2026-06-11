@@ -1,9 +1,16 @@
 import "dotenv/config"
 import { PrismaClient, Rol, EstadoVisita, PlanType } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { Pool } from "pg"
 import bcrypt from "bcryptjs"
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+// max:1 + bypass RLS a nivel de sesión: el seed corre como dueño y necesita
+// crear/borrar filas de todos los condominios (incl. SuperAdmin con condominioId NULL).
+const pool = new Pool({ connectionString: process.env.DATABASE_URL!, max: 1 })
+pool.on("connect", (client) => {
+  client.query("SET app.bypass_rls = 'on'").catch(() => {})
+})
+const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
 async function hashPassword(password: string) {

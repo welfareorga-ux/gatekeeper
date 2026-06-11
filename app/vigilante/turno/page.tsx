@@ -1,22 +1,28 @@
 import { TurnoCliente } from "./turno-cliente"
 import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { withTenant } from "@/lib/tenant"
 
 export const metadata = { title: "Mi Turno — Gatekeeper" }
 
 export default async function TurnoPage() {
   const session = await getServerSession(authOptions)
-  const condominioId = session!.user.condominioId
+  const condominioId = session?.user.condominioId
+  if (!condominioId) redirect("/login")
+  const vigilanteId = session!.user.id
 
-  const turnoActivo = await prisma.turnoVigilante.findFirst({
-    where: { vigilanteId: session!.user.id, condominioId, activo: true },
-  })
+  const { turnoActivo, ultimosTurnos } = await withTenant(condominioId, async (tx) => {
+    const turnoActivo = await tx.turnoVigilante.findFirst({
+      where: { vigilanteId, activo: true },
+    })
 
-  const ultimosTurnos = await prisma.turnoVigilante.findMany({
-    where: { vigilanteId: session!.user.id, condominioId },
-    orderBy: { horaInicioTurno: "desc" },
-    take: 5,
+    const ultimosTurnos = await tx.turnoVigilante.findMany({
+      where: { vigilanteId },
+      orderBy: { horaInicioTurno: "desc" },
+      take: 5,
+    })
+    return { turnoActivo, ultimosTurnos }
   })
 
   return (
