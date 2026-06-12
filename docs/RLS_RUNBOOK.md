@@ -27,6 +27,48 @@ de Postgres. Es la capa 3, encima del filtrado de la app (`lib/tenant.ts`).
 - Tablas sin `condominioId` (Vehiculo, RegistroIngreso, LogActividad) no tienen
   policy propia; se acceden por join a las protegidas dentro de `withTenant`.
 
+## ⚠️ Rol de aplicación `app_tenant` — OBLIGATORIO
+
+**Sin esto, RLS queda INERTE.** El rol por defecto de Neon, `neondb_owner`, tiene
+el atributo `rolbypassrls = true` → **se salta RLS incluso con `FORCE`**. No se
+puede quitar (`ALTER ROLE neondb_owner NOBYPASSRLS` → *permission denied*; Neon no
+expone superuser). Por eso la app debe conectarse con un rol **sin BYPASSRLS**.
+
+- **`app_tenant`**: `LOGIN`, `NOBYPASSRLS`, sin privilegios de admin, con
+  `GRANT SELECT/INSERT/UPDATE/DELETE` en todas las tablas + `USAGE/SELECT` en
+  secuencias + `ALTER DEFAULT PRIVILEGES` (para tablas futuras de migraciones).
+- **Provisión (SQL, como `neondb_owner` — Neon SQL Editor o psql).** Idempotente:
+  ```sql
+  DO $$
+  BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_tenant') THEN
+      CREATE ROLE app_tenant LOGIN PASSWORD '<PASSWORD>'
+        NOBYPASSRLS NOSUPERUSER NOCREATEROLE NOCREATEDB;
+    ELSE
+      ALTER ROLE app_tenant WITH LOGIN PASSWORD '<PASSWORD>';  -- NO* exige superuser
+    END IF;
+  END $$;
+
+  GRANT USAGE ON SCHEMA public TO app_tenant;
+  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_tenant;
+  GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_tenant;
+  -- tablas/secuencias futuras (migraciones) accesibles automáticamente:
+  ALTER DEFAULT PRIVILEGES FOR ROLE neondb_owner IN SCHEMA public
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_tenant;
+  ALTER DEFAULT PRIVILEGES FOR ROLE neondb_owner IN SCHEMA public
+    GRANT USAGE, SELECT ON SEQUENCES TO app_tenant;
+  ```
+  (Equivalente automatizado, no versionado por estar en `scripts/` gitignored:
+  `MIGRATE_DATABASE_URL=<admin> APP_DB_PASSWORD=<pass> node scripts/provision-app-role.mjs`.)
+- **Separación de credenciales:**
+  - `DATABASE_URL` (runtime de la app, en Vercel) → **`app_tenant`**.
+  - `MIGRATE_DATABASE_URL` (solo al correr `migrate deploy` / `db:seed`) →
+    **`neondb_owner`**. `prisma.config.ts` y los seeds usan
+    `MIGRATE_DATABASE_URL ?? DATABASE_URL`.
+- Verificado en rama (12 jun 2026): como `app_tenant`, sin setting → 0 filas
+  (deny), con `app.condominio_id`=A solo ve A (no la trampa de B), `bypass_rls=on`
+  ve todo; smoke test E2E (login admin/vigilante + búsquedas) OK, sin 500s.
+
 ## Probar en una rama de Neon
 
 1. **Crear rama** en Neon Console (Branches → New branch desde `main`/producción).
@@ -49,10 +91,16 @@ de Postgres. Es la capa 3, encima del filtrado de la app (`lib/tenant.ts`).
    distintivo: **placa `ZZZ-999` / DNI `99999999`** que NO existe en A.
    Credenciales B: `adminb@gatekeeper.pe` / `AdminB123!`,
    `vigilanteb@gatekeeper.pe` / `VigilanteB1!`, `residenteb@gatekeeper.pe` / `ResidenteB1!`.
-5. **Levantar la app** apuntando a la rama:
+5. **Provisionar el rol `app_tenant`** corriendo el SQL de la sección
+   *"Rol de aplicación `app_tenant`"* (como `neondb_owner`).
+6. **Levantar la app como `app_tenant`** (NO como neondb_owner, o RLS no aísla):
    ```bash
-   npm run dev
+   # DATABASE_URL = app_tenant ; NEXTAUTH_URL local para login en dev
+   DATABASE_URL="postgres://app_tenant:<pass>@HOST/neondb?sslmode=require" \
+   NEXTAUTH_URL="http://localhost:3000" npm run dev
    ```
+   Atajo de verificación automatizada: con el server arriba,
+   `node scripts/smoke-login.mjs` (login admin/vigilante + prueba de aislamiento).
 
 ### Matriz de prueba (lo que DEBE pasar)
 
@@ -87,20 +135,35 @@ que toca una tabla con RLS y olvidó `withTenant`/`runAsAdmin`: revisar logs.
 
 ## Promover a producción
 
-1. Merge de la rama `feat/rls-tenant-isolation` a `main` (Vercel auto-deploy).
-2. En la DB de producción (Neon), aplicar la migración:
+> ⚠️ **Orden crítico.** Si activas la migración RLS antes de que la app conecte
+> como `app_tenant`, no pasa nada (neondb_owner la ignora). El riesgo real es lo
+> contrario: cambiar `DATABASE_URL` a `app_tenant` **antes** de provisionar el rol
+> y sus grants → la app no puede leer nada. Por eso este orden:
+
+1. **Provisionar `app_tenant` en la DB de PROD** (antes de tocar nada en Vercel):
+   correr el SQL de la sección *"Rol de aplicación `app_tenant`"* contra prod
+   como `neondb_owner` (Neon SQL Editor).
+2. **Aplicar la migración RLS** en prod (sigue inerte hasta que la app use app_tenant):
    ```bash
-   # con DATABASE_URL de PROD
-   npx prisma migrate deploy
+   MIGRATE_DATABASE_URL="<PROD neondb_owner>" npx prisma migrate deploy
    ```
-   > El código nuevo y la migración deben ir casi juntos: con FORCE RLS activo,
-   > el código viejo (sin `withTenant`) vería vacío; y el código nuevo sin la
-   > migración funciona igual (solo no tiene la capa DB). Orden recomendado:
-   > **desplegar código → aplicar migración** (ventana corta).
+3. **Merge** `feat/rls-tenant-isolation` → `main` (Vercel auto-deploy del código
+   nuevo con `withTenant`/`runAsAdmin`). Aún con `DATABASE_URL=neondb_owner`
+   funciona igual (RLS inerte, sin romper).
+4. **Cambiar `DATABASE_URL` en Vercel** a la cadena de **`app_tenant`** y
+   redeploy. **Recién aquí RLS empieza a aislar de verdad.** Vigilar logs unos
+   minutos: si algo quedó sin wrapper, daría pantallas vacías → rollback abajo.
+   - (Opcional) Conservar `MIGRATE_DATABASE_URL=neondb_owner` en Vercel para
+     futuras migraciones; el runtime no lo usa.
 
 ## Rollback
 
-Si algo sale mal en producción, desactivar RLS sin perder datos:
+**Más rápido (instantáneo, sin SQL):** volver `DATABASE_URL` en Vercel a la cadena
+de **`neondb_owner`** y redeploy → como ese rol tiene BYPASSRLS, RLS queda inerte
+y la app vuelve a ver todo. Las policies y la migración siguen aplicadas pero sin
+efecto. Ideal si aparece una pantalla vacía por una ruta sin wrapper.
+
+Alternativa a nivel DB (desactivar RLS sin perder datos):
 ```sql
 ALTER TABLE "User" NO FORCE ROW LEVEL SECURITY;            ALTER TABLE "User" DISABLE ROW LEVEL SECURITY;
 ALTER TABLE "Visita" NO FORCE ROW LEVEL SECURITY;          ALTER TABLE "Visita" DISABLE ROW LEVEL SECURITY;

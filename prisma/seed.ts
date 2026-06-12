@@ -6,7 +6,8 @@ import bcrypt from "bcryptjs"
 
 // max:1 + bypass RLS a nivel de sesión: el seed corre como dueño y necesita
 // crear/borrar filas de todos los condominios (incl. SuperAdmin con condominioId NULL).
-const pool = new Pool({ connectionString: process.env.DATABASE_URL!, max: 1 })
+// Usa el rol ADMIN (MIGRATE_DATABASE_URL=neondb_owner); fallback a DATABASE_URL.
+const pool = new Pool({ connectionString: process.env.MIGRATE_DATABASE_URL ?? process.env.DATABASE_URL!, max: 1 })
 pool.on("connect", (client) => {
   client.query("SET app.bypass_rls = 'on'").catch(() => {})
 })

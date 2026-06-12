@@ -7,6 +7,10 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env.DATABASE_URL!,
+    // Las migraciones se aplican con el rol ADMIN (neondb_owner), que puede
+    // crear/alterar tablas y políticas. La app en runtime usa app_tenant
+    // (sin BYPASSRLS) vía DATABASE_URL. Fallback a DATABASE_URL si no se
+    // separan credenciales (compatibilidad).
+    url: process.env.MIGRATE_DATABASE_URL ?? process.env.DATABASE_URL!,
   },
 })

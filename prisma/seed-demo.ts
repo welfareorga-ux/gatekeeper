@@ -8,7 +8,8 @@ import bcrypt from "bcryptjs"
 // A diferencia de seed.ts, este es ADITIVO: NO borra nada, solo agrega el
 // condominio "Las Palmeras" con datos DISTINTIVOS (placa/DNI que no existen
 // en "Los Pinos"). Corre como dueño con bypass RLS a nivel de sesión.
-const pool = new Pool({ connectionString: process.env.DATABASE_URL!, max: 1 })
+// Usa el rol ADMIN (MIGRATE_DATABASE_URL=neondb_owner); fallback a DATABASE_URL.
+const pool = new Pool({ connectionString: process.env.MIGRATE_DATABASE_URL ?? process.env.DATABASE_URL!, max: 1 })
 pool.on("connect", (client) => {
   client.query("SET app.bypass_rls = 'on'").catch(() => {})
 })
