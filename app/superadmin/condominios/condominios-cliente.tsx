@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RefreshCw, Building2, Users, FileText, KeyRound } from "lucide-react"
+import { RefreshCw, Building2, Users, FileText, KeyRound, Trash2 } from "lucide-react"
 import { formatFecha } from "@/lib/utils"
 
 type Condominio = {
@@ -37,6 +37,9 @@ export function CondominiosCliente() {
   const [modalReset, setModalReset] = useState<Condominio | null>(null)
   const [newPassword, setNewPassword] = useState("")
   const [guardando, setGuardando] = useState(false)
+  const [aEliminar, setAEliminar] = useState<Condominio | null>(null)
+  const [confirmNombre, setConfirmNombre] = useState("")
+  const [eliminando, setEliminando] = useState(false)
 
   const cargar = useCallback(async () => {
     setLoading(true)
@@ -107,6 +110,24 @@ export function CondominiosCliente() {
       toast.error("Error de conexión")
     } finally {
       setGuardando(false)
+    }
+  }
+
+  async function eliminarCondominio() {
+    if (!aEliminar || confirmNombre.trim() !== aEliminar.nombre) return
+    setEliminando(true)
+    try {
+      const res = await fetch(`/api/superadmin/condominios/${aEliminar.id}`, { method: "DELETE" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) { toast.error(data.error ?? "Error al eliminar"); return }
+      toast.success(`Condominio "${aEliminar.nombre}" eliminado (${data.usuarios} usuarios, ${data.visitas} visitas)`)
+      setCondominios((prev) => prev.filter((x) => x.id !== aEliminar.id))
+      setAEliminar(null)
+      setConfirmNombre("")
+    } catch {
+      toast.error("Error de conexión")
+    } finally {
+      setEliminando(false)
     }
   }
 
@@ -190,13 +211,22 @@ export function CondominiosCliente() {
                       <Switch checked={c.activo} onCheckedChange={() => toggleActivo(c)} />
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost" size="icon" className="h-8 w-8"
-                        title="Resetear contraseña del admin"
-                        onClick={() => { setModalReset(c); setNewPassword("") }}
-                      >
-                        <KeyRound className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost" size="icon" className="h-8 w-8"
+                          title="Resetear contraseña del admin"
+                          onClick={() => { setModalReset(c); setNewPassword("") }}
+                        >
+                          <KeyRound className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
+                          title="Eliminar condominio"
+                          onClick={() => { setAEliminar(c); setConfirmNombre("") }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -240,6 +270,50 @@ export function CondominiosCliente() {
             <Button variant="outline" onClick={() => setModalReset(null)}>Cancelar</Button>
             <Button onClick={resetAdminPassword} disabled={guardando || newPassword.length < 8}>
               {guardando ? "Actualizando…" : "Actualizar contraseña"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!aEliminar} onOpenChange={(v) => { if (!v) { setAEliminar(null); setConfirmNombre("") } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-4 w-4" />
+              Eliminar condominio
+            </DialogTitle>
+          </DialogHeader>
+          {aEliminar && (
+            <div className="space-y-3 text-sm">
+              <p>
+                Vas a eliminar <strong>{aEliminar.nombre}</strong> y <strong>TODO</strong> lo que contiene:
+              </p>
+              <ul className="list-disc pl-5 text-muted-foreground space-y-0.5">
+                <li><strong>{aEliminar._count.usuarios}</strong> usuario(s): administradores, vigilantes y residentes</li>
+                <li><strong>{aEliminar._count.visitas}</strong> visita(s) y sus vehículos/registros</li>
+                <li>Plantillas, turnos y registros de actividad del condominio</li>
+              </ul>
+              <p className="rounded-md border border-destructive/30 bg-destructive/10 text-destructive px-3 py-2 text-xs">
+                ⚠️ Esta acción es <strong>permanente e irreversible</strong>. No hay papelera ni forma de recuperar los datos.
+              </p>
+              <div className="space-y-1.5">
+                <Label>Para confirmar, escribe el nombre del condominio:</Label>
+                <Input
+                  placeholder={aEliminar.nombre}
+                  value={confirmNombre}
+                  onChange={(e) => setConfirmNombre(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAEliminar(null); setConfirmNombre("") }}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              onClick={eliminarCondominio}
+              disabled={eliminando || !aEliminar || confirmNombre.trim() !== aEliminar.nombre}
+            >
+              {eliminando ? "Eliminando…" : "Eliminar definitivamente"}
             </Button>
           </DialogFooter>
         </DialogContent>
