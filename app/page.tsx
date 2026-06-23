@@ -51,15 +51,16 @@ export default async function RootPage() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium">
                 <ShieldCheck className="h-3.5 w-3.5 text-orange-400" />
-                Control de visitas y accesos para condominios
+                Control de visitas y accesos para condominios y edificios con vigilancia
               </div>
               <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
                 Más seguridad y menos conflictos{" "}
                 <span className="text-orange-400">en la puerta de tu condominio.</span>
               </h1>
               <p className="text-lg text-slate-300 max-w-xl">
-                Reemplaza el cuaderno de la garita por una plataforma simple: registra visitas,
-                controla el ingreso de vehículos y ten todo el historial a un clic. Sin instalar nada.
+                Dale a tu administración el control y el respaldo que un cuaderno no puede dar:
+                quién entró, quién lo autorizó y cuándo, todo registrado. Residentes más tranquilos
+                y reportes claros para la junta. Sin instalar nada.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/registro">
@@ -120,7 +121,7 @@ export default async function RootPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-medium text-foreground/80">
             <span className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /> Condominios cerrados</span>
-            <span className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /> Edificios multifamiliares</span>
+            <span className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /> Edificios y complejos multifamiliares con vigilancia</span>
             <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> Urbanizaciones</span>
             <span className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> Empresas administradoras</span>
           </div>
@@ -132,14 +133,14 @@ export default async function RootPage() {
         <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
           <h2 className="text-3xl font-bold">El cuaderno de la garita ya no alcanza</h2>
           <p className="text-muted-foreground">
-            Anotar a mano genera colas, errores y cero trazabilidad cuando algo pasa.
+            El papel no protege a tu administración: cuando hay un reclamo o un incidente, no hay con qué responder.
           </p>
         </div>
         <div className="grid sm:grid-cols-3 gap-6">
           {[
-            { icon: ClipboardList, t: "Registro en papel", d: "Datos ilegibles, hojas que se pierden y ninguna forma de buscar quién entró y cuándo." },
-            { icon: Clock, t: "Colas en la puerta", d: "Cada visita toma tiempo. En hora punta se forman filas y crece la incomodidad." },
-            { icon: Shield, t: "Sin control ni respaldo", d: "Ante un incidente no hay historial confiable que respalde a la administración ni a los residentes." },
+            { icon: Shield, t: "Sin respaldo ante un incidente", d: "Si algo pasa, el cuaderno no prueba quién entró ni quién lo autorizó. La administración queda expuesta frente a residentes y junta." },
+            { icon: ClipboardList, t: "Reclamos de los residentes", d: "Colas en la puerta, visitas mal anotadas y quejas que terminan en la mesa de la administración." },
+            { icon: BarChart3, t: "Cero visibilidad para la junta", d: "Sin reportes ni datos confiables no hay cómo rendir cuentas ni demostrar que la seguridad está bajo control." },
           ].map((p) => {
             const Icon = p.icon
             return (
@@ -456,7 +457,7 @@ export default async function RootPage() {
             { q: "¿Qué pasa con los datos de los visitantes?", a: "Se tratan de forma responsable y conforme a la Ley N° 29733. Cada usuario accede solo a lo que le corresponde y queda registro de las acciones." },
             { q: "¿Capacitan a mi personal?", a: "Sí. Ofrecemos onboarding y capacitación para vigilantes, residentes y administradores, para que arranquen sin complicaciones." },
             { q: "¿Hay contrato de permanencia?", a: "No. Empiezas con 14 días gratis sin tarjeta y luego eliges un plan mensual. Puedes cancelar cuando quieras." },
-            { q: "¿Sirve para edificios y urbanizaciones, no solo condominios?", a: "Sí. Funciona para condominios cerrados, edificios multifamiliares, urbanizaciones y empresas que administran varios inmuebles." },
+            { q: "¿Sirve para edificios y urbanizaciones, no solo condominios?", a: "Sí. Funciona en cualquier inmueble con vigilancia: condominios cerrados, edificios y complejos multifamiliares con vigilante, urbanizaciones y empresas que administran varios inmuebles." },
             { q: "¿Cómo registra el vigilante a una visita?", a: "Por placa o DNI, o escaneando el código QR que el residente envió por WhatsApp. Registra ingreso y salida con un toque." },
           ].map((item) => (
             <details key={item.q} className="rounded-xl border px-5 bg-background group">

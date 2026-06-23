@@ -209,14 +209,33 @@ export async function DELETE() {
     return NextResponse.json({ error: "La suscripción ya está cancelada" }, { status: 400 })
   }
 
-  const culqiRes = await culqiFetch(
-    `/recurrent/subscriptions/${condominio.culqiSubscriptionId}/delete`,
-    "DELETE",
-    secretKey
-  ) as { object?: string }
+  // Culqi cancela con: DELETE https://api.culqi.com/v2/recurrent/subscriptions/{id}
+  // El id va al FINAL del path. El sufijo "/delete" apunta a un endpoint inexistente:
+  // Culqi devolvía error, NO se cancelaba el cobro recurrente y la DB quedaba en
+  // "cancelada" → el cliente creía haber cancelado pero se le seguía cobrando.
+  const res = await fetch(
+    `${CULQI_BASE}/recurrent/subscriptions/${condominio.culqiSubscriptionId}`,
+    { method: "DELETE", headers: { Authorization: `Bearer ${secretKey}` } }
+  )
+  const culqiRes = await res.json().catch(() => ({})) as {
+    object?: string; deleted?: boolean; merchant_message?: string; user_message?: string
+  }
 
-  if (culqiRes?.object !== "deleted") {
-    console.error("[Culqi] cancelar suscripción:", JSON.stringify(culqiRes))
+  const cancelada = res.ok && (culqiRes?.object === "deleted" || culqiRes?.deleted === true)
+
+  if (!cancelada) {
+    // NO marcamos "cancelada": si Culqi no confirmó, la suscripción sigue viva y
+    // seguiría cobrando. Devolvemos error para que el cliente reintente o escriba.
+    console.error("[Culqi] cancelar suscripción falló:", res.status, JSON.stringify(culqiRes))
+    return NextResponse.json(
+      {
+        error:
+          culqiRes?.merchant_message ??
+          culqiRes?.user_message ??
+          "No se pudo cancelar la suscripción en la pasarela de pago. Vuelve a intentarlo o escríbenos a soporte@gatekeeper-app.org.",
+      },
+      { status: 502 }
+    )
   }
 
   await prisma.condominio.update({

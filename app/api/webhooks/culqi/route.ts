@@ -50,8 +50,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true })
   }
 
+  // Las suscripciones recurrentes de Culqi tienen id con prefijo "sxn"
+  // (antes se buscaba "sbn_", que nunca coincide → los eventos de cancelación/
+  //  cobro desde Culqi no actualizaban el condominio).
   const subscriptionId: string =
-    obj.id?.startsWith("sbn_") ? obj.id :
+    obj.id?.startsWith("sxn") ? obj.id :
     obj.subscription_id ?? obj.source_id ?? ""
 
   if (!subscriptionId) return NextResponse.json({ ok: true })
