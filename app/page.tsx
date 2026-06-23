@@ -162,7 +162,8 @@ export default async function RootPage() {
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <h2 className="text-3xl font-bold">Una plataforma, tres roles</h2>
             <p className="text-muted-foreground">
-              Cada quien hace lo suyo en segundos, desde el celular o la computadora.
+              El residente registra su visita, el vigilante la verifica en la puerta y la
+              administración lo ve todo. Cada quien hace lo suyo en segundos, desde el celular o la computadora.
             </p>
           </div>
           <div className="grid sm:grid-cols-3 gap-6">
@@ -170,12 +171,12 @@ export default async function RootPage() {
               {
                 icon: Users, color: "text-blue-500 bg-blue-500/10",
                 title: "Residente",
-                description: "Registra a su visita con anticipación y comparte un código QR por WhatsApp. Recibe avisos cuando entra y sale.",
+                description: "Es quien registra a su visita con anticipación y comparte un código QR por WhatsApp. Recibe avisos cuando entra y sale.",
               },
               {
                 icon: Car, color: "text-green-500 bg-green-500/10",
                 title: "Vigilante",
-                description: "Busca por placa o DNI, o escanea el QR con la cámara. Registra ingreso y salida con un toque. Funciona en el móvil.",
+                description: "Verifica la visita en la puerta: busca por placa o DNI, o escanea el QR. Registra el ingreso y la salida con un toque, desde el móvil.",
               },
               {
                 icon: BarChart3, color: "text-purple-500 bg-purple-500/10",

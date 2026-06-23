@@ -32,10 +32,13 @@ async function estadoCulqi(subId) {
   const body = await res.json().catch(() => ({}));
   if (res.status === 404) return { viva: false, detalle: "no existe (404)" };
   if (!res.ok) return { viva: null, detalle: `error ${res.status}: ${body?.merchant_message ?? body?.user_message ?? ""}` };
-  // Una suscripción cancelada en Culqi responde 404 o con object:"deleted".
-  // Si responde con objeto vivo y tiene next_billing_date futura, SIGUE cobrando.
-  // (El campo `status` numérico NO sirve para detectar baja: status=3 es una sub viva.)
-  const eliminada = body?.object === "deleted" || body?.deleted === true;
+  // Estados de suscripción Culqi (empírico): status 3 = viva/al día,
+  // status 4 = cancelada. Tras dar de baja, el GET sigue devolviendo el objeto
+  // (con next_billing_date) pero con status 4 — NO devuelve 404 ni deleted:true.
+  // Por eso consideramos viva solo si status < 4 y no hay marca de baja.
+  const status = Number(body?.status);
+  const eliminada =
+    body?.object === "deleted" || body?.deleted === true || (Number.isFinite(status) && status >= 4);
   const nextDate = body?.next_billing_date ?? body?.current_period_end ?? body?.billing_date ?? null;
   const futura = nextDate ? nextDate * 1000 > Date.now() : false;
   return {
