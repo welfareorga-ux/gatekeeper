@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/expirar-visitas",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/keepalive-redis",
+      "schedule": "0 6 * * *"
     }
   ]
 }
