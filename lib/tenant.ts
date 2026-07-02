@@ -116,6 +116,14 @@ export function forTenant(condominioId: string) {
   })
 }
 
+/**
+ * Opciones para TODA transacción. `maxWait` sube de 2s (default) a 10s: da
+ * margen para conseguir la conexión del pool (`max: 1`) cuando Neon despierta
+ * de autosuspend en horas sin tráfico (p.ej. el cron de medianoche), que era la
+ * causa del error "Unable to start a transaction in the given time".
+ */
+const TX_OPTIONS = { maxWait: 10_000, timeout: 20_000 } as const
+
 export type TenantPrisma = ReturnType<typeof forTenant>
 
 /** Cliente transaccional acotado al tenant (con inyección de condominioId). */
@@ -143,7 +151,7 @@ export async function withTenant<T>(
     // set_config(..., true) = SET LOCAL: vive solo en esta transacción.
     await tx.$executeRaw`SELECT set_config('app.condominio_id', ${condominioId}, true)`
     return fn(tx as TenantTx)
-  })
+  }, TX_OPTIONS)
 }
 
 /**
@@ -156,5 +164,5 @@ export async function runAsAdmin<T>(fn: (tx: AdminTx) => Promise<T>): Promise<T>
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`
     return fn(tx as AdminTx)
-  })
+  }, TX_OPTIONS)
 }
