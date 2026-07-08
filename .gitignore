@@ -39,3 +39,15 @@ next-env.d.ts
 /app/generated/prisma
 
 .vercel
+
+# secrets / credenciales locales (NUNCA subir)
+recovery-codes.txt
+*recovery-codes*.txt
+scripts/.prod_app_tenant_url
+scripts/.*
+
+# scripts locales de un solo uso (dev/diagnóstico)
+# se conserva solo el diagnóstico que sí queremos versionar
+/scripts/*.mjs
+/scripts/*.ts
+!/scripts/check-suscripciones.mjs
