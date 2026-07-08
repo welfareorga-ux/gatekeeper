@@ -8,7 +8,7 @@ import {
   Shield, ShieldCheck, Lock, Car, Users, BarChart3, CheckCircle2,
   Bell, FileSpreadsheet, Phone, Mail, MapPin, Building2, QrCode,
   ScanLine, Clock, MessageCircle, Database, ClipboardList, KeyRound,
-  Zap, Headset, X,
+  Zap, Headset, X, Smartphone,
 } from "lucide-react"
 
 const WHATSAPP = "https://wa.me/51964462645"
@@ -153,6 +153,42 @@ export default async function RootPage() {
               </div>
             )
           })}
+        </div>
+      </section>
+
+      {/* CÓMO FUNCIONA EN 3 PASOS */}
+      <section className="border-t">
+        <div className="container max-w-6xl mx-auto px-4 py-20">
+          <div className="text-center max-w-2xl mx-auto space-y-3 mb-14">
+            <h2 className="text-3xl font-bold">Así de simple. Y todo queda registrado.</h2>
+            <p className="text-muted-foreground">
+              El residente decide quién entra, el visitante llega con su pase y el vigilante solo confirma. En segundos.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-6">
+            {[
+              { n: "1", icon: Smartphone, t: "El residente autoriza", d: "Desde su celular, el residente registra a su visita con el DNI (y la placa, si viene en auto). Nadie entra sin que el residente lo autorice." },
+              { n: "2", icon: MessageCircle, t: "El visitante recibe su pase QR", d: "Gatekeeper genera un pase QR que el residente le envía por WhatsApp. Sin llamadas a la garita ni esperas." },
+              { n: "3", icon: CheckCircle2, t: "El vigilante confirma", d: "En la puerta, el vigilante escanea el QR o busca por DNI o placa y confirma el ingreso con un toque. Queda registrado quién entró, quién lo autorizó y cuándo." },
+            ].map((s) => {
+              const Icon = s.icon
+              return (
+                <div key={s.n} className="relative rounded-xl border bg-background p-6 pt-8 space-y-3">
+                  <div className="absolute -top-4 left-6 inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white font-bold text-sm">
+                    {s.n}
+                  </div>
+                  <div className="inline-flex p-3 rounded-lg bg-orange-500/10">
+                    <Icon className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <h3 className="font-semibold text-lg">{s.t}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{s.d}</p>
+                </div>
+              )
+            })}
+          </div>
+          <p className="text-center text-muted-foreground text-sm mt-10 max-w-2xl mx-auto">
+            El vigilante ya no anota a mano. El residente decide. Y la administración tiene la prueba.
+          </p>
         </div>
       </section>
 
