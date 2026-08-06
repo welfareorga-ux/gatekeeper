@@ -6,9 +6,22 @@ import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { enviarCredencialesUsuario } from "@/lib/email"
 
+/**
+ * Guardarraíl de capacidad, NO un límite comercial.
+ *
+ * El plan Pro se vende sin límite de residentes y esa promesa se mantiene: este
+ * tope existe para que el crecimiento de una sola cuenta no desborde nuestra
+ * capacidad de operación y soporte sin que nos enteremos. Cuando una cuenta lo
+ * alcanza, se amplía caso por caso.
+ *
+ * Por eso no se publica en la landing, los términos ni el panel: el admin solo
+ * ve un aviso para contactar a soporte si llega ahí.
+ */
+const TOPE_RESIDENTES_PRO = 300
+
 const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
-  GRATIS: { residentes: 15,       vigilantes: 1        },
-  PRO:    { residentes: Infinity, vigilantes: Infinity },
+  GRATIS: { residentes: 15,                  vigilantes: 1        },
+  PRO:    { residentes: TOPE_RESIDENTES_PRO, vigilantes: Infinity },
 }
 
 export async function GET(req: Request) {
@@ -105,9 +118,12 @@ export async function POST(req: Request) {
           where: { rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
         })
         if (actual >= limite) {
-          return { error: NextResponse.json({
-            error: `El plan Gratis permite máximo ${limite} ${campo}. Pasa al plan Pro para agregar más.`,
-          }, { status: 403 }) }
+          // En Gratis se dice el límite (es parte de la oferta). En Pro NO se
+          // menciona ninguna cifra: se deriva a soporte, que lo amplía.
+          const mensaje = condominio?.plan === "GRATIS"
+            ? `El plan Gratis permite máximo ${limite} ${campo}. Pasa al plan Pro para agregar más.`
+            : `Has alcanzado la capacidad asignada a tu cuenta. Escríbenos a soporte@gatekeeper-app.org y la ampliamos.`
+          return { error: NextResponse.json({ error: mensaje }, { status: 403 }) }
         }
       }
     }
