@@ -11,6 +11,8 @@ const actualizarSchema = z.object({
   telefono: z.string().nullable().optional(),
   direccion: z.string().nullable().optional(),
   activo: z.boolean().optional(),
+  // null = quitar la empresa (dejar al residente sin asignar).
+  empresaId: z.string().nullable().optional(),
 })
 
 export async function PATCH(
@@ -40,10 +42,25 @@ export async function PATCH(
     const target = await tx.user.findFirst({ where: { id: params.id }, select: { id: true } })
     if (!target) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
 
+    // La empresa debe existir y ser de esta organización. El findFirst va dentro
+    // de withTenant, así que RLS impide referenciar una de otro tenant.
+    if (result.data.empresaId) {
+      const empresa = await tx.empresa.findFirst({
+        where: { id: result.data.empresaId },
+        select: { id: true },
+      })
+      if (!empresa) {
+        return NextResponse.json({ error: "La empresa seleccionada no existe" }, { status: 400 })
+      }
+    }
+
     const usuario = await tx.user.update({
       where: { id: params.id },
       data: result.data,
-      select: { id: true, nombre: true, email: true, rol: true, activo: true, telefono: true, direccion: true },
+      select: {
+        id: true, nombre: true, email: true, rol: true, activo: true,
+        telefono: true, direccion: true, empresaId: true,
+      },
     })
 
     await tx.logActividad.create({

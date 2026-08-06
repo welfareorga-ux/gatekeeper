@@ -59,7 +59,7 @@ export default function TerminosPage() {
             <h2 className="text-xl font-semibold">3. Planes y precios</h2>
             <p>Los planes disponibles y sus tarifas mensuales son:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong>Plan Gratis:</strong> S/ 0.00 — hasta 15 residentes, 1 vigilante, 50 visitas al mes, historial de 30 días. Sin fecha de vencimiento.</li>
+              <li><strong>Plan Gratis:</strong> S/ 0.00 — hasta 15 residentes, 2 vigilantes, 50 visitas al mes, historial de 30 días. Sin fecha de vencimiento.</li>
               <li><strong>Plan Pro:</strong> S/ 89.00/mes — residentes y vigilantes ilimitados, historial completo, reportes, notificaciones por correo y empresas.</li>
               <li><strong>Plan Premium:</strong> S/ 149.00/mes — sin límite de residentes y vigilantes, historial ilimitado, reportes avanzados, soporte dedicado.</li>
               <li><strong>Onboarding y Configuración:</strong> S/ 59.00 (pago único) — implementación inicial del sistema.</li>

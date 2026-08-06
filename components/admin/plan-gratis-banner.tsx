@@ -13,7 +13,7 @@ export function PlanGratisBanner() {
           <Sparkles className="h-4 w-4 text-orange-400 shrink-0" />
           <span>
             Estás en el <strong>plan Gratis</strong>
-            <span className="text-slate-400"> · 15 residentes · 1 vigilante · 50 visitas al mes</span>
+            <span className="text-slate-400"> · 15 residentes · 2 vigilantes · 50 visitas al mes</span>
           </span>
         </p>
         <Link

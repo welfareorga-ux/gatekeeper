@@ -16,7 +16,7 @@ export const metadata = { title: "Usuarios — Gatekeeper Admin" }
  * cuando alguien la alcanza. No debe aparecer aquí.
  */
 const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
-  GRATIS: { residentes: 15,       vigilantes: 1        },
+  GRATIS: { residentes: 15,       vigilantes: 2        },
   PRO:    { residentes: Infinity, vigilantes: Infinity },
 }
 
@@ -27,7 +27,11 @@ export default async function UsuariosPage() {
 
   const [usuarios, condominio] = await withTenant(condominioId, (tx) => Promise.all([
     tx.user.findMany({
-      select: { id: true, nombre: true, email: true, telefono: true, rol: true, direccion: true, activo: true, createdAt: true },
+      select: {
+        id: true, nombre: true, email: true, telefono: true, rol: true,
+        direccion: true, activo: true, createdAt: true,
+        empresaId: true, empresa: { select: { nombre: true } },
+      },
       orderBy: [{ rol: "asc" }, { nombre: "asc" }],
     }),
     tx.condominio.findUnique({

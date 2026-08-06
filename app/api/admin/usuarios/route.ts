@@ -20,7 +20,7 @@ import { enviarCredencialesUsuario } from "@/lib/email"
 const TOPE_RESIDENTES_PRO = 300
 
 const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
-  GRATIS: { residentes: 15,                  vigilantes: 1        },
+  GRATIS: { residentes: 15,                  vigilantes: 2        },
   PRO:    { residentes: TOPE_RESIDENTES_PRO, vigilantes: Infinity },
 }
 
@@ -59,6 +59,8 @@ export async function GET(req: Request) {
       direccion: true,
       activo: true,
       createdAt: true,
+      empresaId: true,
+      empresa: { select: { nombre: true } },
     },
     orderBy: [{ rol: "asc" }, { nombre: "asc" }],
   }))

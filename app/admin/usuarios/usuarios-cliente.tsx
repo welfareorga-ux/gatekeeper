@@ -25,6 +25,8 @@ type Usuario = {
   direccion: string | null
   activo: boolean
   createdAt: string
+  empresaId?: string | null
+  empresa?: { nombre: string } | null
 }
 
 interface Limite { actual: number; max: number }
@@ -140,11 +142,18 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
           email: modalEditar.email,
           telefono: modalEditar.telefono,
           direccion: modalEditar.direccion,
+          // Solo los residentes tienen empresa; null = quitar la asignacion.
+          ...(modalEditar.rol === "RESIDENTE" ? { empresaId: modalEditar.empresaId ?? null } : {}),
         }),
       })
       if (!res.ok) { toast.error((await res.json()).error ?? "Error al actualizar"); return }
       const actualizado = await res.json()
-      setUsuarios((prev) => prev.map((u) => (u.id === actualizado.id ? { ...u, ...actualizado } : u)))
+      const empresa = empresas.find((e) => e.id === actualizado.empresaId)
+      setUsuarios((prev) => prev.map((u) => (
+        u.id === actualizado.id
+          ? { ...u, ...actualizado, empresa: empresa ? { nombre: empresa.nombre } : null }
+          : u
+      )))
       toast.success("Usuario actualizado")
       setModalEditar(null)
     } catch { toast.error("Error de conexión") }
@@ -264,8 +273,11 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
                       {u.rol}
                     </span>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[140px] truncate">
-                    {u.direccion ?? "—"}
+                  <TableCell className="text-sm text-muted-foreground max-w-[160px]">
+                    <p className="truncate">{u.direccion ?? "—"}</p>
+                    {u.empresa?.nombre && (
+                      <p className="truncate text-xs text-primary/80">{u.empresa.nombre}</p>
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {formatFecha(u.createdAt)}
@@ -401,6 +413,23 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
                 <Label>Dirección / Unidad</Label>
                 <Input value={modalEditar.direccion ?? ""} onChange={(e) => setModalEditar((p) => p ? { ...p, direccion: e.target.value || null } : p)} placeholder="Torre A, Dpto 301" />
               </div>
+              {modalEditar.rol === "RESIDENTE" && empresas.length > 0 && (
+                <div className="col-span-2 space-y-1.5">
+                  <Label>Empresa <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                  <Select
+                    value={modalEditar.empresaId ?? SIN_EMPRESA}
+                    onValueChange={(v) => setModalEditar((p) => p ? { ...p, empresaId: v === SIN_EMPRESA ? null : v } : p)}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={SIN_EMPRESA}>Sin empresa</SelectItem>
+                      {empresas.filter((e) => e.activo || e.id === modalEditar.empresaId).map((e) => (
+                        <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
