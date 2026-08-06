@@ -4,6 +4,7 @@ import "./globals.css"
 import { AuthSessionProvider } from "@/components/providers/session-provider"
 import { HelpWidget } from "@/components/help-widget"
 import { Toaster } from "sonner"
+import Script from "next/script"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -63,6 +64,18 @@ export default function RootLayout({
           <HelpWidget />
           <Toaster richColors position="top-right" />
         </AuthSessionProvider>
+        {/* AdSense solo se carga si hay cuenta configurada. Sin la variable, la
+            app no pide ni un byte a Google. Los espacios del plan gratuito
+            muestran entonces una promoción propia. */}
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
+          <Script
+            id="adsbygoogle"
+            async
+            strategy="afterInteractive"
+            crossOrigin="anonymous"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
+          />
+        )}
       </body>
     </html>
   )

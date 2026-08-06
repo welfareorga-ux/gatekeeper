@@ -119,10 +119,28 @@ export default function TerminosPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold">9. Privacidad de datos</h2>
             <p>
-              Los datos personales registrados en la plataforma son tratados conforme a la Ley N° 29733,
-              Ley de Protección de Datos Personales del Perú. No compartimos datos con terceros salvo
-              obligación legal. Los datos del condominio son propiedad del cliente y pueden ser exportados
-              o eliminados a solicitud.
+              Los datos personales registrados en la plataforma (nombres, DNI, placas, direcciones y
+              registros de visitas) son tratados conforme a la Ley N° 29733, Ley de Protección de Datos
+              Personales del Perú. <strong>No compartimos esos datos con terceros</strong> salvo obligación
+              legal. Los datos de la organización son propiedad del cliente y pueden ser exportados o
+              eliminados a solicitud.
+            </p>
+            <p>
+              <strong>Publicidad en el plan Gratis.</strong> Las cuentas del plan gratuito pueden mostrar
+              anuncios servidos por Google AdSense. Para ello, Google recibe datos técnicos de navegación
+              (dirección IP, tipo de dispositivo y navegador) y puede usar cookies para mostrar anuncios.
+              <strong> Los datos que registras en la plataforma nunca se envían a la red publicitaria</strong>:
+              los anuncios no acceden a nombres, DNI, placas ni al historial de visitas. Puedes gestionar
+              tus preferencias en{" "}
+              <a
+                href="https://adssettings.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-4"
+              >
+                adssettings.google.com
+              </a>{" "}
+              o eliminarlos por completo pasando al plan Pro, que no muestra publicidad.
             </p>
           </section>
 

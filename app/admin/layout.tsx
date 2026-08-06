@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { PlanGratisBanner } from "@/components/admin/plan-gratis-banner"
+import { EspacioPublicitario } from "@/components/ads/espacio-publicitario"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
@@ -30,7 +31,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       />
       <main className="flex-1 overflow-auto bg-background pt-14 md:pt-0">
         {enPlanGratis && <PlanGratisBanner />}
-        <div className="container max-w-6xl mx-auto px-4 py-8">{children}</div>
+        <div className="container max-w-6xl mx-auto px-4 py-8 space-y-6">
+          {children}
+          {enPlanGratis && <EspacioPublicitario slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ADMIN} conEnlacePro />}
+        </div>
       </main>
     </div>
   )

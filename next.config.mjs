@@ -1,5 +1,21 @@
 import { withSentryConfig } from "@sentry/nextjs"
 
+// Dominios de Google AdSense para el espacio publicitario del plan gratuito.
+// Se añaden al CSP solo cuando hay cuenta configurada.
+const ADSENSE_HOSTS = [
+  "https://pagead2.googlesyndication.com",
+  "https://googleads.g.doubleclick.net",
+  "https://tpc.googlesyndication.com",
+  "https://www.googletagservices.com",
+  "https://adservice.google.com",
+].join(" ")
+
+const ADS = process.env.NEXT_PUBLIC_ADSENSE_CLIENT ? ` ${ADSENSE_HOSTS}` : ""
+// Los creativos se sirven desde varios CDN de Google.
+const ADS_IMG = process.env.NEXT_PUBLIC_ADSENSE_CLIENT
+  ? ` ${ADSENSE_HOSTS} https://www.google.com https://www.gstatic.com https://*.googleusercontent.com`
+  : ""
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
@@ -31,14 +47,17 @@ const nextConfig = {
           },
           {
             key: "Content-Security-Policy",
+            // Los dominios de AdSense solo se whitelistean si hay cuenta
+            // configurada: sin NEXT_PUBLIC_ADSENSE_CLIENT el CSP se queda tan
+            // estricto como estaba y no se abre nada "por si acaso".
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.culqi.com",
+              `script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.culqi.com${ADS}`,
               "style-src 'self' 'unsafe-inline' https://checkout.culqi.com",
-              "img-src 'self' data: blob: https://checkout.culqi.com",
+              `img-src 'self' data: blob: https://checkout.culqi.com${ADS_IMG}`,
               "font-src 'self' https://checkout.culqi.com",
-              "connect-src 'self' https://api.culqi.com https://checkout.culqi.com https://*.sentry.io",
-              "frame-src https://checkout.culqi.com",
+              `connect-src 'self' https://api.culqi.com https://checkout.culqi.com https://*.sentry.io${ADS}`,
+              `frame-src https://checkout.culqi.com${ADS}`,
               "frame-ancestors 'none'",
             ].join("; "),
           },
