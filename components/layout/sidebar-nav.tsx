@@ -18,6 +18,7 @@ const NAV_ITEMS = {
   admin: [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/usuarios", label: "Usuarios", icon: Users },
+    { href: "/admin/empresas", label: "Empresas", icon: Building2 },
     { href: "/admin/reportes", label: "Reportes", icon: BarChart3 },
     { href: "/admin/auditoria", label: "Auditoría", icon: ScrollText },
     { href: "/admin/alertas", label: "Alertas", icon: AlertTriangle },

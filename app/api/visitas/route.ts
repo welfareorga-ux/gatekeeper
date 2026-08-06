@@ -78,9 +78,17 @@ export async function POST(req: NextRequest) {
   const fechaFinFull = new Date(aniof, mesf - 1, diaf, hfH, hfM)
 
   const visita = await withTenant(condominioId, async (tx) => {
+    // La visita hereda la empresa del residente que la registra: así el vigilante
+    // asignado a esa empresa puede filtrar solo lo suyo (caso coworking).
+    const anfitrion = await tx.user.findFirst({
+      where: { id: session.user.id },
+      select: { empresaId: true },
+    })
+
     const v = await tx.visita.create({
       data: {
         residenteId: session.user.id,
+        empresaId: anfitrion?.empresaId ?? null,
         nombreVisitante, dniVisitante, motivoVisita,
         fechaProgramada: fechaBase, horaInicio: fechaInicioFull, horaFin: fechaFinFull,
         esRecurrente: esRecurrente ?? false,

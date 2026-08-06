@@ -61,6 +61,8 @@ const crearSchema = z.object({
   rol: z.enum(["RESIDENTE", "VIGILANTE", "ADMIN"]),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
+  // Opcional: solo aplica a edificios con varias empresas (coworking).
+  empresaId: z.string().optional().nullable(),
 })
 
 export async function POST(req: Request) {
@@ -77,7 +79,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
   }
 
-  const { nombre, email, password, rol, telefono, direccion } = result.data
+  const { nombre, email, password, rol, telefono, direccion, empresaId } = result.data
 
   // El email es único en TODA la plataforma (no por condominio). El chequeo debe
   // ser global → runAsAdmin (bypass RLS), o un email de otro condominio pasaría
@@ -112,8 +114,19 @@ export async function POST(req: Request) {
       }
     }
 
+    // La empresa debe existir y pertenecer a esta organización. El findFirst va
+    // dentro de withTenant, así que RLS ya impide referenciar una de otro tenant.
+    let empresaValida: string | null = null
+    if (empresaId) {
+      const empresa = await tx.empresa.findFirst({ where: { id: empresaId }, select: { id: true } })
+      if (!empresa) {
+        return { error: NextResponse.json({ error: "La empresa seleccionada no existe" }, { status: 400 }) }
+      }
+      empresaValida = empresa.id
+    }
+
     const usuario = await tx.user.create({
-      data: { nombre, email, password: hash, rol, telefono, direccion },
+      data: { nombre, email, password: hash, rol, telefono, direccion, empresaId: empresaValida },
       select: { id: true, nombre: true, email: true, rol: true, activo: true, createdAt: true },
     })
 

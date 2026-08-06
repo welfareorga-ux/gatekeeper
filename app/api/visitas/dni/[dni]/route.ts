@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
+import { filtroEmpresaVigilante } from "@/lib/empresa"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import { EstadoVisita } from "@prisma/client"
 
@@ -32,10 +33,11 @@ export async function GET(req: NextRequest, { params }: { params: { dni: string 
 
   let visitas
   try {
-    visitas = await withTenant(condominioId, (tx) => tx.visita.findMany({
+    visitas = await withTenant(condominioId, async (tx) => tx.visita.findMany({
       where: {
         dniVisitante: dni,
         estado: { notIn: [EstadoVisita.CANCELADO] },
+        ...(await filtroEmpresaVigilante(tx, session.user.id)),
       },
       include: {
         vehiculos: true,

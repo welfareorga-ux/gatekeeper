@@ -49,7 +49,28 @@ model Condominio {
   visitas    Visita[]
   turnos     TurnoVigilante[]
   plantillas PlantillaVisita[]
+  empresas   Empresa[]
 
+  @@index([activo])
+}
+
+/// Empresa a la que pertenece un residente dentro de un mismo edificio
+/// (caso coworking / oficinas). La lista la administra el ADMIN de la
+/// organización. Es OPCIONAL: hay residentes que no vienen de una empresa.
+model Empresa {
+  id           String     @id @default(cuid())
+  nombre       String
+  condominioId String
+  condominio   Condominio @relation(fields: [condominioId], references: [id])
+  activo       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  usuarios User[]
+  visitas  Visita[]
+
+  @@unique([condominioId, nombre])
+  @@index([condominioId])
   @@index([activo])
 }
 
@@ -65,6 +86,8 @@ model User {
   isSuperAdmin Boolean     @default(false)
   condominioId String?
   condominio   Condominio? @relation(fields: [condominioId], references: [id])
+  empresaId    String?
+  empresa      Empresa?    @relation(fields: [empresaId], references: [id])
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -86,6 +109,10 @@ model Visita {
   residente       User         @relation("ResidenteVisitas", fields: [residenteId], references: [id])
   condominioId    String?
   condominio      Condominio?  @relation(fields: [condominioId], references: [id])
+  // Se hereda del residente al crear la visita. Permite que el vigilante de una
+  // empresa (coworking) vea solo las visitas de la suya.
+  empresaId       String?
+  empresa         Empresa?     @relation(fields: [empresaId], references: [id])
   nombreVisitante String
   dniVisitante    String
   motivoVisita    String
@@ -103,6 +130,7 @@ model Visita {
 
   @@index([residenteId])
   @@index([condominioId])
+  @@index([empresaId])
   @@index([estado])
   @@index([fechaProgramada])
 }
