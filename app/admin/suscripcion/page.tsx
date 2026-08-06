@@ -424,7 +424,7 @@ export default function SuscripcionPage() {
               gradient: "from-amber-400 to-amber-600",
               slug: "onboarding",
               nombre: "Onboarding y Configuración",
-              precio: "S/ 99",
+              precio: "S/ 59",
               descripcion: "Carga de residentes, creación de usuarios y puesta en marcha. Incluye 1 sesión de acompañamiento remoto.",
             },
             {
@@ -432,7 +432,7 @@ export default function SuscripcionPage() {
               gradient: "from-teal-500 to-teal-700",
               slug: "capacitacion",
               nombre: "Capacitación del Personal",
-              precio: "S/ 79",
+              precio: "S/ 29",
               descripcion: "Capacitación para vigilantes, residentes y administradores. Incluye sesión de preguntas en vivo.",
             },
           ].map((srv) => {

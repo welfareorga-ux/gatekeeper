@@ -140,8 +140,8 @@ export default function LibroReclamacionesPage() {
                     <option value="Plan Gratis">Plan Gratis</option>
                     <option value="Plan Pro - S/ 89/mes">Plan Pro — S/ 89/mes</option>
                     <option value="Plan Premium - S/ 149/mes">Plan Premium — S/ 149/mes</option>
-                    <option value="Onboarding y Configuración - S/ 99">Onboarding y Configuración — S/ 99</option>
-                    <option value="Capacitación del Personal - S/ 79">Capacitación del Personal — S/ 79</option>
+                    <option value="Onboarding y Configuración - S/ 59">Onboarding y Configuración — S/ 59</option>
+                    <option value="Capacitación del Personal - S/ 29">Capacitación del Personal — S/ 29</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">

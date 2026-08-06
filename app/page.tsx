@@ -13,7 +13,7 @@ import {
 
 const WHATSAPP = "https://wa.me/51964462645"
 const WHATSAPP_DEMO =
-  "https://wa.me/51964462645?text=Hola%2C%20quiero%20agendar%20una%20demo%20de%20Gatekeeper%20para%20mi%20condominio"
+  "https://wa.me/51964462645?text=Hola%2C%20quiero%20saber%20m%C3%A1s%20sobre%20Gatekeeper%20para%20mi%20condominio"
 const WHATSAPP_ADMIN =
   "https://wa.me/51964462645?text=Hola%2C%20administro%20varios%20edificios%20y%20quiero%20conocer%20Gatekeeper"
 
@@ -70,7 +70,7 @@ export default async function RootPage() {
                 </Link>
                 <a href={WHATSAPP_DEMO} target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white">
-                    <MessageCircle className="h-4 w-4" /> Agendar una demo
+                    <MessageCircle className="h-4 w-4" /> Escríbenos por WhatsApp
                   </Button>
                 </a>
               </div>
@@ -368,16 +368,15 @@ export default async function RootPage() {
                         </li>
                       ))}
                     </ul>
-                    <Link href="/registro" className="block">
+                    {/* Pro va directo al checkout; Gratis al alta sin tarjeta. */}
+                    <Link
+                      href={plan.destacado ? `/checkout?plan=${plan.slug}` : "/registro"}
+                      className="block"
+                    >
                       <Button variant={plan.destacado ? "default" : "outline"} className="w-full">
-                        {plan.destacado ? "Empezar con Pro" : "Crear cuenta gratis"}
+                        {plan.destacado ? "Contratar Pro" : "Crear cuenta gratis"}
                       </Button>
                     </Link>
-                    {plan.destacado && (
-                      <Link href={`/checkout?plan=${plan.slug}`} className="block text-center text-xs text-muted-foreground hover:text-foreground transition-colors">
-                        o contratar directamente
-                      </Link>
-                    )}
                   </div>
                 </div>
               )
@@ -394,12 +393,12 @@ export default async function RootPage() {
               {[
                 {
                   icon: Bell, gradient: "from-amber-400 to-amber-600", slug: "onboarding",
-                  nombre: "Onboarding y Configuración", precio: "S/ 99", periodo: "pago único",
+                  nombre: "Onboarding y Configuración", precio: "S/ 59", periodo: "pago único",
                   descripcion: "Configuramos Gatekeeper en tu condominio: carga de residentes, creación de usuarios y puesta en marcha. Incluye 1 sesión de acompañamiento remoto.",
                 },
                 {
                   icon: FileSpreadsheet, gradient: "from-teal-500 to-teal-700", slug: "capacitacion",
-                  nombre: "Capacitación del Personal", precio: "S/ 79", periodo: "pago único",
+                  nombre: "Capacitación del Personal", precio: "S/ 29", periodo: "pago único",
                   descripcion: "Capacitamos a tus vigilantes, residentes y administradores en el uso de la plataforma. Incluye sesión de preguntas en vivo.",
                 },
               ].map((srv) => {
@@ -441,8 +440,9 @@ export default async function RootPage() {
             </div>
             <h2 className="text-3xl font-bold">¿Administras varios edificios?</h2>
             <p className="text-slate-300">
-              Gestiona todos tus condominios desde una sola cuenta, con reportes consolidados y
-              un plan a la medida de tu operación. Profesionaliza la seguridad de toda tu cartera.
+              Cada edificio con su propia cuenta y su propio administrador, y los datos de uno
+              aislados de los demás. Sumas edificios cuando los necesites, siempre al mismo
+              precio por edificio y sin contratos de permanencia.
             </p>
             <a href={WHATSAPP_ADMIN} target="_blank" rel="noopener noreferrer">
               <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white">
@@ -452,10 +452,10 @@ export default async function RootPage() {
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
-              { icon: Building2, t: "Multi-edificio", d: "Todos tus condominios en un solo lugar." },
-              { icon: BarChart3, t: "Reportes consolidados", d: "Visión clara de toda tu cartera." },
-              { icon: Headset, t: "Soporte dedicado", d: "Acompañamiento para tu equipo." },
-              { icon: KeyRound, t: "Plan a medida", d: "Precios según tu volumen." },
+              { icon: Building2, t: "Una cuenta por edificio", d: "Cada uno opera solo, sin depender del resto." },
+              { icon: Lock, t: "Datos aislados", d: "Nadie ve la información de otro edificio." },
+              { icon: Headset, t: "Soporte directo", d: "Nos escribes y te respondemos nosotros." },
+              { icon: KeyRound, t: "Precio fijo", d: "S/ 89 al mes por edificio. Sin sorpresas." },
             ].map((a) => {
               const Icon = a.icon
               return (
@@ -537,7 +537,7 @@ export default async function RootPage() {
               </Link>
               <a href={WHATSAPP_DEMO} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 border-white/60 bg-transparent text-white hover:bg-white/10 hover:text-white">
-                  <MessageCircle className="h-4 w-4" /> Agendar una demo
+                  <MessageCircle className="h-4 w-4" /> Escríbenos por WhatsApp
                 </Button>
               </a>
             </div>

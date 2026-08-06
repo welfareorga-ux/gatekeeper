@@ -8,14 +8,14 @@ import { enviarNotificacionServicioContratado } from "@/lib/email"
 const SERVICIOS = {
   onboarding: {
     nombre: "Onboarding y Configuración",
-    amount: 9900,
-    precioStr: "S/ 99.00",
+    amount: 5900,
+    precioStr: "S/ 59.00",
     description: "Onboarding y Configuración — Gatekeeper",
   },
   capacitacion: {
     nombre: "Capacitación del Personal",
-    amount: 7900,
-    precioStr: "S/ 79.00",
+    amount: 2900,
+    precioStr: "S/ 29.00",
     description: "Capacitación del Personal — Gatekeeper",
   },
 } as const

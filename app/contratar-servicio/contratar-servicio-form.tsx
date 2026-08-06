@@ -12,8 +12,8 @@ import {
 const SERVICIOS = {
   onboarding: {
     nombre: "Onboarding y Configuración",
-    precio: 9900,
-    precioStr: "S/ 99.00",
+    precio: 5900,
+    precioStr: "S/ 59.00",
     icon: Bell,
     gradient: "from-amber-400 to-amber-600",
     descripcion: "Configuramos Gatekeeper en tu condominio: carga de residentes, creación de usuarios y puesta en marcha. Incluye 1 sesión de acompañamiento remoto.",
@@ -26,8 +26,8 @@ const SERVICIOS = {
   },
   capacitacion: {
     nombre: "Capacitación del Personal",
-    precio: 7900,
-    precioStr: "S/ 79.00",
+    precio: 2900,
+    precioStr: "S/ 29.00",
     icon: FileSpreadsheet,
     gradient: "from-teal-500 to-teal-700",
     descripcion: "Capacitamos a tus vigilantes, residentes y administradores en el uso de la plataforma. Incluye sesión de preguntas en vivo.",

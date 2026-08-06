@@ -62,8 +62,8 @@ export default function TerminosPage() {
               <li><strong>Plan Gratis:</strong> S/ 0.00 — hasta 15 residentes, 1 vigilante, 50 visitas al mes, historial de 30 días. Sin fecha de vencimiento.</li>
               <li><strong>Plan Pro:</strong> S/ 89.00/mes — residentes y vigilantes ilimitados, historial completo, reportes, notificaciones por correo y empresas.</li>
               <li><strong>Plan Premium:</strong> S/ 149.00/mes — sin límite de residentes y vigilantes, historial ilimitado, reportes avanzados, soporte dedicado.</li>
-              <li><strong>Onboarding y Configuración:</strong> S/ 99.00 (pago único) — implementación inicial del sistema.</li>
-              <li><strong>Capacitación del Personal:</strong> S/ 79.00 (pago único) — sesión de capacitación para vigilantes y administradores.</li>
+              <li><strong>Onboarding y Configuración:</strong> S/ 59.00 (pago único) — implementación inicial del sistema.</li>
+              <li><strong>Capacitación del Personal:</strong> S/ 29.00 (pago único) — sesión de capacitación para vigilantes y administradores.</li>
             </ul>
             <p>Todos los precios incluyen IGV. Los precios pueden modificarse con previo aviso de 30 días.</p>
           </section>
