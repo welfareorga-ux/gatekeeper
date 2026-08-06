@@ -8,6 +8,10 @@ const ADSENSE_HOSTS = [
   "https://tpc.googlesyndication.com",
   "https://www.googletagservices.com",
   "https://adservice.google.com",
+  // CMP de Google (banner de consentimiento para EEE, Reino Unido y Suiza).
+  // Sin estos dominios el banner queda bloqueado por el CSP y no aparece.
+  "https://fundingchoicesmessages.google.com",
+  "https://*.fundingchoicesmessages.google.com",
 ].join(" ")
 
 const ADS = process.env.NEXT_PUBLIC_ADSENSE_CLIENT ? ` ${ADSENSE_HOSTS}` : ""
