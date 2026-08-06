@@ -61,6 +61,7 @@ export async function GET(req: Request) {
       createdAt: true,
       empresaId: true,
       empresa: { select: { nombre: true } },
+      empresasVigiladas: { select: { empresaId: true } },
     },
     orderBy: [{ rol: "asc" }, { nombre: "asc" }],
   }))
@@ -75,8 +76,10 @@ const crearSchema = z.object({
   rol: z.enum(["RESIDENTE", "VIGILANTE", "ADMIN"]),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
-  // Opcional: solo aplica a edificios con varias empresas (coworking).
+  // Opcional, solo en edificios con varias empresas (coworking):
+  // el RESIDENTE pertenece a una; el VIGILANTE puede cubrir varias.
   empresaId: z.string().optional().nullable(),
+  empresaIds: z.array(z.string()).optional(),
 })
 
 export async function POST(req: Request) {
@@ -93,7 +96,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
   }
 
-  const { nombre, email, password, rol, telefono, direccion, empresaId } = result.data
+  const { nombre, email, password, rol, telefono, direccion, empresaId, empresaIds } = result.data
 
   // El email es único en TODA la plataforma (no por condominio). El chequeo debe
   // ser global → runAsAdmin (bypass RLS), o un email de otro condominio pasaría
@@ -145,6 +148,24 @@ export async function POST(req: Request) {
       data: { nombre, email, password: hash, rol, telefono, direccion, empresaId: empresaValida },
       select: { id: true, nombre: true, email: true, rol: true, activo: true, createdAt: true },
     })
+
+    // Empresas que vigila (solo VIGILANTE). Se validan contra el tenant antes
+    // de crear las asignaciones.
+    if (rol === "VIGILANTE" && empresaIds && empresaIds.length > 0) {
+      const validas = await tx.empresa.findMany({
+        where: { id: { in: empresaIds } },
+        select: { id: true },
+      })
+      if (validas.length > 0) {
+        await tx.vigilanteEmpresa.createMany({
+          data: validas.map((e) => ({
+            vigilanteId: usuario.id,
+            empresaId: e.id,
+            condominioId,
+          })),
+        })
+      }
+    }
 
     await tx.logActividad.create({
       data: {

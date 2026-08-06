@@ -50,6 +50,7 @@ export const MODELOS_TENANT = new Set([
   "TurnoVigilante",
   "PlantillaVisita",
   "Empresa",
+  "VigilanteEmpresa",
 ])
 
 /** Operaciones cuyo aislamiento va en `args.where`. */

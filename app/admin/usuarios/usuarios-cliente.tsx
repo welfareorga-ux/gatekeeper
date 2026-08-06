@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { UserPlus, KeyRound, Pencil, Search, Trash2 } from "lucide-react"
 import { formatFecha } from "@/lib/utils"
+import { SelectorEmpresasVigilante } from "@/components/admin/selector-empresas-vigilante"
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -27,6 +28,8 @@ type Usuario = {
   createdAt: string
   empresaId?: string | null
   empresa?: { nombre: string } | null
+  /** Solo VIGILANTE: empresas que tiene asignadas. */
+  empresasVigiladas?: Array<{ empresaId: string }>
 }
 
 interface Limite { actual: number; max: number }
@@ -42,7 +45,7 @@ const ROL_COLOR: Record<string, string> = {
   RESIDENTE: "bg-green-500/10 text-green-400 border border-green-500/20",
 }
 
-const FORM_INICIAL = { nombre: "", email: "", password: "", rol: "RESIDENTE", telefono: "", direccion: "", empresaId: "" }
+const FORM_INICIAL = { nombre: "", email: "", password: "", rol: "RESIDENTE", telefono: "", direccion: "", empresaId: "", empresaIds: [] as string[] }
 
 /** Valor centinela del <Select>: shadcn no admite SelectItem con value="". */
 const SIN_EMPRESA = "__sin_empresa__"
@@ -118,6 +121,7 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
         body: JSON.stringify({
           ...form,
           empresaId: form.rol === "RESIDENTE" && form.empresaId ? form.empresaId : null,
+          empresaIds: form.rol === "VIGILANTE" ? form.empresaIds : [],
         }),
       })
       if (!res.ok) { toast.error((await res.json()).error ?? "Error al crear"); return }
@@ -142,8 +146,11 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
           email: modalEditar.email,
           telefono: modalEditar.telefono,
           direccion: modalEditar.direccion,
-          // Solo los residentes tienen empresa; null = quitar la asignacion.
+          // El residente pertenece a una empresa; el vigilante cubre varias.
           ...(modalEditar.rol === "RESIDENTE" ? { empresaId: modalEditar.empresaId ?? null } : {}),
+          ...(modalEditar.rol === "VIGILANTE"
+            ? { empresaIds: (modalEditar.empresasVigiladas ?? []).map((e) => e.empresaId) }
+            : {}),
         }),
       })
       if (!res.ok) { toast.error((await res.json()).error ?? "Error al actualizar"); return }
@@ -359,6 +366,13 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
                 <Input value={form.direccion} onChange={(e) => setForm((p) => ({ ...p, direccion: e.target.value }))} placeholder="Torre A, Dpto 301" />
               </div>
             )}
+            {form.rol === "VIGILANTE" && (
+              <SelectorEmpresasVigilante
+                empresas={empresas}
+                seleccionadas={form.empresaIds}
+                onChange={(ids) => setForm((p) => ({ ...p, empresaIds: ids }))}
+              />
+            )}
             {form.rol === "RESIDENTE" && empresas.length > 0 && (
               <div className="col-span-2 space-y-1.5">
                 <Label>Empresa <span className="text-muted-foreground font-normal">(opcional)</span></Label>
@@ -413,6 +427,15 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
                 <Label>Dirección / Unidad</Label>
                 <Input value={modalEditar.direccion ?? ""} onChange={(e) => setModalEditar((p) => p ? { ...p, direccion: e.target.value || null } : p)} placeholder="Torre A, Dpto 301" />
               </div>
+              {modalEditar.rol === "VIGILANTE" && (
+                <SelectorEmpresasVigilante
+                  empresas={empresas}
+                  seleccionadas={(modalEditar.empresasVigiladas ?? []).map((e) => e.empresaId)}
+                  onChange={(ids) => setModalEditar((p) => p
+                    ? { ...p, empresasVigiladas: ids.map((empresaId) => ({ empresaId })) }
+                    : p)}
+                />
+              )}
               {modalEditar.rol === "RESIDENTE" && empresas.length > 0 && (
                 <div className="col-span-2 space-y-1.5">
                   <Label>Empresa <span className="text-muted-foreground font-normal">(opcional)</span></Label>

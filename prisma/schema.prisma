@@ -51,6 +51,7 @@ model Condominio {
   turnos     TurnoVigilante[]
   plantillas PlantillaVisita[]
   empresas   Empresa[]
+  vigilanciaEmpresas VigilanteEmpresa[]
 
   @@index([activo])
 }
@@ -67,12 +68,35 @@ model Empresa {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  usuarios User[]
-  visitas  Visita[]
+  usuarios   User[]
+  visitas    Visita[]
+  vigilantes VigilanteEmpresa[]
 
   @@unique([condominioId, nombre])
   @@index([condominioId])
   @@index([activo])
+}
+
+/// Empresas que vigila un vigilante. A diferencia del residente —que pertenece
+/// a UNA empresa— un vigilante puede cubrir VARIAS, porque en un mismo edificio
+/// conviven distintas oficinas.
+///
+/// Es OPCIONAL: un vigilante sin filas aquí ve todas las visitas de la
+/// organización, que es el caso normal de un condominio o edificio residencial.
+model VigilanteEmpresa {
+  vigilanteId  String
+  vigilante    User       @relation(fields: [vigilanteId], references: [id], onDelete: Cascade)
+  empresaId    String
+  empresa      Empresa    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  /// Denormalizado para poder aplicar RLS igual que al resto de tablas tenant.
+  condominioId String
+  condominio   Condominio @relation(fields: [condominioId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@id([vigilanteId, empresaId])
+  @@index([vigilanteId])
+  @@index([empresaId])
+  @@index([condominioId])
 }
 
 model User {
@@ -98,6 +122,7 @@ model User {
   ingresos        RegistroIngreso[] @relation("VigilanteIngreso")
   salidas         RegistroIngreso[] @relation("VigilanteSalida")
   logs            LogActividad[]
+  empresasVigiladas VigilanteEmpresa[]
 
   @@index([email])
   @@index([rol])

@@ -31,6 +31,7 @@ export default async function UsuariosPage() {
         id: true, nombre: true, email: true, telefono: true, rol: true,
         direccion: true, activo: true, createdAt: true,
         empresaId: true, empresa: { select: { nombre: true } },
+        empresasVigiladas: { select: { empresaId: true } },
       },
       orderBy: [{ rol: "asc" }, { nombre: "asc" }],
     }),

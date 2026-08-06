@@ -13,6 +13,9 @@ const actualizarSchema = z.object({
   activo: z.boolean().optional(),
   // null = quitar la empresa (dejar al residente sin asignar).
   empresaId: z.string().nullable().optional(),
+  // Empresas que vigila (solo VIGILANTE). Array vacío = quitar todas, que
+  // equivale a "ve todas las visitas de la organización".
+  empresaIds: z.array(z.string()).optional(),
 })
 
 export async function PATCH(
@@ -54,14 +57,38 @@ export async function PATCH(
       }
     }
 
+    // empresaIds no es columna de User: se materializa en VigilanteEmpresa.
+    const { empresaIds, ...datosUsuario } = result.data
+
     const usuario = await tx.user.update({
       where: { id: params.id },
-      data: result.data,
+      data: datosUsuario,
       select: {
         id: true, nombre: true, email: true, rol: true, activo: true,
         telefono: true, direccion: true, empresaId: true,
       },
     })
+
+    if (empresaIds) {
+      // Se reemplaza el conjunto completo: primero se limpia, luego se crean
+      // las que sigan siendo válidas dentro de este condominio.
+      await tx.vigilanteEmpresa.deleteMany({ where: { vigilanteId: params.id } })
+      if (empresaIds.length > 0) {
+        const validas = await tx.empresa.findMany({
+          where: { id: { in: empresaIds } },
+          select: { id: true },
+        })
+        if (validas.length > 0) {
+          await tx.vigilanteEmpresa.createMany({
+            data: validas.map((e) => ({
+              vigilanteId: params.id,
+              empresaId: e.id,
+              condominioId,
+            })),
+          })
+        }
+      }
+    }
 
     await tx.logActividad.create({
       data: {
