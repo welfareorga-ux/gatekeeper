@@ -7,9 +7,8 @@ import { UsuariosCliente } from "./usuarios-cliente"
 export const metadata = { title: "Usuarios — Gatekeeper Admin" }
 
 const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
-  BASICO:   { residentes: 20,       vigilantes: 1        },
-  ESTANDAR: { residentes: 50,       vigilantes: 3        },
-  PREMIUM:  { residentes: Infinity, vigilantes: Infinity },
+  GRATIS: { residentes: 15,       vigilantes: 1        },
+  PRO:    { residentes: Infinity, vigilantes: Infinity },
 }
 
 export default async function UsuariosPage() {
@@ -28,7 +27,7 @@ export default async function UsuariosPage() {
     }),
   ]))
 
-  const plan = condominio?.plan ?? "BASICO"
+  const plan = condominio?.plan ?? "GRATIS"
   const limites = LIMITES_PLAN[plan]
   const activosResidentes = usuarios.filter((u) => u.rol === "RESIDENTE" && u.activo).length
   const activosVigilantes = usuarios.filter((u) => u.rol === "VIGILANTE" && u.activo).length

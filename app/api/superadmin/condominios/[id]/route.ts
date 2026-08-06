@@ -7,7 +7,7 @@ import { runAsAdmin } from "@/lib/tenant"
 
 const schema = z.object({
   activo: z.boolean().optional(),
-  plan: z.enum(["BASICO", "ESTANDAR", "PREMIUM"]).optional(),
+  plan: z.enum(["GRATIS", "PRO"]).optional(),
   nombre: z.string().min(3).optional(),
   ruc: z.string().optional(),
   telefono: z.string().optional(),

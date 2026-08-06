@@ -6,11 +6,11 @@ import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+
 import Link from "next/link"
 import {
   CreditCard, CheckCircle2, XCircle, Loader2,
-  AlertTriangle, RefreshCw, Calendar, Clock, Shield, BarChart3, Building2,
+  AlertTriangle, RefreshCw, Calendar, Clock, BarChart3,
   Bell, FileSpreadsheet,
 } from "lucide-react"
 
@@ -23,54 +23,36 @@ declare global {
 }
 
 const PLAN_INFO: Record<string, { label: string; precio: string; features: string[] }> = {
-  BASICO: {
-    label: "Básico",
-    precio: "S/ 49.00 / mes",
-    features: ["Hasta 20 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"],
+  GRATIS: {
+    label: "Gratis",
+    precio: "S/ 0.00 · no caduca",
+    features: [
+      "Hasta 15 residentes", "1 vigilante", "50 visitas al mes",
+      "Pase QR por WhatsApp", "Historial de 30 días",
+    ],
   },
-  ESTANDAR: {
-    label: "Estándar",
+  PRO: {
+    label: "Pro",
     precio: "S/ 89.00 / mes",
-    features: ["Hasta 50 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación"],
-  },
-  PREMIUM: {
-    label: "Premium",
-    precio: "S/ 149.00 / mes",
-    features: ["Residentes ilimitados", "Vigilantes ilimitados", "Historial ilimitado", "Soporte dedicado"],
+    features: ["Residentes ilimitados", "Vigilantes ilimitados", "Visitas sin límite práctico",
+      "Aviso por correo al residente", "Reportes y exportación", "Historial completo",
+      "Empresas (coworking y oficinas)", "Soporte prioritario"],
   },
 }
 
 const PLANES_DISPONIBLES = [
   {
-    key: "BASICO" as const,
-    nombre: "Básico",
-    precio: 4900,
-    precioStr: "S/ 49",
-    descripcion: "Ideal para condominios pequeños",
-    icon: Shield,
-    gradient: "from-blue-500 to-blue-700",
-    features: ["Hasta 20 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"],
-  },
-  {
-    key: "ESTANDAR" as const,
-    nombre: "Estándar",
+    key: "PRO" as const,
+    nombre: "Pro",
     precio: 8900,
     precioStr: "S/ 89",
-    descripcion: "El más elegido. Para condominios medianos",
+    descripcion: "Sin límites de residentes ni vigilantes",
     icon: BarChart3,
     gradient: "from-primary to-primary/70",
-    features: ["Hasta 50 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación"],
+    features: ["Residentes ilimitados", "Vigilantes ilimitados", "Visitas sin límite práctico",
+      "Aviso por correo al residente", "Reportes y exportación", "Historial completo",
+      "Empresas (coworking y oficinas)", "Soporte prioritario"],
     destacado: true,
-  },
-  {
-    key: "PREMIUM" as const,
-    nombre: "Premium",
-    precio: 14900,
-    precioStr: "S/ 149",
-    descripcion: "Sin límites para grandes edificios",
-    icon: Building2,
-    gradient: "from-purple-500 to-purple-800",
-    features: ["Residentes ilimitados", "Vigilantes ilimitados", "Historial ilimitado", "Soporte dedicado"],
   },
 ]
 
@@ -79,7 +61,6 @@ type SuscripcionData = {
   suscripcionEstado: string
   culqiSubscriptionId: string | null
   nombre: string
-  trialEndsAt: string | null
   currentPeriodEnd: number | null
 }
 
@@ -136,7 +117,7 @@ export default function SuscripcionPage() {
     }
   }, [])
 
-  async function handleSuscribir(planKey: "BASICO" | "ESTANDAR" | "PREMIUM", precio: number, planNombre: string) {
+  async function handleSuscribir(planKey: "PRO", precio: number, planNombre: string) {
     setSuscribiendo(planKey)
 
     let tokenId: string
@@ -222,11 +203,7 @@ export default function SuscripcionPage() {
 
   const planInfo = PLAN_INFO[data.plan] ?? { label: data.plan, precio: "—", features: [] }
   const activa = data.suscripcionEstado === "activa"
-  const esTrial = data.suscripcionEstado === "trial"
-
-  const daysLeftTrial = data.trialEndsAt
-    ? Math.ceil((new Date(data.trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    : null
+  const esGratis = data.plan === "GRATIS"
 
   const fechaVencimiento = data.currentPeriodEnd
     ? new Date(data.currentPeriodEnd * 1000).toLocaleDateString("es-PE", {
@@ -234,7 +211,9 @@ export default function SuscripcionPage() {
       })
     : null
 
-  const mostrarSelectorPlanes = !activa
+  // Se ofrece Pro a quien está en Gratis, y también a quien tiene una
+  // suscripción caída (vencida o fallida) para que pueda reactivarla.
+  const mostrarSelectorPlanes = esGratis || !activa
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -248,29 +227,33 @@ export default function SuscripcionPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
-              {esTrial ? <Clock className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />}
-              {esTrial ? "Prueba gratuita" : `Plan ${planInfo.label}`}
+              {esGratis ? <Clock className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />}
+              Plan {planInfo.label}
             </CardTitle>
-            <Badge variant={activa ? "default" : esTrial ? "secondary" : "destructive"}>
-              {activa ? "Activa" : esTrial ? "Trial" : "Inactiva"}
+            <Badge variant={esGratis ? "secondary" : activa ? "default" : "destructive"}>
+              {esGratis ? "Gratis" : activa ? "Activa" : "Inactiva"}
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {esTrial ? (
+          {esGratis ? (
             <div className="space-y-3">
-              <p className="text-muted-foreground text-sm">
-                Tienes acceso completo a todas las funciones durante tu período de prueba gratuita.
-              </p>
-              {daysLeftTrial !== null && daysLeftTrial > 0 && (
-                <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
-                  <Clock className="h-4 w-4 shrink-0" />
-                  <span>
-                    {daysLeftTrial === 1 ? "¡Último día de prueba!" : `${daysLeftTrial} días restantes`}
-                    {" "}Elige un plan abajo para continuar.
-                  </span>
-                </div>
-              )}
+              <p className="text-2xl font-bold">{planInfo.precio}</p>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                {planInfo.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-start gap-2 rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-900">
+                <Clock className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>
+                  Tu plan gratuito <strong>no vence</strong>. Puedes usarlo el tiempo que
+                  quieras y pasar a Pro cuando lo necesites: tus usuarios y tu historial se conservan.
+                </span>
+              </div>
             </div>
           ) : (
             <>
@@ -299,21 +282,21 @@ export default function SuscripcionPage() {
         </CardContent>
       </Card>
 
-      {/* ── Selector de planes (trial o inactivo) ─────────────────────────────── */}
+      {/* ── Paso a Pro (desde Gratis) o reactivación (suscripción caída) ──────── */}
       {mostrarSelectorPlanes && (
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-semibold">
-              {esTrial ? "Activa tu suscripción" : "Elige un plan"}
+              {esGratis ? "Pasar al plan Pro" : "Reactivar tu suscripción"}
             </h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {esTrial
-                ? "Sin interrupciones. Tu historial y usuarios se conservan al activar."
-                : "Reactiva el acceso eligiendo el plan que mejor se adapte a tu condominio."}
+              {esGratis
+                ? "Sin límites de residentes ni vigilantes. Tu historial y tus usuarios se conservan."
+                : "Reactiva el acceso completo al panel de administración."}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:max-w-md gap-4">
             {PLANES_DISPONIBLES.map((plan) => {
               const Icon = plan.icon
               const isLoading = suscribiendo === plan.key

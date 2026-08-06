@@ -7,10 +7,9 @@ import { z } from "zod"
 
 const CULQI_BASE = "https://api.culqi.com/v2"
 
+// Plan unico de pago. El plan GRATIS no pasa por Culqi.
 const PLAN_CODES: Record<string, string> = {
-  BASICO: "plan-basico-2026",
-  ESTANDAR: "plan-estandar-2026",
-  PREMIUM: "plan-premium-2026",
+  PRO: "plan-pro-2026",
 }
 
 async function culqiFetch(path: string, method: string, secretKey: string, body?: object) {
@@ -41,7 +40,7 @@ export async function GET() {
 
   const condominio = await prisma.condominio.findUnique({
     where: { id: session.user.condominioId ?? "" },
-    select: { plan: true, suscripcionEstado: true, culqiSubscriptionId: true, nombre: true, trialEndsAt: true },
+    select: { plan: true, suscripcionEstado: true, culqiSubscriptionId: true, nombre: true },
   })
   if (!condominio) return NextResponse.json({ error: "Condominio no encontrado" }, { status: 404 })
 
@@ -64,17 +63,13 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({
-    ...condominio,
-    trialEndsAt: condominio.trialEndsAt?.toISOString() ?? null,
-    currentPeriodEnd,
-  })
+  return NextResponse.json({ ...condominio, currentPeriodEnd })
 }
 
-// POST — suscribirse a un plan desde dentro del app (trial o inactivo)
+// POST — pasar del plan GRATIS al plan PRO desde el panel
 const suscribirSchema = z.object({
   tokenId: z.string().min(1),
-  plan: z.enum(["BASICO", "ESTANDAR", "PREMIUM"]),
+  plan: z.literal("PRO"),
 })
 
 export async function POST(req: Request) {
@@ -177,7 +172,7 @@ export async function POST(req: Request) {
   await prisma.condominio.update({
     where: { id: session.user.condominioId ?? "" },
     data: {
-      plan: plan as "BASICO" | "ESTANDAR" | "PREMIUM",
+      plan: "PRO",
       suscripcionEstado: "activa",
       culqiSubscriptionId: subscription.id,
     },

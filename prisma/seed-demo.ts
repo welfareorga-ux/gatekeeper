@@ -45,7 +45,7 @@ async function main() {
       ruc: "20687654321",
       telefono: "01-9876543",
       email: "admin@laspalmeras.pe",
-      plan: PlanType.BASICO,
+      plan: PlanType.GRATIS,
       activo: true,
     },
   })

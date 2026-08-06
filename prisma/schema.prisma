@@ -22,10 +22,10 @@ enum EstadoVisita {
   CANCELADO
 }
 
+/// Dos planes, sin período de prueba: el plan GRATIS no caduca.
 enum PlanType {
-  BASICO
-  ESTANDAR
-  PREMIUM
+  GRATIS
+  PRO
 }
 
 // ─── Modelos ──────────────────────────────────────────────────────────────────
@@ -37,11 +37,12 @@ model Condominio {
   ruc       String?
   telefono  String?
   email     String?
-  plan                PlanType @default(BASICO)
+  plan                PlanType @default(GRATIS)
   activo              Boolean  @default(true)
   culqiSubscriptionId String?
+  /// Solo relevante en plan PRO: "activa" | "cancelada" | "vencida" | "fallida".
+  /// El plan GRATIS está siempre "activa" (no se bloquea nunca).
   suscripcionEstado   String   @default("activa")
-  trialEndsAt         DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

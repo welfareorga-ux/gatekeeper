@@ -79,7 +79,7 @@ export function RegistroForm() {
           <div>
             <p className="font-bold text-lg">¡Cuenta creada!</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Tu prueba gratuita de 14 días ha comenzado. Redirigiendo al inicio de sesión…
+              Tu cuenta gratuita ya está lista. Redirigiendo al inicio de sesión…
             </p>
           </div>
         </CardContent>
@@ -90,12 +90,12 @@ export function RegistroForm() {
   return (
     <Card>
       <CardContent className="pt-6 space-y-5">
-        {/* Trial badge */}
+        {/* Distintivo del plan gratuito */}
         <div className="flex items-center gap-2 rounded-lg bg-primary/10 border border-primary/20 px-4 py-2.5">
           <Clock className="h-4 w-4 text-primary shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-primary">14 días gratis · Sin tarjeta de crédito</p>
-            <p className="text-xs text-muted-foreground">Al finalizar la prueba, elige el plan que mejor se adapte a tu condominio.</p>
+            <p className="text-sm font-semibold text-primary">Plan gratuito · Sin tarjeta · No caduca</p>
+            <p className="text-xs text-muted-foreground">Cuando necesites más residentes, vigilantes o reportes, pasa al plan Pro.</p>
           </div>
         </div>
 
@@ -154,7 +154,7 @@ export function RegistroForm() {
             {loading ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Creando cuenta…</>
             ) : (
-              "Comenzar prueba gratuita"
+              "Crear cuenta gratis"
             )}
           </Button>
         </form>

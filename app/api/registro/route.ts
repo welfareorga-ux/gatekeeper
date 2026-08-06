@@ -2,7 +2,7 @@ import { runAsAdmin } from "@/lib/tenant"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
-import { enviarEmailTrialBienvenida, enviarManualUso } from "@/lib/email"
+import { enviarEmailBienvenidaGratis, enviarManualUso } from "@/lib/email"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 
 const registroSchema = z.object({
@@ -37,16 +37,16 @@ export async function POST(req: Request) {
   }
 
   const hash = await bcrypt.hash(adminPassword, 12)
-  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
 
   const { condominio, admin } = await runAsAdmin(async (tx) => {
+    // El registro crea siempre una cuenta GRATIS. No hay período de prueba:
+    // el plan gratuito no caduca y se sube a PRO cuando el cliente quiera.
     const condominio = await tx.condominio.create({
       data: {
         nombre: nombreCondominio,
         direccion,
-        plan: "BASICO",
-        suscripcionEstado: "trial",
-        trialEndsAt,
+        plan: "GRATIS",
+        suscripcionEstado: "activa",
       },
     })
     const admin = await tx.user.create({
@@ -61,8 +61,8 @@ export async function POST(req: Request) {
     await tx.logActividad.create({
       data: {
         userId: admin.id,
-        accion: "REGISTRO_TRIAL",
-        detalle: JSON.stringify({ condominio: nombreCondominio, trialEndsAt }),
+        accion: "REGISTRO_GRATIS",
+        detalle: JSON.stringify({ condominio: nombreCondominio, plan: "GRATIS" }),
       },
     })
     return { condominio, admin }
@@ -70,11 +70,10 @@ export async function POST(req: Request) {
 
   const appUrl = process.env.NEXTAUTH_URL ?? "https://gatekeeper-app.org"
 
-  void enviarEmailTrialBienvenida({
+  void enviarEmailBienvenidaGratis({
     email: adminEmail,
     nombre: adminNombre,
     condominioNombre: nombreCondominio,
-    trialEndsAt,
     loginUrl: `${appUrl}/login`,
   })
 

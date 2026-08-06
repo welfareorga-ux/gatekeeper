@@ -168,7 +168,7 @@ const CATEGORIES: Category[] = [
       {
         q: "¿Tengo periodo de prueba gratis?",
         a: [
-          "Sí: al registrarte tienes 14 días gratis con todas las funciones.",
+          "Sí: el plan Gratis no caduca (15 residentes, 1 vigilante y 50 visitas al mes). El plan Pro cuesta S/ 89 al mes.",
           "Puedes empezar sin ingresar tarjeta y suscribirte cuando quieras.",
         ],
       },

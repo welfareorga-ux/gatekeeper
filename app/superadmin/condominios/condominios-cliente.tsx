@@ -19,16 +19,15 @@ type Condominio = {
   nombre: string
   direccion: string | null
   email: string | null
-  plan: "BASICO" | "ESTANDAR" | "PREMIUM"
+  plan: "GRATIS" | "PRO"
   activo: boolean
   createdAt: string
   _count: { usuarios: number; visitas: number }
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  BASICO: "bg-gray-500/10 text-gray-400 border-gray-500/20",
-  ESTANDAR: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  PREMIUM: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  GRATIS: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+  PRO: "bg-orange-500/10 text-orange-400 border-orange-500/20",
 }
 
 export function CondominiosCliente() {
@@ -200,9 +199,8 @@ export function CondominiosCliente() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="BASICO">Básico</SelectItem>
-                          <SelectItem value="ESTANDAR">Estándar</SelectItem>
-                          <SelectItem value="PREMIUM">Premium</SelectItem>
+                          <SelectItem value="GRATIS">Gratis</SelectItem>
+                          <SelectItem value="PRO">Pro</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>

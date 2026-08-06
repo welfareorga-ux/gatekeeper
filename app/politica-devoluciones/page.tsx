@@ -40,7 +40,7 @@ export default function PoliticaDevolucionesPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold">2. Período de prueba gratuita</h2>
             <p>
-              Todos los planes incluyen <strong>14 días de prueba gratuita</strong> sin cargo. Durante
+              Puedes usar el <strong>plan Gratis</strong> sin cargo y sin fecha límite. Durante
               este período el cliente puede evaluar el servicio sin compromiso. No se realiza ningún
               cobro hasta que el período de prueba finalice y el cliente contrate un plan.
             </p>

@@ -60,7 +60,7 @@ async function main() {
       ruc: "20612345678",
       telefono: "01-4567890",
       email: "admin@lospinos.pe",
-      plan: PlanType.ESTANDAR,
+      plan: PlanType.PRO,
       activo: true,
     },
   })

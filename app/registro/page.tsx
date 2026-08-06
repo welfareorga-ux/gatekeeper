@@ -18,7 +18,7 @@ export default function RegistroPage() {
             <div className="text-center">
               <h1 className="text-2xl font-bold">Gatekeeper</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                14 días gratis · Sin tarjeta de crédito
+                Plan gratuito · Sin tarjeta · Sin vencimiento
               </p>
             </div>
           </div>

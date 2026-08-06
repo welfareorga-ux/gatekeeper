@@ -7,9 +7,8 @@ import bcrypt from "bcryptjs"
 import { enviarCredencialesUsuario } from "@/lib/email"
 
 const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
-  BASICO:   { residentes: 20,         vigilantes: 1          },
-  ESTANDAR: { residentes: 50,         vigilantes: 3          },
-  PREMIUM:  { residentes: Infinity,   vigilantes: Infinity   },
+  GRATIS: { residentes: 15,       vigilantes: 1        },
+  PRO:    { residentes: Infinity, vigilantes: Infinity },
 }
 
 export async function GET(req: Request) {
@@ -97,7 +96,7 @@ export async function POST(req: Request) {
 
     // Verificar límites del plan antes de crear
     if (rol === "RESIDENTE" || rol === "VIGILANTE") {
-      const limites = LIMITES_PLAN[condominio?.plan ?? "BASICO"]
+      const limites = LIMITES_PLAN[condominio?.plan ?? "GRATIS"]
       const campo = rol === "RESIDENTE" ? "residentes" : "vigilantes"
       const limite = limites[campo]
 
@@ -106,9 +105,8 @@ export async function POST(req: Request) {
           where: { rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
         })
         if (actual >= limite) {
-          const planLabel = condominio?.plan === "BASICO" ? "Básico" : condominio?.plan === "ESTANDAR" ? "Estándar" : "Premium"
           return { error: NextResponse.json({
-            error: `Tu plan ${planLabel} permite máximo ${limite} ${campo}. Actualiza tu plan para agregar más.`,
+            error: `El plan Gratis permite máximo ${limite} ${campo}. Pasa al plan Pro para agregar más.`,
           }, { status: 403 }) }
         }
       }

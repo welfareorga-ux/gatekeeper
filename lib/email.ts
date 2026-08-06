@@ -248,27 +248,23 @@ export async function enviarEmailBienvenida({
   }
 }
 
-export async function enviarEmailTrialBienvenida({
+/** Alta en el plan GRATIS. No hay prueba con fecha de vencimiento: no caduca. */
+export async function enviarEmailBienvenidaGratis({
   email,
   nombre,
   condominioNombre,
-  trialEndsAt,
   loginUrl,
 }: {
   email: string
   nombre: string
   condominioNombre: string
-  trialEndsAt: Date
   loginUrl: string
 }) {
-  const fechaFin = trialEndsAt.toLocaleDateString("es-PE", {
-    day: "numeric", month: "long", year: "numeric", timeZone: "America/Lima",
-  })
   try {
     await getResend().emails.send({
       from: FROM,
       to: email,
-      subject: `¡Bienvenido a Gatekeeper! Tu prueba gratuita de 14 días ha comenzado`,
+      subject: `¡Bienvenido a Gatekeeper! Tu cuenta gratuita está lista`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
           <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
@@ -278,14 +274,14 @@ export async function enviarEmailTrialBienvenida({
 
           <h2 style="color:#111827;font-size:20px;margin:0 0 8px">¡Bienvenido, ${nombre}!</h2>
           <p style="color:#6b7280;font-size:14px;margin:0 0 24px">
-            Tu prueba gratuita de <strong>14 días</strong> ha comenzado. Explora todas las funciones del panel de administración sin costo.
+            Tu cuenta <strong>gratuita</strong> ya está activa. No caduca y no necesitas tarjeta: úsala el tiempo que quieras.
           </p>
 
           <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px">
             <table style="width:100%;border-collapse:collapse">
-              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:40%">Condominio</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${condominioNombre}</td></tr>
-              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Acceso</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#059669">14 días gratis · Sin tarjeta</td></tr>
-              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Vence el</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${fechaFin}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:40%">Organización</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${condominioNombre}</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Plan</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#059669">Gratis · Sin fecha de vencimiento</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Incluye</td><td style="padding:8px 0;font-size:14px;color:#111827">15 residentes · 1 vigilante · 50 visitas al mes</td></tr>
               <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Email de acceso</td><td style="padding:8px 0;font-size:14px;color:#111827">${email}</td></tr>
             </table>
           </div>
@@ -295,9 +291,10 @@ export async function enviarEmailTrialBienvenida({
             Acceder al panel →
           </a>
 
-          <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px 16px;margin-bottom:16px">
-            <p style="color:#92400e;font-size:13px;margin:0">
-              ⏰ Antes de que termine tu prueba, elige un plan desde <strong>Mi suscripción</strong> en el panel para continuar sin interrupciones.
+          <div style="background:#eff6ff;border:1px solid #3b82f6;border-radius:8px;padding:14px 16px;margin-bottom:16px">
+            <p style="color:#1e40af;font-size:13px;margin:0">
+              ¿Necesitas más residentes, más vigilantes, reportes o notificaciones por correo?
+              Puedes pasar al plan <strong>Pro</strong> cuando quieras desde <strong>Suscripción</strong> en el panel.
             </p>
           </div>
 
@@ -308,7 +305,7 @@ export async function enviarEmailTrialBienvenida({
       `,
     })
   } catch (err) {
-    console.error("[email] Error al enviar email de trial:", err)
+    console.error("[email] Error al enviar email de bienvenida gratis:", err)
   }
 }
 
