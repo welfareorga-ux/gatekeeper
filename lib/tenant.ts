@@ -44,7 +44,13 @@ export function tenantWhere(session: Session | null): { condominioId: string } {
  * NO los cubre la extensión: filtra a mano por relación
  * (p.ej. `where: { visita: { condominioId } }`, `where: { user: { condominioId } }`).
  */
-export const MODELOS_TENANT = new Set(["User", "Visita", "TurnoVigilante", "PlantillaVisita"])
+export const MODELOS_TENANT = new Set([
+  "User",
+  "Visita",
+  "TurnoVigilante",
+  "PlantillaVisita",
+  "Empresa",
+])
 
 /** Operaciones cuyo aislamiento va en `args.where`. */
 const OPS_FILTRO = new Set([

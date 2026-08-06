@@ -65,7 +65,7 @@ export default async function RootPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/registro">
                   <Button size="lg" className="w-full sm:w-auto px-8 bg-orange-600 hover:bg-orange-700 text-white">
-                    Comenzar gratis — 14 días
+                    Crear cuenta gratis
                   </Button>
                 </Link>
                 <a href={WHATSAPP_DEMO} target="_blank" rel="noopener noreferrer">
@@ -302,31 +302,41 @@ export default async function RootPage() {
       <section className="border-t" id="planes">
         <div className="container max-w-6xl mx-auto px-4 py-20 space-y-10">
           <div className="text-center space-y-3">
-            <h2 className="text-3xl font-bold">Planes simples y transparentes</h2>
+            <h2 className="text-3xl font-bold">Dos planes. Sin letra chica.</h2>
             <p className="text-muted-foreground">
-              14 días gratis, sin tarjeta. Sin contratos ni permanencia. Cancela cuando quieras.
+              Empieza gratis y sin fecha de vencimiento. Sin tarjeta, sin contratos, sin permanencia.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {[
               {
-                nombre: "Básico", precio: "S/ 49", periodo: "/mes", slug: "BASICO",
-                gradient: "from-blue-500 to-blue-700", icon: Shield,
-                descripcion: "Ideal para condominios pequeños que necesitan digitalizar su control de acceso.",
-                features: ["Hasta 20 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"],
+                nombre: "Gratis", precio: "S/ 0", periodo: "para siempre", slug: "GRATIS",
+                gradient: "from-slate-600 to-slate-800", icon: Shield,
+                descripcion: "Para empezar hoy mismo. No caduca y no pedimos tarjeta.",
+                features: [
+                  "Hasta 15 residentes",
+                  "1 vigilante",
+                  "50 visitas al mes",
+                  "Pase QR por WhatsApp",
+                  "Acceso por placa o DNI",
+                  "Historial de 30 días",
+                ],
               },
               {
-                nombre: "Estándar", precio: "S/ 89", periodo: "/mes", slug: "ESTANDAR",
+                nombre: "Pro", precio: "S/ 89", periodo: "/mes", slug: "PRO",
                 gradient: "from-primary to-primary/70", icon: BarChart3,
-                descripcion: "El más elegido. Perfecto para condominios medianos con múltiples vigilantes.",
-                features: ["Hasta 50 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación", "Soporte prioritario"],
+                descripcion: "Cuando el edificio crece y la administración necesita respaldo.",
+                features: [
+                  "Residentes ilimitados",
+                  "Vigilantes ilimitados",
+                  "Visitas sin límite práctico",
+                  "Aviso por correo al residente",
+                  "Reportes y exportación",
+                  "Historial completo",
+                  "Empresas (coworking y oficinas)",
+                  "Soporte prioritario",
+                ],
                 destacado: true,
-              },
-              {
-                nombre: "Premium", precio: "S/ 149", periodo: "/mes", slug: "PREMIUM",
-                gradient: "from-purple-500 to-purple-800", icon: Building2,
-                descripcion: "Sin límites. Para grandes edificios y urbanizaciones con operación intensiva.",
-                features: ["Residentes ilimitados", "Vigilantes ilimitados", "Historial ilimitado", "Reportes avanzados", "Soporte dedicado"],
               },
             ].map((plan) => {
               const Icon = plan.icon
@@ -360,12 +370,14 @@ export default async function RootPage() {
                     </ul>
                     <Link href="/registro" className="block">
                       <Button variant={plan.destacado ? "default" : "outline"} className="w-full">
-                        Probar 14 días gratis
+                        {plan.destacado ? "Empezar con Pro" : "Crear cuenta gratis"}
                       </Button>
                     </Link>
-                    <Link href={`/checkout?plan=${plan.slug}`} className="block text-center text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      o contratar directamente
-                    </Link>
+                    {plan.destacado && (
+                      <Link href={`/checkout?plan=${plan.slug}`} className="block text-center text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        o contratar directamente
+                      </Link>
+                    )}
                   </div>
                 </div>
               )
@@ -463,7 +475,7 @@ export default async function RootPage() {
         <div className="container max-w-6xl mx-auto px-4 py-16">
           <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto text-center">
             {[
-              { icon: Clock, t: "14 días gratis", d: "Prueba todo sin ingresar tarjeta." },
+              { icon: Clock, t: "Gratis sin caducidad", d: "El plan Gratis no vence ni pide tarjeta." },
               { icon: X, t: "Sin permanencia", d: "Cancela cuando quieras, sin penalidades." },
               { icon: Headset, t: "Te acompañamos", d: "Onboarding y capacitación para tu equipo." },
             ].map((g) => {
@@ -493,7 +505,7 @@ export default async function RootPage() {
             { q: "¿Necesito comprar algún equipo o instalar algo?", a: "No. Gatekeeper funciona 100% en la nube desde el navegador. Tu vigilante puede usarlo desde un celular con internet." },
             { q: "¿Qué pasa con los datos de los visitantes?", a: "Se tratan de forma responsable y conforme a la Ley N° 29733. Cada usuario accede solo a lo que le corresponde y queda registro de las acciones." },
             { q: "¿Capacitan a mi personal?", a: "Sí. Ofrecemos onboarding y capacitación para vigilantes, residentes y administradores, para que arranquen sin complicaciones." },
-            { q: "¿Hay contrato de permanencia?", a: "No. Empiezas con 14 días gratis sin tarjeta y luego eliges un plan mensual. Puedes cancelar cuando quieras." },
+            { q: "¿Hay contrato de permanencia?", a: "No. El plan Gratis no caduca y no pide tarjeta. Si pasas a Pro es mes a mes y puedes cancelar cuando quieras." },
             { q: "¿Sirve para edificios y urbanizaciones, no solo condominios?", a: "Sí. Funciona en cualquier inmueble con vigilancia: condominios cerrados, edificios y complejos multifamiliares con vigilante, urbanizaciones y empresas que administran varios inmuebles." },
             { q: "¿Cómo registra el vigilante a una visita?", a: "Por placa o DNI, o escaneando el código QR que el residente envió por WhatsApp. Registra ingreso y salida con un toque." },
           ].map((item) => (
@@ -520,7 +532,7 @@ export default async function RootPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/registro">
                 <Button size="lg" className="w-full sm:w-auto px-8 bg-white text-orange-600 hover:bg-white/90">
-                  Comenzar gratis — 14 días
+                  Crear cuenta gratis
                 </Button>
               </Link>
               <a href={WHATSAPP_DEMO} target="_blank" rel="noopener noreferrer">

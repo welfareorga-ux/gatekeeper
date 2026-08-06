@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,7 +40,12 @@ const ROL_COLOR: Record<string, string> = {
   RESIDENTE: "bg-green-500/10 text-green-400 border border-green-500/20",
 }
 
-const FORM_INICIAL = { nombre: "", email: "", password: "", rol: "RESIDENTE", telefono: "", direccion: "" }
+const FORM_INICIAL = { nombre: "", email: "", password: "", rol: "RESIDENTE", telefono: "", direccion: "", empresaId: "" }
+
+/** Valor centinela del <Select>: shadcn no admite SelectItem con value="". */
+const SIN_EMPRESA = "__sin_empresa__"
+
+type EmpresaOpcion = { id: string; nombre: string; activo: boolean }
 
 export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
   const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciales)
@@ -53,6 +58,8 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
   const [modalEliminar, setModalEliminar] = useState<Usuario | null>(null)
 
   const [form, setForm] = useState(FORM_INICIAL)
+  // Lista de empresas para el selector. Si no hay ninguna, el campo ni aparece.
+  const [empresas, setEmpresas] = useState<EmpresaOpcion[]>([])
   const [newPassword, setNewPassword] = useState("")
   const [guardando, setGuardando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
@@ -84,6 +91,13 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
     }
   }
 
+  useEffect(() => {
+    fetch("/api/admin/empresas")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setEmpresas)
+      .catch(() => setEmpresas([]))
+  }, [])
+
   async function crearUsuario() {
     if (!form.nombre.trim() || !form.email.trim() || !form.password) {
       toast.error("Nombre, email y contraseña son requeridos")
@@ -98,7 +112,11 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
       const res = await fetch("/api/admin/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        // La empresa solo aplica a residentes y es opcional.
+        body: JSON.stringify({
+          ...form,
+          empresaId: form.rol === "RESIDENTE" && form.empresaId ? form.empresaId : null,
+        }),
       })
       if (!res.ok) { toast.error((await res.json()).error ?? "Error al crear"); return }
       const nuevo: Usuario = { ...(await res.json()), telefono: form.telefono || null, direccion: form.direccion || null }
@@ -327,6 +345,26 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
               <div className="col-span-2 space-y-1.5">
                 <Label>Dirección / Unidad</Label>
                 <Input value={form.direccion} onChange={(e) => setForm((p) => ({ ...p, direccion: e.target.value }))} placeholder="Torre A, Dpto 301" />
+              </div>
+            )}
+            {form.rol === "RESIDENTE" && empresas.length > 0 && (
+              <div className="col-span-2 space-y-1.5">
+                <Label>Empresa <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                <Select
+                  value={form.empresaId || SIN_EMPRESA}
+                  onValueChange={(v) => setForm((p) => ({ ...p, empresaId: v === SIN_EMPRESA ? "" : v }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={SIN_EMPRESA}>Sin empresa</SelectItem>
+                    {empresas.filter((e) => e.activo).map((e) => (
+                      <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Solo si el edificio aloja varias empresas. Gestiona la lista en Empresas.
+                </p>
               </div>
             )}
           </div>

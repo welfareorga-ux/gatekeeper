@@ -12,27 +12,22 @@ import {
   Building2, User, ChevronRight, Lock,
 } from "lucide-react"
 
+// Solo el plan de pago pasa por el checkout; el plan GRATIS se crea en /registro.
 const PLANES = {
-  BASICO: {
-    nombre: "Básico",
-    precio: 4900,
-    precioStr: "S/ 49.00",
-    descripcion: "Hasta 20 residentes · 1 vigilante · Historial 30 días",
-    features: ["Hasta 20 residentes", "1 vigilante", "Historial 30 días", "Soporte por email"],
-  },
-  ESTANDAR: {
-    nombre: "Estándar",
+  PRO: {
+    nombre: "Pro",
     precio: 8900,
     precioStr: "S/ 89.00",
-    descripcion: "Hasta 50 residentes · 3 vigilantes · Historial 90 días",
-    features: ["Hasta 50 residentes", "3 vigilantes", "Historial 90 días", "Reportes y exportación", "Soporte prioritario"],
-  },
-  PREMIUM: {
-    nombre: "Premium",
-    precio: 14900,
-    precioStr: "S/ 149.00",
-    descripcion: "Sin límites · Soporte dedicado · Historial ilimitado",
-    features: ["Residentes ilimitados", "Vigilantes ilimitados", "Historial ilimitado", "Reportes avanzados", "Soporte dedicado"],
+    descripcion: "Residentes y vigilantes ilimitados · Historial completo · Reportes",
+    features: [
+      "Residentes ilimitados",
+      "Vigilantes ilimitados",
+      "Aviso por correo al residente",
+      "Reportes y exportación",
+      "Historial completo",
+      "Empresas (coworking y oficinas)",
+      "Soporte prioritario",
+    ],
   },
 } as const
 
@@ -51,8 +46,8 @@ type Step = "datos" | "pago" | "exito"
 export function CheckoutForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const rawPlan = (params.get("plan") ?? "ESTANDAR").toUpperCase()
-  const planKey: PlanKey = rawPlan in PLANES ? (rawPlan as PlanKey) : "ESTANDAR"
+  const rawPlan = (params.get("plan") ?? "PRO").toUpperCase()
+  const planKey: PlanKey = rawPlan in PLANES ? (rawPlan as PlanKey) : "PRO"
   const plan = PLANES[planKey]
 
   const [step, setStep] = useState<Step>("datos")

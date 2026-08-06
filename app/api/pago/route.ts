@@ -6,15 +6,11 @@ import { enviarEmailBienvenida } from "@/lib/email"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 
 const PLAN_CODES: Record<string, string> = {
-  BASICO: "plan-basico-2026",
-  ESTANDAR: "plan-estandar-2026",
-  PREMIUM: "plan-premium-2026",
+  PRO: "plan-pro-2026",
 }
 
 const PLAN_LABELS: Record<string, string> = {
-  BASICO: "Básico",
-  ESTANDAR: "Estándar",
-  PREMIUM: "Premium",
+  PRO: "Pro",
 }
 
 async function resolverPlanId(planCode: string, secretKey: string): Promise<string> {
@@ -29,7 +25,7 @@ async function resolverPlanId(planCode: string, secretKey: string): Promise<stri
 
 const schema = z.object({
   tokenId: z.string().min(1),
-  plan: z.enum(["BASICO", "ESTANDAR", "PREMIUM"]),
+  plan: z.literal("PRO"),
   amount: z.number().int().positive(),
   nombreCondominio: z.string().min(3).max(100),
   direccion: z.string().min(5).max(200),

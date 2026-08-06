@@ -6,10 +6,18 @@ import { UsuariosCliente } from "./usuarios-cliente"
 
 export const metadata = { title: "Usuarios — Gatekeeper Admin" }
 
+/**
+ * Límites que se MUESTRAN al administrador. En Pro se muestra sin límite,
+ * que es lo que se vende.
+ *
+ * El guardarraíl de capacidad de Pro (ver TOPE_RESIDENTES_PRO en
+ * app/api/admin/usuarios/route.ts) vive solo en el backend a propósito: es una
+ * salvaguarda operativa nuestra, no parte de la oferta, y se amplía por cuenta
+ * cuando alguien la alcanza. No debe aparecer aquí.
+ */
 const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
-  BASICO:   { residentes: 20,       vigilantes: 1        },
-  ESTANDAR: { residentes: 50,       vigilantes: 3        },
-  PREMIUM:  { residentes: Infinity, vigilantes: Infinity },
+  GRATIS: { residentes: 15,       vigilantes: 1        },
+  PRO:    { residentes: Infinity, vigilantes: Infinity },
 }
 
 export default async function UsuariosPage() {
@@ -28,7 +36,7 @@ export default async function UsuariosPage() {
     }),
   ]))
 
-  const plan = condominio?.plan ?? "BASICO"
+  const plan = condominio?.plan ?? "GRATIS"
   const limites = LIMITES_PLAN[plan]
   const activosResidentes = usuarios.filter((u) => u.rol === "RESIDENTE" && u.activo).length
   const activosVigilantes = usuarios.filter((u) => u.rol === "VIGILANTE" && u.activo).length

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
+import { filtroEmpresaVigilante } from "@/lib/empresa"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
 import { EstadoVisita } from "@prisma/client"
 
@@ -31,10 +32,11 @@ export async function GET(req: NextRequest, { params }: { params: { codigoQR: st
   let visita
   try {
     // findFirst (no findUnique) + withTenant: condominioId inyectado y RLS por contexto.
-    visita = await withTenant(condominioId, (tx) => tx.visita.findFirst({
+    visita = await withTenant(condominioId, async (tx) => tx.visita.findFirst({
       where: {
         codigoQR: codigo,
         estado: { notIn: [EstadoVisita.CANCELADO] },
+        ...(await filtroEmpresaVigilante(tx, session.user.id)),
       },
       include: {
         vehiculos: true,

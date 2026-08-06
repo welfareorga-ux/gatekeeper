@@ -4,9 +4,7 @@ import { runAsAdmin } from "@/lib/tenant"
 import { enviarEmailCobroFallido } from "@/lib/email"
 
 const PLAN_LABEL: Record<string, string> = {
-  BASICO: "Básico",
-  ESTANDAR: "Estándar",
-  PREMIUM: "Premium",
+  PRO: "Pro",
 }
 
 function verificarAuth(req: Request): boolean {

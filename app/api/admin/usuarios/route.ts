@@ -6,10 +6,22 @@ import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { enviarCredencialesUsuario } from "@/lib/email"
 
+/**
+ * Guardarraíl de capacidad, NO un límite comercial.
+ *
+ * El plan Pro se vende sin límite de residentes y esa promesa se mantiene: este
+ * tope existe para que el crecimiento de una sola cuenta no desborde nuestra
+ * capacidad de operación y soporte sin que nos enteremos. Cuando una cuenta lo
+ * alcanza, se amplía caso por caso.
+ *
+ * Por eso no se publica en la landing, los términos ni el panel: el admin solo
+ * ve un aviso para contactar a soporte si llega ahí.
+ */
+const TOPE_RESIDENTES_PRO = 300
+
 const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
-  BASICO:   { residentes: 20,         vigilantes: 1          },
-  ESTANDAR: { residentes: 50,         vigilantes: 3          },
-  PREMIUM:  { residentes: Infinity,   vigilantes: Infinity   },
+  GRATIS: { residentes: 15,                  vigilantes: 1        },
+  PRO:    { residentes: TOPE_RESIDENTES_PRO, vigilantes: Infinity },
 }
 
 export async function GET(req: Request) {
@@ -61,6 +73,8 @@ const crearSchema = z.object({
   rol: z.enum(["RESIDENTE", "VIGILANTE", "ADMIN"]),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
+  // Opcional: solo aplica a edificios con varias empresas (coworking).
+  empresaId: z.string().optional().nullable(),
 })
 
 export async function POST(req: Request) {
@@ -77,7 +91,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
   }
 
-  const { nombre, email, password, rol, telefono, direccion } = result.data
+  const { nombre, email, password, rol, telefono, direccion, empresaId } = result.data
 
   // El email es único en TODA la plataforma (no por condominio). El chequeo debe
   // ser global → runAsAdmin (bypass RLS), o un email de otro condominio pasaría
@@ -95,7 +109,7 @@ export async function POST(req: Request) {
 
     // Verificar límites del plan antes de crear
     if (rol === "RESIDENTE" || rol === "VIGILANTE") {
-      const limites = LIMITES_PLAN[condominio?.plan ?? "BASICO"]
+      const limites = LIMITES_PLAN[condominio?.plan ?? "GRATIS"]
       const campo = rol === "RESIDENTE" ? "residentes" : "vigilantes"
       const limite = limites[campo]
 
@@ -104,16 +118,29 @@ export async function POST(req: Request) {
           where: { rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
         })
         if (actual >= limite) {
-          const planLabel = condominio?.plan === "BASICO" ? "Básico" : condominio?.plan === "ESTANDAR" ? "Estándar" : "Premium"
-          return { error: NextResponse.json({
-            error: `Tu plan ${planLabel} permite máximo ${limite} ${campo}. Actualiza tu plan para agregar más.`,
-          }, { status: 403 }) }
+          // En Gratis se dice el límite (es parte de la oferta). En Pro NO se
+          // menciona ninguna cifra: se deriva a soporte, que lo amplía.
+          const mensaje = condominio?.plan === "GRATIS"
+            ? `El plan Gratis permite máximo ${limite} ${campo}. Pasa al plan Pro para agregar más.`
+            : `Has alcanzado la capacidad asignada a tu cuenta. Escríbenos a soporte@gatekeeper-app.org y la ampliamos.`
+          return { error: NextResponse.json({ error: mensaje }, { status: 403 }) }
         }
       }
     }
 
+    // La empresa debe existir y pertenecer a esta organización. El findFirst va
+    // dentro de withTenant, así que RLS ya impide referenciar una de otro tenant.
+    let empresaValida: string | null = null
+    if (empresaId) {
+      const empresa = await tx.empresa.findFirst({ where: { id: empresaId }, select: { id: true } })
+      if (!empresa) {
+        return { error: NextResponse.json({ error: "La empresa seleccionada no existe" }, { status: 400 }) }
+      }
+      empresaValida = empresa.id
+    }
+
     const usuario = await tx.user.create({
-      data: { nombre, email, password: hash, rol, telefono, direccion },
+      data: { nombre, email, password: hash, rol, telefono, direccion, empresaId: empresaValida },
       select: { id: true, nombre: true, email: true, rol: true, activo: true, createdAt: true },
     })
 

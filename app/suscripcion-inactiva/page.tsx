@@ -20,9 +20,8 @@ export default async function SuscripcionInactivaPage() {
   if (condominio?.suscripcionEstado === "activa") redirect("/admin/dashboard")
 
   const PLAN_LABEL: Record<string, string> = {
-    BASICO: "Básico",
-    ESTANDAR: "Estándar",
-    PREMIUM: "Premium",
+    GRATIS: "Gratis",
+    PRO: "Pro",
   }
 
   return (
