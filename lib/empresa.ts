@@ -10,8 +10,8 @@ import type { TenantTx } from "@/lib/tenant"
  *
  * Reglas:
  *   - Vigilante SIN empresas asignadas → ve TODAS las visitas de la
- *     organización. Es el caso normal de un condominio o edificio residencial,
- *     donde no hay empresas de por medio, y el comportamiento por defecto.
+ *     organización. Es el comportamiento por defecto y el habitual cuando no
+ *     hay empresas de por medio (condominio o edificio residencial).
  *   - Vigilante CON empresas asignadas → ve SOLO las visitas de esas empresas.
  *     Las visitas sin empresa (departamentos del mismo edificio) quedan fuera:
  *     si se le asignaron empresas explícitamente, es para acotarlo a ellas.

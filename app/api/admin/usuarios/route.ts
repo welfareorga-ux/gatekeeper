@@ -73,7 +73,10 @@ const crearSchema = z.object({
   nombre: z.string().min(3, "Mínimo 3 caracteres").max(100),
   email: z.string().email("Email inválido"),
   password: z.string().min(8, "Mínimo 8 caracteres"),
-  rol: z.enum(["RESIDENTE", "VIGILANTE", "ADMIN"]),
+  // Un administrador solo da de alta residentes y vigilantes. La cuenta
+  // principal es una por organización y solo se crea al registrarse; si hace
+  // falta traspasarla, el propio admin cambia su email y contraseña.
+  rol: z.enum(["RESIDENTE", "VIGILANTE"]),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
   // Opcional, solo en edificios con varias empresas (coworking):

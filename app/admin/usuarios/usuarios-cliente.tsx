@@ -352,9 +352,11 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
                 <SelectContent>
                   <SelectItem value="RESIDENTE">Residente</SelectItem>
                   <SelectItem value="VIGILANTE">Vigilante</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                La cuenta de administrador es una por organización, la tuya.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Teléfono</Label>

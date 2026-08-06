@@ -51,7 +51,7 @@ export function SelectorEmpresasVigilante({ empresas, seleccionadas, onChange }:
       </div>
       <p className="text-xs text-muted-foreground">
         {seleccionadas.length === 0
-          ? "Sin marcar ninguna: verá todas las visitas del edificio. Es lo normal en un condominio."
+          ? "Sin marcar ninguna: verá todas las visitas. Es lo habitual cuando no hay empresas de por medio."
           : `Solo verá las visitas de ${seleccionadas.length === 1 ? "esta empresa" : `estas ${seleccionadas.length} empresas`}.`}
       </p>
     </div>
