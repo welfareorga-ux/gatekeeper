@@ -247,7 +247,7 @@ export default async function RootPage() {
             { icon: ScanLine, t: "Por placa o DNI", d: "Admite visitas en auto o a pie. Búsqueda al instante." },
             { icon: QrCode, t: "QR por WhatsApp", d: "El residente envía el pase al visitante. La garita solo escanea." },
             { icon: Zap, t: "Sin hardware", d: "100% en la nube. Funciona desde cualquier celular o PC." },
-            { icon: Building2, t: "Multi-edificio", d: "Administra varios condominios desde una sola cuenta." },
+            { icon: Building2, t: "Varios edificios", d: "Cada uno con su cuenta y su administrador, todos con el mismo sistema." },
           ].map((d) => {
             const Icon = d.icon
             return (
