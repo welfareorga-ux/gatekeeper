@@ -24,6 +24,12 @@ type Visita = {
   motivoVisita: string; horaInicio: string; horaFin: string; estado: EstadoVisita
   createdAt: string
   vehiculos: Array<{ id: string; placa: string; marca?: string; modelo?: string; color?: string }>
+  registros?: Array<{ fechaHoraIngreso: string; fechaHoraSalida: string | null }>
+}
+
+/** "15:42" a partir de una fecha ISO. */
+function soloHora(iso: string) {
+  return new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: false })
 }
 
 const ESTADOS: Array<{ value: string; label: string }> = [
@@ -204,6 +210,18 @@ export function HistorialCliente() {
 
                   <TableCell>
                     <EstadoBadge estado={v.estado} />
+                    {v.registros?.[0] && (
+                      <div className="mt-1 space-y-0.5">
+                        <p className="text-xs text-emerald-600 font-medium whitespace-nowrap">
+                          Llegó {soloHora(v.registros[0].fechaHoraIngreso)}
+                        </p>
+                        {v.registros[0].fechaHoraSalida && (
+                          <p className="text-xs text-muted-foreground whitespace-nowrap">
+                            Salió {soloHora(v.registros[0].fechaHoraSalida)}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </TableCell>
 
                   <TableCell className="text-right">

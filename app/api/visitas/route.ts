@@ -35,6 +35,13 @@ export async function GET(req: NextRequest) {
         vehiculos: true,
         residente: { select: { nombre: true, direccion: true } },
         _count: { select: { registros: true } },
+        // Último movimiento en garita: permite al residente ver a qué hora
+        // llegó/salió su visitante sin depender del correo de notificación.
+        registros: {
+          select: { fechaHoraIngreso: true, fechaHoraSalida: true },
+          orderBy: { fechaHoraIngreso: "desc" },
+          take: 1,
+        },
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
