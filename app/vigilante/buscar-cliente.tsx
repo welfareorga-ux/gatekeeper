@@ -30,7 +30,7 @@ type VisitaResult = {
   nombreVisitante: string; dniVisitante: string; motivoVisita: string
   horaInicio: string; horaFin: string
   vehiculos: VehiculoResult[]
-  residente: { id: string; nombre: string; direccion?: string; telefono?: string }
+  residente: { id: string; nombre: string; direccion?: string }
   registros: Array<{ id: string; fechaHoraIngreso: string }>
 }
 

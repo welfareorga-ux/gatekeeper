@@ -30,7 +30,7 @@ const NAV_ITEMS = {
     { href: "/residente/plantillas", label: "Plantillas", icon: BookMarked },
   ],
   superadmin: [
-    { href: "/superadmin/condominios", label: "Condominios", icon: Building2 },
+    { href: "/superadmin/condominios", label: "Organizaciones", icon: Building2 },
     { href: "/superadmin/usuarios", label: "Usuarios", icon: Users },
   ],
 }

@@ -20,7 +20,7 @@ type Visita = {
   nombreVisitante: string; dniVisitante: string; motivoVisita: string
   horaInicio: string; horaFin: string
   vehiculos: Vehiculo[]
-  residente: { nombre: string; direccion?: string; telefono?: string }
+  residente: { nombre: string; direccion?: string }
   registros: Array<{ id: string; fechaHoraIngreso: string }>
 }
 

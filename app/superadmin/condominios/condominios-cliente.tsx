@@ -48,7 +48,7 @@ export function CondominiosCliente() {
       if (!res.ok) throw new Error()
       setCondominios(await res.json())
     } catch {
-      toast.error("Error al cargar condominios")
+      toast.error("Error al cargar organizaciones")
     } finally {
       setLoading(false)
     }
@@ -70,7 +70,7 @@ export function CondominiosCliente() {
         setCondominios((prev) => prev.map((x) => x.id === c.id ? { ...x, activo: c.activo } : x))
         return
       }
-      toast.success(`Condominio ${nuevo ? "activado" : "desactivado"}`)
+      toast.success(`Organización ${nuevo ? "activada" : "desactivada"}`)
     } catch {
       toast.error("Error de conexión")
       setCondominios((prev) => prev.map((x) => x.id === c.id ? { ...x, activo: c.activo } : x))
@@ -120,7 +120,7 @@ export function CondominiosCliente() {
       const res = await fetch(`/api/superadmin/condominios/${aEliminar.id}`, { method: "DELETE" })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) { toast.error(data.error ?? "Error al eliminar"); return }
-      toast.success(`Condominio "${aEliminar.nombre}" eliminado (${data.usuarios} usuarios, ${data.visitas} visitas)`)
+      toast.success(`Organización "${aEliminar.nombre}" eliminada (${data.usuarios} usuarios, ${data.visitas} visitas)`)
       setCondominios((prev) => prev.filter((x) => x.id !== aEliminar.id))
       setAEliminar(null)
       setConfirmNombre("")
@@ -141,7 +141,7 @@ export function CondominiosCliente() {
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Condominios activos", value: activos, icon: Building2 },
+          { label: "Organizaciones activas", value: activos, icon: Building2 },
           { label: "Total usuarios", value: totalUsuarios, icon: Users },
           { label: "Total visitas", value: totalVisitas, icon: FileText },
         ].map((s) => {
@@ -159,7 +159,7 @@ export function CondominiosCliente() {
       </div>
 
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">{condominios.length} condominio{condominios.length !== 1 ? "s" : ""} registrados</p>
+        <p className="text-sm text-muted-foreground">{condominios.length} organización{condominios.length !== 1 ? "es" : ""} registrada{condominios.length !== 1 ? "s" : ""}</p>
         <Button variant="ghost" size="sm" onClick={cargar}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Actualizar
@@ -173,7 +173,7 @@ export function CondominiosCliente() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Condominio</TableHead>
+                <TableHead>Organización</TableHead>
                 <TableHead>Usuarios</TableHead>
                 <TableHead>Visitas</TableHead>
                 <TableHead>Plan</TableHead>
@@ -184,7 +184,7 @@ export function CondominiosCliente() {
             </TableHeader>
             <TableBody>
               {condominios.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Sin condominios registrados</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Sin organizaciones registradas</TableCell></TableRow>
               ) : (
                 condominios.map((c) => (
                   <TableRow key={c.id} className={!c.activo ? "opacity-50" : ""}>
@@ -221,7 +221,7 @@ export function CondominiosCliente() {
                         </Button>
                         <Button
                           variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                          title="Eliminar condominio"
+                          title="Eliminar organización"
                           onClick={() => { setAEliminar(c); setConfirmNombre("") }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -247,7 +247,7 @@ export function CondominiosCliente() {
           {modalReset && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Condominio: <strong>{modalReset.nombre}</strong>
+                Organización: <strong>{modalReset.nombre}</strong>
               </p>
               <div className="space-y-1.5">
                 <Label>Nueva contraseña</Label>
@@ -280,7 +280,7 @@ export function CondominiosCliente() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-4 w-4" />
-              Eliminar condominio
+              Eliminar organización
             </DialogTitle>
           </DialogHeader>
           {aEliminar && (
@@ -291,13 +291,13 @@ export function CondominiosCliente() {
               <ul className="list-disc pl-5 text-muted-foreground space-y-0.5">
                 <li><strong>{aEliminar._count.usuarios}</strong> usuario(s): administradores, vigilantes y residentes</li>
                 <li><strong>{aEliminar._count.visitas}</strong> visita(s) y sus vehículos/registros</li>
-                <li>Plantillas, turnos y registros de actividad del condominio</li>
+                <li>Plantillas, turnos y registros de actividad de la organización</li>
               </ul>
               <p className="rounded-md border border-destructive/30 bg-destructive/10 text-destructive px-3 py-2 text-xs">
                 ⚠️ Esta acción es <strong>permanente e irreversible</strong>. No hay papelera ni forma de recuperar los datos.
               </p>
               <div className="space-y-1.5">
-                <Label>Para confirmar, escribe el nombre del condominio:</Label>
+                <Label>Para confirmar, escribe el nombre de la organización:</Label>
                 <Input
                   placeholder={aEliminar.nombre}
                   value={confirmNombre}

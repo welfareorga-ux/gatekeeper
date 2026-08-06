@@ -99,7 +99,7 @@ export function UsuariosCliente() {
         {[
           { label: "Total usuarios", value: usuarios.length, icon: Users },
           { label: "Administradores", value: totalAdmins, icon: ShieldCheck },
-          { label: "Condominios", value: condominios.length, icon: Users },
+          { label: "Organizaciones", value: condominios.length, icon: Users },
         ].map((s) => {
           const Icon = s.icon
           return (
@@ -128,7 +128,7 @@ export function UsuariosCliente() {
           <Select value={filtroCondo} onValueChange={setFiltroCondo}>
             <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos los condominios</SelectItem>
+              <SelectItem value="todos">Todas las organizaciones</SelectItem>
               {condominios.map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -148,7 +148,7 @@ export function UsuariosCliente() {
               <TableRow>
                 <TableHead>Usuario</TableHead>
                 <TableHead>Rol</TableHead>
-                <TableHead>Condominio</TableHead>
+                <TableHead>Organización</TableHead>
                 <TableHead className="text-center">Activo</TableHead>
                 <TableHead>Registro</TableHead>
                 <TableHead></TableHead>
@@ -206,7 +206,7 @@ export function UsuariosCliente() {
               <p>
                 Vas a eliminar a <strong>{aEliminar.nombre}</strong> ({aEliminar.email}),
                 rol <strong>{ROL_LABEL[aEliminar.rol] ?? aEliminar.rol}</strong>
-                {aEliminar.condominio?.nombre ? <> del condominio <strong>{aEliminar.condominio.nombre}</strong></> : null}.
+                {aEliminar.condominio?.nombre ? <> de la organización <strong>{aEliminar.condominio.nombre}</strong></> : null}.
               </p>
               <p className="text-muted-foreground">
                 Se borrarán también sus datos asociados (visitas, plantillas, turnos y registros de actividad).
@@ -214,7 +214,7 @@ export function UsuariosCliente() {
               </p>
               {aEliminar.rol === "ADMIN" && (
                 <p className="rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-400 px-3 py-2 text-xs">
-                  ⚠️ Es un <strong>administrador</strong>. Si es el único de su condominio, este quedará sin nadie que lo gestione.
+                  ⚠️ Es un <strong>administrador</strong>. Si es el único de su organización, esta quedará sin nadie que la gestione.
                 </p>
               )}
             </div>

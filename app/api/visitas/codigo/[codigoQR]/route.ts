@@ -38,7 +38,9 @@ export async function GET(req: NextRequest, { params }: { params: { codigoQR: st
       },
       include: {
         vehiculos: true,
-        residente: { select: { id: true, nombre: true, direccion: true, telefono: true } },
+        // El teléfono del residente NO se expone: el vigilante no necesita llamarlo
+        // (la plataforma le notifica el ingreso/salida por email automáticamente).
+        residente: { select: { id: true, nombre: true, direccion: true } },
         registros: { where: { fechaHoraSalida: null }, take: 1, orderBy: { fechaHoraIngreso: "desc" } },
       },
     }))

@@ -100,15 +100,18 @@ export function RegistroForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Condominio */}
+          {/* Organización (condominio, edificio o administradora) */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
               <Building2 className="h-4 w-4" />
-              Datos del condominio
+              Datos de la organización
             </div>
             <div className="space-y-1.5">
-              <Label>Nombre del condominio *</Label>
+              <Label>Nombre de la organización *</Label>
               <Input {...campo("nombreCondominio")} placeholder="Residencial Los Pinos" required />
+              <p className="text-xs text-muted-foreground">
+                Tu condominio, edificio, urbanización o empresa administradora.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Dirección *</Label>
@@ -125,7 +128,7 @@ export function RegistroForm() {
               Cuenta del administrador
             </div>
             <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
-              <strong>Esta será la cuenta principal del condominio.</strong> Con ella accedes al panel de administración para agregar vigilantes y residentes. Los demás usuarios ingresan con las credenciales que tú les asignes.
+              <strong>Esta será la cuenta principal de la organización.</strong> Con ella accedes al panel de administración para agregar vigilantes y residentes. Los demás usuarios ingresan con las credenciales que tú les asignes.
             </div>
             <div className="space-y-1.5">
               <Label>Nombre completo *</Label>
