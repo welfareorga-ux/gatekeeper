@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
@@ -16,6 +17,11 @@ const WHATSAPP_DEMO =
   "https://wa.me/51964462645?text=Hola%2C%20quiero%20saber%20m%C3%A1s%20sobre%20Gatekeeper%20para%20mi%20condominio"
 const WHATSAPP_ADMIN =
   "https://wa.me/51964462645?text=Hola%2C%20administro%20varios%20edificios%20y%20quiero%20conocer%20Gatekeeper"
+
+/** Canónica propia: el layout raíz ya no la declara para todo el sitio. */
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+}
 
 export default async function RootPage() {
   const session = await getServerSession(authOptions)
