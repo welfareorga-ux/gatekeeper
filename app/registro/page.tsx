@@ -3,7 +3,8 @@ import { RegistroForm } from "./registro-form"
 import Link from "next/link"
 import { Shield, Loader2 } from "lucide-react"
 
-export const metadata = { title: "Registrar Condominio — Gatekeeper" }
+export const metadata = {
+  alternates: { canonical: "/registro" }, title: "Registrar Condominio — Gatekeeper" }
 
 export default function RegistroPage() {
   return (

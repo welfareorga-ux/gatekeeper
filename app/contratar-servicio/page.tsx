@@ -6,7 +6,8 @@ import { Shield, Lock, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ContrataServicioForm } from "./contratar-servicio-form"
 
-export const metadata = { title: "Contratar Servicio — Gatekeeper" }
+export const metadata = {
+  robots: { index: false, follow: true }, title: "Contratar Servicio — Gatekeeper" }
 
 export default async function ContrataServicioPage({
   searchParams,

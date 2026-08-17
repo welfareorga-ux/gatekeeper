@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Shield } from "lucide-react"
 
 export const metadata = {
+  alternates: { canonical: "/politica-devoluciones" },
   title: "Política de Cambios y Devoluciones — Gatekeeper",
 }
 

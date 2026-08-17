@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Shield, Building2, UserCheck, Home, ChevronRight } from "lucide-react"
 
 export const metadata = {
+  alternates: { canonical: "/manual" },
   title: "Manual de uso — Gatekeeper",
   description: "Guía completa para administradores, vigilantes y residentes de Gatekeeper.",
 }

@@ -3,7 +3,8 @@ import Link from "next/link"
 import { Shield, Loader2 } from "lucide-react"
 import { CheckoutForm } from "./checkout-form"
 
-export const metadata = { title: "Contratar Plan — Gatekeeper" }
+export const metadata = {
+  robots: { index: false, follow: true }, title: "Contratar Plan — Gatekeeper" }
 
 export default function CheckoutPage() {
   return (

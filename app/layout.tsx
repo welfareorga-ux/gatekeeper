@@ -25,9 +25,6 @@ export const metadata: Metadata = {
     template: "%s — Gatekeeper",
   },
   description: "Sistema de gestión de visitas vehiculares para condominios cerrados",
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     locale: "es_PE",
