@@ -597,6 +597,7 @@ export default async function RootPage() {
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <Link href="/login" className="hover:text-foreground transition-colors">Iniciar sesión</Link>
               <Link href="/registro" className="hover:text-foreground transition-colors">Registrarse</Link>
+              <Link href="/guias" className="hover:text-foreground transition-colors">Guías</Link>
               <Link href="/manual" className="hover:text-foreground transition-colors">Manual</Link>
               <Link href="/terminos" className="hover:text-foreground transition-colors">Términos y condiciones</Link>
               <Link href="/politica-devoluciones" className="hover:text-foreground transition-colors">Política de devoluciones</Link>
