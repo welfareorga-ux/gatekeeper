@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { LandingNav } from "@/components/layout/landing-nav"
 import { notFound } from "next/navigation"
 import { Shield, Clock, ArrowLeft } from "lucide-react"
 import { guias, guiaPorSlug, relacionadas, type Bloque } from "@/content/guias"
@@ -134,12 +135,7 @@ export default function GuiaPage({ params }: { params: { slug: string } }) {
             <Shield className="h-5 w-5 text-primary" />
             Gatekeeper
           </Link>
-          <Link
-            href="/login"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Iniciar sesión →
-          </Link>
+          <LandingNav />
         </div>
       </header>
 
