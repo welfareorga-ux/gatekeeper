@@ -43,6 +43,15 @@ model Condominio {
   /// Solo relevante en plan PRO: "activa" | "cancelada" | "vencida" | "fallida".
   /// El plan GRATIS está siempre "activa" (no se bloquea nunca).
   suscripcionEstado   String   @default("activa")
+  /// Contadores ACUMULATIVOS para los límites del plan GRATIS: suben al crear
+  /// y nunca bajan. Eliminar o desactivar a alguien no libera su cupo; si no,
+  /// bastaría con ir rotando personas para saltarse el límite.
+  residentesCreados   Int      @default(0)
+  vigilantesCreados   Int      @default(0)
+  /// Visitas registradas en el mes que empezó en `visitasMesInicio` (hora de
+  /// Lima). Tampoco bajan al cancelar o borrar visitas.
+  visitasMes          Int      @default(0)
+  visitasMesInicio    DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

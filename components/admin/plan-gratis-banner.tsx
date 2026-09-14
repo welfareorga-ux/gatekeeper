@@ -1,19 +1,28 @@
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
+import { LIMITES_GRATIS } from "@/lib/limites-plan"
 
 /**
  * Aviso del plan gratuito. A diferencia del antiguo banner de prueba, NO hay
- * cuenta regresiva: el plan gratis no caduca. Solo invita a pasar a Pro.
+ * cuenta regresiva: el plan gratis no caduca. Muestra el cupo de visitas del
+ * mes, que es el límite que antes se nota, e invita a pasar a Pro.
  */
-export function PlanGratisBanner() {
+export function PlanGratisBanner({ visitasUsadas }: { visitasUsadas: number }) {
+  const agotado = visitasUsadas >= LIMITES_GRATIS.visitasPorMes
+
   return (
     <div className="bg-slate-900 text-white px-4 py-2.5 print:hidden">
       <div className="container max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm flex items-center gap-2">
+        <p className="text-sm flex flex-wrap items-center gap-x-2">
           <Sparkles className="h-4 w-4 text-orange-400 shrink-0" />
           <span>
             Estás en el <strong>plan Gratis</strong>
-            <span className="text-slate-400"> · 15 residentes · 2 vigilantes · 50 visitas al mes</span>
+            <span className="text-slate-400">
+              {" "}· {LIMITES_GRATIS.residentes} residentes · {LIMITES_GRATIS.vigilantes} vigilante ·{" "}
+            </span>
+            <span className={agotado ? "text-orange-400 font-semibold" : "text-slate-300"}>
+              {Math.min(visitasUsadas, LIMITES_GRATIS.visitasPorMes)} de {LIMITES_GRATIS.visitasPorMes} visitas este mes
+            </span>
           </span>
         </p>
         <Link

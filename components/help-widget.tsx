@@ -168,7 +168,7 @@ const CATEGORIES: Category[] = [
       {
         q: "¿Tengo periodo de prueba gratis?",
         a: [
-          "Sí: el plan Gratis no caduca (15 residentes, 2 vigilantes y 50 visitas al mes). El plan Pro cuesta S/ 89 al mes.",
+          "Sí: el plan Gratis no caduca (1 administrador, 1 vigilante, 4 residentes y 12 visitas al mes; cada alta ocupa un cupo aunque después elimines a esa persona). El plan Pro cuesta S/ 89 al mes.",
           "Puedes empezar sin ingresar tarjeta y suscribirte cuando quieras.",
         ],
       },

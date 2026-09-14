@@ -5,6 +5,8 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { enviarCredencialesUsuario } from "@/lib/email"
+import { reservarCupoUsuario } from "@/lib/cupos-plan"
+import { mensajeLimiteUsuarios } from "@/lib/limites-plan"
 
 /**
  * Guardarraíl de capacidad, NO un límite comercial.
@@ -18,11 +20,6 @@ import { enviarCredencialesUsuario } from "@/lib/email"
  * ve un aviso para contactar a soporte si llega ahí.
  */
 const TOPE_RESIDENTES_PRO = 300
-
-const LIMITES_PLAN: Record<string, { residentes: number; vigilantes: number }> = {
-  GRATIS: { residentes: 15,                  vigilantes: 2        },
-  PRO:    { residentes: TOPE_RESIDENTES_PRO, vigilantes: Infinity },
-}
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions)
@@ -115,25 +112,22 @@ export async function POST(req: Request) {
       select: { plan: true, nombre: true },
     })
 
-    // Verificar límites del plan antes de crear
-    if (rol === "RESIDENTE" || rol === "VIGILANTE") {
-      const limites = LIMITES_PLAN[condominio?.plan ?? "GRATIS"]
-      const campo = rol === "RESIDENTE" ? "residentes" : "vigilantes"
-      const limite = limites[campo]
+    const plan = condominio?.plan ?? "GRATIS"
 
-      if (limite !== Infinity) {
-        const actual = await tx.user.count({
-          where: { rol: rol as "RESIDENTE" | "VIGILANTE", activo: true },
-        })
-        if (actual >= limite) {
-          // En Gratis se dice el límite (es parte de la oferta). En Pro NO se
-          // menciona ninguna cifra: se deriva a soporte, que lo amplía.
-          const mensaje = condominio?.plan === "GRATIS"
-            ? `El plan Gratis permite máximo ${limite} ${campo}. Pasa al plan Pro para agregar más.`
-            : `Has alcanzado la capacidad asignada a tu cuenta. Escríbenos a soporte@gatekeeper-app.org y la ampliamos.`
-          return { error: NextResponse.json({ error: mensaje }, { status: 403 }) }
-        }
+    // Guardarraíl de Pro: residentes ACTIVOS. No se menciona ninguna cifra, se
+    // deriva a soporte, que lo amplía.
+    if (plan === "PRO" && rol === "RESIDENTE") {
+      const activos = await tx.user.count({ where: { rol: "RESIDENTE", activo: true } })
+      if (activos >= TOPE_RESIDENTES_PRO) {
+        const mensaje = "Has alcanzado la capacidad asignada a tu cuenta. Escríbenos a soporte@gatekeeper-app.org y la ampliamos."
+        return { error: NextResponse.json({ error: mensaje }, { status: 403 }) }
       }
+    }
+
+    // Límite del plan Gratis, ACUMULATIVO: cuenta cada alta aunque después se
+    // haya eliminado o desactivado a esa persona.
+    if (!(await reservarCupoUsuario(tx, condominioId, plan, rol))) {
+      return { error: NextResponse.json({ error: mensajeLimiteUsuarios(rol) }, { status: 403 }) }
     }
 
     // La empresa debe existir y pertenecer a esta organización. El findFirst va

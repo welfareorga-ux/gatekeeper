@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { PlanGratisBanner } from "@/components/admin/plan-gratis-banner"
 import { EspacioPublicitario } from "@/components/ads/espacio-publicitario"
+import { visitasUsadasEsteMes } from "@/lib/limites-plan"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
@@ -14,12 +15,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // El plan GRATIS no caduca, así que no hay cuenta atrás: solo un aviso
   // permanente y discreto con la vía para pasar a Pro.
   let enPlanGratis = false
+  let visitasUsadas = 0
   if (session.user.condominioId) {
     const condo = await prisma.condominio.findUnique({
       where: { id: session.user.condominioId },
-      select: { plan: true },
+      select: { plan: true, visitasMes: true, visitasMesInicio: true },
     })
     enPlanGratis = condo?.plan === "GRATIS"
+    if (condo) visitasUsadas = visitasUsadasEsteMes(condo)
   }
 
   return (
@@ -30,7 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         rolLabel="Panel Admin"
       />
       <main className="flex-1 overflow-auto bg-background pt-14 md:pt-0">
-        {enPlanGratis && <PlanGratisBanner />}
+        {enPlanGratis && <PlanGratisBanner visitasUsadas={visitasUsadas} />}
         <div className="container max-w-6xl mx-auto px-4 py-8 space-y-6">
           {children}
           {enPlanGratis && <EspacioPublicitario slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ADMIN} conEnlacePro />}

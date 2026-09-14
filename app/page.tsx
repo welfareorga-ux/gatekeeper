@@ -322,9 +322,9 @@ export default async function RootPage() {
                 gradient: "from-slate-600 to-slate-800", icon: Shield,
                 descripcion: "Para empezar hoy mismo. No caduca y no pedimos tarjeta.",
                 features: [
-                  "Hasta 15 residentes",
-                  "2 vigilantes",
-                  "50 visitas al mes",
+                  "1 administrador y 1 vigilante",
+                  "Hasta 4 residentes",
+                  "12 visitas al mes",
                   "Pase QR por WhatsApp",
                   "Acceso por placa o DNI",
                   "Historial de 30 días",

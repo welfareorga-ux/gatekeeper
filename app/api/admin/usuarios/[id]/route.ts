@@ -42,8 +42,22 @@ export async function PATCH(
 
   return withTenant(condominioId, async (tx) => {
     // findFirst (con tenant + RLS) garantiza que el usuario sea del condominio.
-    const target = await tx.user.findFirst({ where: { id: params.id }, select: { id: true } })
+    const target = await tx.user.findFirst({ where: { id: params.id }, select: { id: true, rol: true, email: true } })
     if (!target) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 })
+
+    // El cupo del plan Gratis es acumulativo: cambiarle el correo a un residente
+    // o vigilante equivale a dar de alta a otra persona en su lugar. El nombre
+    // sí se puede corregir, y el admin sigue pudiendo cambiar su propio correo.
+    const cambiaEmail = result.data.email !== undefined && result.data.email.toLowerCase() !== target.email.toLowerCase()
+    if (cambiaEmail && target.rol !== Rol.ADMIN) {
+      const condominio = await tx.condominio.findUnique({ where: { id: condominioId }, select: { plan: true } })
+      if (condominio?.plan === "GRATIS") {
+        return NextResponse.json(
+          { error: "En el plan Gratis no se puede cambiar el correo de un usuario: cada persona ocupa un cupo. Pasa al plan Pro para gestionarlo libremente." },
+          { status: 403 },
+        )
+      }
+    }
 
     // La empresa debe existir y ser de esta organización. El findFirst va dentro
     // de withTenant, así que RLS impide referenciar una de otro tenant.

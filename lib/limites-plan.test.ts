@@ -1,0 +1,51 @@
+import { describe, it, expect } from "vitest"
+import { inicioMesLima, limiteUsuarios, visitasUsadasEsteMes, LIMITES_GRATIS } from "./limites-plan"
+
+describe("inicioMesLima", () => {
+  it("devuelve el día 1 a las 00:00 de Lima (05:00 UTC)", () => {
+    expect(inicioMesLima(new Date("2026-09-14T15:00:00Z")).toISOString()).toBe("2026-09-01T05:00:00.000Z")
+  })
+
+  it("la noche del último día en Lima sigue siendo el mes anterior aunque en UTC ya sea el siguiente", () => {
+    // 30 sep 22:00 en Lima = 1 oct 03:00 UTC
+    expect(inicioMesLima(new Date("2026-10-01T03:00:00Z")).toISOString()).toBe("2026-09-01T05:00:00.000Z")
+  })
+
+  it("a medianoche del día 1 en Lima ya empieza el mes nuevo", () => {
+    expect(inicioMesLima(new Date("2026-10-01T05:00:00Z")).toISOString()).toBe("2026-10-01T05:00:00.000Z")
+  })
+
+  it("cruza el cambio de año", () => {
+    // 31 dic 23:30 en Lima = 1 ene 04:30 UTC
+    expect(inicioMesLima(new Date("2027-01-01T04:30:00Z")).toISOString()).toBe("2026-12-01T05:00:00.000Z")
+    expect(inicioMesLima(new Date("2027-01-01T05:00:00Z")).toISOString()).toBe("2027-01-01T05:00:00.000Z")
+  })
+})
+
+describe("visitasUsadasEsteMes", () => {
+  const ahora = new Date("2026-09-14T15:00:00Z")
+
+  it("usa el contador si es del mes en curso", () => {
+    expect(visitasUsadasEsteMes({ visitasMes: 7, visitasMesInicio: new Date("2026-09-01T05:00:00Z") }, ahora)).toBe(7)
+  })
+
+  it("un contador de un mes anterior cuenta como cero", () => {
+    expect(visitasUsadasEsteMes({ visitasMes: 12, visitasMesInicio: new Date("2026-08-01T05:00:00Z") }, ahora)).toBe(0)
+  })
+
+  it("sin contador iniciado cuenta como cero", () => {
+    expect(visitasUsadasEsteMes({ visitasMes: 0, visitasMesInicio: null }, ahora)).toBe(0)
+  })
+})
+
+describe("limiteUsuarios", () => {
+  it("aplica los límites del plan Gratis", () => {
+    expect(limiteUsuarios("GRATIS", "RESIDENTE")).toBe(LIMITES_GRATIS.residentes)
+    expect(limiteUsuarios("GRATIS", "VIGILANTE")).toBe(LIMITES_GRATIS.vigilantes)
+  })
+
+  it("Pro no tiene límite comercial", () => {
+    expect(limiteUsuarios("PRO", "RESIDENTE")).toBe(Infinity)
+    expect(limiteUsuarios("PRO", "VIGILANTE")).toBe(Infinity)
+  })
+})

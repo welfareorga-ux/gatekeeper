@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -53,6 +54,7 @@ const SIN_EMPRESA = "__sin_empresa__"
 type EmpresaOpcion = { id: string; nombre: string; activo: boolean }
 
 export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
+  const router = useRouter()
   const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciales)
   const [filtroRol, setFiltroRol] = useState("TODOS")
   const [buscar, setBuscar] = useState("")
@@ -127,6 +129,8 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
       if (!res.ok) { toast.error((await res.json()).error ?? "Error al crear"); return }
       const nuevo: Usuario = { ...(await res.json()), telefono: form.telefono || null, direccion: form.direccion || null }
       setUsuarios((prev) => [...prev, nuevo])
+      // Los contadores de cupo los calcula el servidor (en Gratis son acumulativos).
+      router.refresh()
       toast.success("Usuario creado correctamente")
       setModalCrear(false)
       setForm(FORM_INICIAL)
@@ -247,6 +251,11 @@ export function UsuariosCliente({ usuariosIniciales, limites }: Props) {
           {limites.vigilantes.max !== Infinity && ` / ${limites.vigilantes.max}`}
         </span>
         <span className="text-xs">— Plan {limites.plan.charAt(0) + limites.plan.slice(1).toLowerCase()}</span>
+        {limites.plan === "GRATIS" && (
+          <span className="text-xs basis-full">
+            En el plan Gratis cada alta ocupa un cupo, aunque después elimines o desactives a esa persona.
+          </span>
+        )}
       </div>
 
       {/* Tabla */}

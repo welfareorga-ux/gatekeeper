@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
 import { nuevaVisitaSchema } from "@/lib/validations/visita"
 import { EstadoVisita } from "@prisma/client"
+import { reservarCupoVisita } from "@/lib/cupos-plan"
+import { LIMITES_GRATIS } from "@/lib/limites-plan"
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -78,6 +80,11 @@ export async function POST(req: NextRequest) {
   const fechaFinFull = new Date(aniof, mesf - 1, diaf, hfH, hfM)
 
   const visita = await withTenant(condominioId, async (tx) => {
+    const condominio = await tx.condominio.findUnique({ where: { id: condominioId }, select: { plan: true } })
+    if (!(await reservarCupoVisita(tx, condominioId, condominio?.plan ?? "GRATIS"))) {
+      return null
+    }
+
     // La visita hereda la empresa del residente que la registra: así el vigilante
     // asignado a esa empresa puede filtrar solo lo suyo (caso coworking).
     const anfitrion = await tx.user.findFirst({
@@ -104,6 +111,13 @@ export async function POST(req: NextRequest) {
     await tx.logActividad.create({ data: { userId: session.user.id, accion: "CREAR_VISITA", detalle: `Visita para ${nombreVisitante}${vehiculos.length > 0 ? ` | ${vehiculos.map((v) => v.placa || "sin placa").join(", ")}` : " | sin vehículo"}` } })
     return v
   })
+
+  if (!visita) {
+    const mensaje = session.user.rol === "ADMIN"
+      ? `Tu organización ya usó las ${LIMITES_GRATIS.visitasPorMes} visitas del mes del plan Gratis. Pasa al plan Pro para seguir registrando.`
+      : `Tu edificio ya usó las ${LIMITES_GRATIS.visitasPorMes} visitas de este mes del plan Gratis. Avisa a tu administración para ampliar el plan.`
+    return NextResponse.json({ error: mensaje }, { status: 403 })
+  }
 
   return NextResponse.json(visita, { status: 201 })
 }
