@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
 
   if (!visita) {
     const mensaje = session.user.rol === "ADMIN"
-      ? `Tu organización ya usó las ${LIMITES_GRATIS.visitasPorMes} visitas del mes del plan Gratis. Pasa al plan Pro para seguir registrando.`
+      ? `Tu organización ya usó las ${LIMITES_GRATIS.visitasPorMes} visitas del mes del plan Gratis. Compra un paquete de visitas extra o pasa al plan Pro en Suscripción.`
       : `Tu edificio ya usó las ${LIMITES_GRATIS.visitasPorMes} visitas de este mes del plan Gratis. Avisa a tu administración para ampliar el plan.`
     return NextResponse.json({ error: mensaje }, { status: 403 })
   }

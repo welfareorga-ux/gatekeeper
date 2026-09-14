@@ -5,10 +5,11 @@ import { LIMITES_GRATIS } from "@/lib/limites-plan"
 /**
  * Aviso del plan gratuito. A diferencia del antiguo banner de prueba, NO hay
  * cuenta regresiva: el plan gratis no caduca. Muestra el cupo de visitas del
- * mes, que es el límite que antes se nota, e invita a pasar a Pro.
+ * mes, que es el límite que antes se nota, e invita a comprar visitas o a
+ * pasar a Pro.
  */
-export function PlanGratisBanner({ visitasUsadas }: { visitasUsadas: number }) {
-  const agotado = visitasUsadas >= LIMITES_GRATIS.visitasPorMes
+export function PlanGratisBanner({ visitasUsadas, visitasExtra }: { visitasUsadas: number; visitasExtra: number }) {
+  const agotado = visitasUsadas >= LIMITES_GRATIS.visitasPorMes && visitasExtra === 0
 
   return (
     <div className="bg-slate-900 text-white px-4 py-2.5 print:hidden">
@@ -23,13 +24,14 @@ export function PlanGratisBanner({ visitasUsadas }: { visitasUsadas: number }) {
             <span className={agotado ? "text-orange-400 font-semibold" : "text-slate-300"}>
               {Math.min(visitasUsadas, LIMITES_GRATIS.visitasPorMes)} de {LIMITES_GRATIS.visitasPorMes} visitas este mes
             </span>
+            {visitasExtra > 0 && <span className="text-slate-300"> · +{visitasExtra} extra</span>}
           </span>
         </p>
         <Link
           href="/admin/suscripcion"
           className="text-sm font-semibold text-orange-400 hover:text-orange-300 underline underline-offset-4 whitespace-nowrap"
         >
-          Ver plan Pro →
+          {agotado ? "Comprar visitas o pasar a Pro →" : "Ver plan Pro →"}
         </Link>
       </div>
     </div>

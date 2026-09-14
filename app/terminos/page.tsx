@@ -59,9 +59,9 @@ export default function TerminosPage() {
             <h2 className="text-xl font-semibold">3. Planes y precios</h2>
             <p>Los planes disponibles y sus tarifas mensuales son:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong>Plan Gratis:</strong> S/ 0.00 — 1 administrador, 1 vigilante, hasta 4 residentes, 12 visitas al mes, historial de 30 días. Sin fecha de vencimiento. Los cupos de vigilante y residentes son acumulativos: cada alta cuenta aunque después se elimine o desactive a esa persona, y el correo de un usuario ya creado no se puede cambiar. Las visitas se cuentan por mes calendario (hora de Lima) e incluyen las canceladas.</li>
+              <li><strong>Plan Gratis:</strong> S/ 0.00 — 1 administrador, 1 vigilante, hasta 4 residentes, 12 visitas al mes, historial de 30 días. Sin fecha de vencimiento. Los cupos de vigilante y residentes son acumulativos: cada alta cuenta aunque después se elimine o desactive a esa persona, y el correo de un usuario ya creado no se puede cambiar. Las visitas se cuentan por mes calendario (hora de Lima) e incluyen las canceladas. Las visitas, turnos y registros de actividad con más de 30 días se eliminan de forma permanente y no se pueden recuperar.</li>
               <li><strong>Plan Pro:</strong> S/ 89.00/mes — residentes y vigilantes ilimitados, historial completo, reportes, notificaciones por correo y empresas.</li>
-              <li><strong>Plan Premium:</strong> S/ 149.00/mes — sin límite de residentes y vigilantes, historial ilimitado, reportes avanzados, soporte dedicado.</li>
+              <li><strong>Paquete de 20 visitas extra (solo plan Gratis):</strong> S/ 9.00 (pago único) — el saldo no caduca y se usa solo cuando se agotan las visitas incluidas del mes.</li>
               <li><strong>Onboarding y Configuración:</strong> S/ 59.00 (pago único) — implementación inicial del sistema.</li>
               <li><strong>Capacitación del Personal:</strong> S/ 29.00 (pago único) — sesión de capacitación para vigilantes y administradores.</li>
             </ul>

@@ -16,13 +16,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // permanente y discreto con la vía para pasar a Pro.
   let enPlanGratis = false
   let visitasUsadas = 0
+  let visitasExtra = 0
   if (session.user.condominioId) {
     const condo = await prisma.condominio.findUnique({
       where: { id: session.user.condominioId },
-      select: { plan: true, visitasMes: true, visitasMesInicio: true },
+      select: { plan: true, visitasMes: true, visitasMesInicio: true, visitasExtra: true },
     })
     enPlanGratis = condo?.plan === "GRATIS"
-    if (condo) visitasUsadas = visitasUsadasEsteMes(condo)
+    if (condo) {
+      visitasUsadas = visitasUsadasEsteMes(condo)
+      visitasExtra = condo.visitasExtra
+    }
   }
 
   return (
@@ -33,7 +37,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         rolLabel="Panel Admin"
       />
       <main className="flex-1 overflow-auto bg-background pt-14 md:pt-0">
-        {enPlanGratis && <PlanGratisBanner visitasUsadas={visitasUsadas} />}
+        {enPlanGratis && <PlanGratisBanner visitasUsadas={visitasUsadas} visitasExtra={visitasExtra} />}
         <div className="container max-w-6xl mx-auto px-4 py-8 space-y-6">
           {children}
           {enPlanGratis && <EspacioPublicitario slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ADMIN} conEnlacePro />}

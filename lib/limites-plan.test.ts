@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { inicioMesLima, limiteUsuarios, visitasUsadasEsteMes, LIMITES_GRATIS } from "./limites-plan"
+import { fechaCorteHistorial, inicioMesLima, limiteUsuarios, visitasUsadasEsteMes, LIMITES_GRATIS } from "./limites-plan"
 
 describe("inicioMesLima", () => {
   it("devuelve el día 1 a las 00:00 de Lima (05:00 UTC)", () => {
@@ -19,6 +19,12 @@ describe("inicioMesLima", () => {
     // 31 dic 23:30 en Lima = 1 ene 04:30 UTC
     expect(inicioMesLima(new Date("2027-01-01T04:30:00Z")).toISOString()).toBe("2026-12-01T05:00:00.000Z")
     expect(inicioMesLima(new Date("2027-01-01T05:00:00Z")).toISOString()).toBe("2027-01-01T05:00:00.000Z")
+  })
+})
+
+describe("fechaCorteHistorial", () => {
+  it("conserva exactamente los últimos 30 días", () => {
+    expect(fechaCorteHistorial(new Date("2026-09-14T15:00:00Z")).toISOString()).toBe("2026-08-15T15:00:00.000Z")
   })
 })
 

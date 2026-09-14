@@ -16,6 +16,26 @@ export const LIMITES_GRATIS = {
   visitasPorMes: 12,
 } as const
 
+/**
+ * Paquete de visitas extra para el plan GRATIS: pago único, el saldo no caduca
+ * y se usa solo cuando ya se agotaron las visitas incluidas del mes.
+ * Si cambia el precio, actualizar también la portada y los términos.
+ */
+export const PAQUETE_VISITAS = {
+  visitas: 20,
+  /** En céntimos, como lo pide Culqi. */
+  amount: 900,
+  precioStr: "S/ 9.00",
+} as const
+
+/** Días de historial que conserva el plan GRATIS; lo anterior se borra. */
+export const DIAS_HISTORIAL_GRATIS = 30
+
+/** Fecha a partir de la cual se conserva el historial del plan Gratis. */
+export function fechaCorteHistorial(ahora: Date = new Date()): Date {
+  return new Date(ahora.getTime() - DIAS_HISTORIAL_GRATIS * 24 * 3_600_000)
+}
+
 /** Perú no tiene horario de verano: Lima es UTC-5 todo el año. */
 const OFFSET_LIMA_HORAS = 5
 

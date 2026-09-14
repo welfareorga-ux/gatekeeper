@@ -324,7 +324,7 @@ export default async function RootPage() {
                 features: [
                   "1 administrador y 1 vigilante",
                   "Hasta 4 residentes",
-                  "12 visitas al mes",
+                  "12 visitas al mes (+20 por S/ 9)",
                   "Pase QR por WhatsApp",
                   "Acceso por placa o DNI",
                   "Historial de 30 días",

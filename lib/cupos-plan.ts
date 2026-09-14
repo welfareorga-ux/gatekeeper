@@ -37,7 +37,10 @@ export async function reservarCupoUsuario(
   return count === 1
 }
 
-/** Devuelve `false` si el plan Gratis ya agotó las visitas del mes. */
+/**
+ * Devuelve `false` si el plan Gratis ya agotó las visitas del mes Y no le queda
+ * saldo de paquetes extra. El saldo extra solo se toca cuando el mes se acabó.
+ */
 export async function reservarCupoVisita(
   tx: TenantTx,
   condominioId: string,
@@ -60,6 +63,11 @@ export async function reservarCupoVisita(
     },
     data: { visitasMes: { increment: 1 } },
   })
+  if (count === 1) return true
 
-  return count === 1
+  const extra = await tx.condominio.updateMany({
+    where: { id: condominioId, visitasExtra: { gt: 0 } },
+    data: { visitasExtra: { decrement: 1 } },
+  })
+  return extra.count === 1
 }

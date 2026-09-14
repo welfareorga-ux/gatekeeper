@@ -52,7 +52,10 @@ model Condominio {
   /// Lima). Tampoco bajan al cancelar o borrar visitas.
   visitasMes          Int      @default(0)
   visitasMesInicio    DateTime?
-  createdAt           DateTime @default(now())
+  /// Saldo de visitas compradas en paquetes (plan GRATIS). No caduca y solo se
+  /// consume cuando ya se usaron las visitas incluidas del mes.
+  visitasExtra        Int      @default(0)
+  createdAt          DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   usuarios   User[]

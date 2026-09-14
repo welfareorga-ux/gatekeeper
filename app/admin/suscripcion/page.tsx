@@ -11,8 +11,9 @@ import Link from "next/link"
 import {
   CreditCard, CheckCircle2, XCircle, Loader2,
   AlertTriangle, RefreshCw, Calendar, Clock, BarChart3,
-  Bell, FileSpreadsheet,
+  Bell, FileSpreadsheet, Ticket,
 } from "lucide-react"
+import { LIMITES_GRATIS, PAQUETE_VISITAS, DIAS_HISTORIAL_GRATIS } from "@/lib/limites-plan"
 
 declare global {
   interface Window {
@@ -62,6 +63,8 @@ type SuscripcionData = {
   culqiSubscriptionId: string | null
   nombre: string
   currentPeriodEnd: number | null
+  visitasUsadas: number
+  visitasExtra: number
 }
 
 export default function SuscripcionPage() {
@@ -72,6 +75,7 @@ export default function SuscripcionPage() {
   const [confirmando, setConfirmando] = useState(false)
   const [suscribiendo, setSuscribiendo] = useState<string | null>(null)
   const [culqiListo, setCulqiListo] = useState(false)
+  const [comprandoPaquete, setComprandoPaquete] = useState(false)
 
   const resolveToken = useRef<((id: string) => void) | null>(null)
   const rejectToken = useRef<((msg?: string | null) => void) | null>(null)
@@ -117,30 +121,58 @@ export default function SuscripcionPage() {
     }
   }, [])
 
+  /** Abre el formulario de Culqi y resuelve con el token de la tarjeta. */
+  function obtenerTokenCulqi(description: string, amount: number) {
+    return new Promise<string>((resolve, reject) => {
+      resolveToken.current = resolve
+      rejectToken.current = (msg?: string | null) => reject(msg ?? null)
+
+      const pk = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY
+      if (!pk || !window.Culqi) {
+        reject("Pasarela de pago no disponible. Recarga la página.")
+        return
+      }
+
+      window.Culqi.publicKey = pk
+      window.Culqi.settings({ title: "Gatekeeper", currency: "PEN", description, amount })
+      window.Culqi.open()
+    })
+  }
+
+  async function handleComprarPaquete() {
+    setComprandoPaquete(true)
+    let tokenId: string
+    try {
+      tokenId = await obtenerTokenCulqi(`Paquete de ${PAQUETE_VISITAS.visitas} visitas extra`, PAQUETE_VISITAS.amount)
+    } catch (err) {
+      toast.error(typeof err === "string" && err ? err : "Pago cancelado.")
+      setComprandoPaquete(false)
+      return
+    }
+
+    try {
+      const res = await fetch("/api/admin/visitas-extra", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tokenId }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) { toast.error(body.error ?? "Error al procesar el pago"); return }
+      toast.success(`¡Listo! Sumaste ${PAQUETE_VISITAS.visitas} visitas extra.`)
+      setData((prev) => prev ? { ...prev, visitasExtra: body.visitasExtra } : prev)
+    } catch {
+      toast.error("Error de conexión")
+    } finally {
+      setComprandoPaquete(false)
+    }
+  }
+
   async function handleSuscribir(planKey: "PRO", precio: number, planNombre: string) {
     setSuscribiendo(planKey)
 
     let tokenId: string
     try {
-      tokenId = await new Promise<string>((resolve, reject) => {
-        resolveToken.current = resolve
-        rejectToken.current = (msg?: string | null) => reject(msg ?? null)
-
-        const pk = process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY
-        if (!pk || !window.Culqi) {
-          reject("Pasarela de pago no disponible. Recarga la página.")
-          return
-        }
-
-        window.Culqi.publicKey = pk
-        window.Culqi.settings({
-          title: "Gatekeeper",
-          currency: "PEN",
-          description: `Plan ${planNombre} — 1 mes`,
-          amount: precio,
-        })
-        window.Culqi.open()
-      })
+      tokenId = await obtenerTokenCulqi(`Plan ${planNombre} — 1 mes`, precio)
     } catch (err) {
       const msg = typeof err === "string" && err ? err : "Pago cancelado."
       toast.error(msg)
@@ -250,9 +282,38 @@ export default function SuscripcionPage() {
               <div className="flex items-start gap-2 rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-900">
                 <Clock className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>
-                  Tu plan gratuito <strong>no vence</strong>. Puedes usarlo el tiempo que
-                  quieras y pasar a Pro cuando lo necesites: tus usuarios y tu historial se conservan.
+                  Tu plan gratuito <strong>no vence</strong>. Las visitas con más de {DIAS_HISTORIAL_GRATIS} días
+                  se eliminan de forma permanente; si necesitas conservarlas, expórtalas antes o pasa a Pro.
                 </span>
+              </div>
+
+              {/* Cupo del mes + paquete de visitas extra */}
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span>
+                    Visitas este mes:{" "}
+                    <strong className={data.visitasUsadas >= LIMITES_GRATIS.visitasPorMes ? "text-destructive" : ""}>
+                      {Math.min(data.visitasUsadas, LIMITES_GRATIS.visitasPorMes)} de {LIMITES_GRATIS.visitasPorMes}
+                    </strong>
+                  </span>
+                  <span>
+                    Saldo extra: <strong>{data.visitasExtra}</strong>
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xs text-muted-foreground flex items-start gap-2 max-w-sm">
+                    <Ticket className="h-4 w-4 shrink-0 text-orange-500" />
+                    <span>
+                      <strong className="text-foreground">Paquete de {PAQUETE_VISITAS.visitas} visitas extra — {PAQUETE_VISITAS.precioStr}</strong>.
+                      Pago único. El saldo no caduca y se usa solo cuando se acaban las visitas del mes.
+                    </span>
+                  </p>
+                  <Button size="sm" variant="outline" disabled={comprandoPaquete || !culqiListo} onClick={handleComprarPaquete}>
+                    {comprandoPaquete
+                      ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Procesando…</>
+                      : `Comprar — ${PAQUETE_VISITAS.precioStr}`}
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (

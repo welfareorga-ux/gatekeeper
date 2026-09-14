@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withTenant } from "@/lib/tenant"
 import { z } from "zod"
+import { visitasUsadasEsteMes } from "@/lib/limites-plan"
 
 const CULQI_BASE = "https://api.culqi.com/v2"
 
@@ -40,7 +41,10 @@ export async function GET() {
 
   const condominio = await prisma.condominio.findUnique({
     where: { id: session.user.condominioId ?? "" },
-    select: { plan: true, suscripcionEstado: true, culqiSubscriptionId: true, nombre: true },
+    select: {
+      plan: true, suscripcionEstado: true, culqiSubscriptionId: true, nombre: true,
+      visitasMes: true, visitasMesInicio: true, visitasExtra: true,
+    },
   })
   if (!condominio) return NextResponse.json({ error: "Condominio no encontrado" }, { status: 404 })
 
@@ -63,7 +67,12 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ ...condominio, currentPeriodEnd })
+  const { visitasMes, visitasMesInicio, ...resto } = condominio
+  return NextResponse.json({
+    ...resto,
+    visitasUsadas: visitasUsadasEsteMes({ visitasMes, visitasMesInicio }),
+    currentPeriodEnd,
+  })
 }
 
 // POST — pasar del plan GRATIS al plan PRO desde el panel

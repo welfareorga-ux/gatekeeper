@@ -11,7 +11,9 @@ ALTER TABLE "Condominio"
     ADD COLUMN "residentesCreados" INTEGER NOT NULL DEFAULT 0,
     ADD COLUMN "vigilantesCreados" INTEGER NOT NULL DEFAULT 0,
     ADD COLUMN "visitasMes" INTEGER NOT NULL DEFAULT 0,
-    ADD COLUMN "visitasMesInicio" TIMESTAMP(3);
+    ADD COLUMN "visitasMesInicio" TIMESTAMP(3),
+    -- Saldo de paquetes de visitas extra comprados. No caduca.
+    ADD COLUMN "visitasExtra" INTEGER NOT NULL DEFAULT 0;
 
 -- Punto de partida: los usuarios que existen hoy (activos o no). Del pasado
 -- borrado no queda rastro fiable, así que se parte de aquí.
