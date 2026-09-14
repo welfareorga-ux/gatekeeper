@@ -11,13 +11,14 @@ import {
   CreditCard, CheckCircle2, Loader2, ShieldCheck,
   Building2, User, ChevronRight, Lock,
 } from "lucide-react"
+import { SelectorPeriodo } from "@/components/planes/selector-periodo"
+import { CLAVES_PERIODO, PERIODOS_PRO, textoRenovacion, type PeriodoPro } from "@/lib/periodos-pro"
 
 // Solo el plan de pago pasa por el checkout; el plan GRATIS se crea en /registro.
+// El precio sale del periodo elegido (lib/periodos-pro.ts).
 const PLANES = {
   PRO: {
     nombre: "Pro",
-    precio: 8900,
-    precioStr: "S/ 89.00",
     descripcion: "Residentes y vigilantes ilimitados · Historial completo · Reportes",
     features: [
       "Residentes ilimitados",
@@ -49,6 +50,11 @@ export function CheckoutForm() {
   const rawPlan = (params.get("plan") ?? "PRO").toUpperCase()
   const planKey: PlanKey = rawPlan in PLANES ? (rawPlan as PlanKey) : "PRO"
   const plan = PLANES[planKey]
+  const rawPeriodo = params.get("periodo") ?? "mensual"
+  const [periodo, setPeriodo] = useState<PeriodoPro>(
+    (CLAVES_PERIODO as readonly string[]).includes(rawPeriodo) ? (rawPeriodo as PeriodoPro) : "mensual",
+  )
+  const precio = PERIODOS_PRO[periodo]
 
   const [step, setStep] = useState<Step>("datos")
   const [loadingVerificar, setLoadingVerificar] = useState(false)
@@ -166,8 +172,8 @@ export function CheckoutForm() {
         window.Culqi.settings({
           title: "Gatekeeper",
           currency: "PEN",
-          description: `Plan ${plan.nombre} — 1 mes`,
-          amount: plan.precio,
+          description: `Plan ${plan.nombre} ${precio.etiqueta.toLowerCase()}`,
+          amount: precio.amount,
         })
         window.Culqi.open()
       })
@@ -189,7 +195,7 @@ export function CheckoutForm() {
         body: JSON.stringify({
           tokenId,
           plan: planKey,
-          amount: plan.precio,
+          periodo,
           nombreCondominio: form.nombreCondominio,
           direccion: form.direccion,
           adminNombre: form.adminNombre,
@@ -233,11 +239,11 @@ export function CheckoutForm() {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Plan</span>
-            <span className="font-medium">Plan {plan.nombre}</span>
+            <span className="font-medium">Plan {plan.nombre} {precio.etiqueta.toLowerCase()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Monto cobrado</span>
-            <span className="font-medium">{plan.precioStr} / mes</span>
+            <span className="font-medium">{precio.precioStr} {textoRenovacion(periodo)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Email admin</span>
@@ -287,16 +293,13 @@ export function CheckoutForm() {
               </p>
             </div>
 
-            {/* Plan */}
-            <div className="rounded-lg border bg-muted/30 px-4 py-3 flex justify-between items-center">
+            {/* Plan y periodo */}
+            <div className="space-y-2">
               <div>
-                <p className="font-medium text-sm">Plan {plan.nombre}</p>
+                <p className="font-medium text-sm">Plan {plan.nombre} · elige cada cuánto pagar</p>
                 <p className="text-xs text-muted-foreground">{plan.descripcion}</p>
               </div>
-              <div className="text-right shrink-0 ml-4">
-                <p className="font-bold">{plan.precioStr}</p>
-                <p className="text-xs text-muted-foreground">/mes</p>
-              </div>
+              <SelectorPeriodo valor={periodo} onChange={setPeriodo} />
             </div>
 
             {/* Condominio */}
@@ -397,7 +400,7 @@ export function CheckoutForm() {
               ) : !culqiListo ? (
                 <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Cargando pasarela…</>
               ) : (
-                <><CreditCard className="h-5 w-5 mr-2" />Pagar {plan.precioStr}</>
+                <><CreditCard className="h-5 w-5 mr-2" />Pagar {precio.precioStr}</>
               )}
             </Button>
 
@@ -420,10 +423,10 @@ export function CheckoutForm() {
 
           <div className="flex justify-between items-start text-sm">
             <div>
-              <p className="font-medium">Plan {plan.nombre}</p>
+              <p className="font-medium">Plan {plan.nombre} {precio.etiqueta.toLowerCase()}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{plan.descripcion}</p>
             </div>
-            <span className="font-bold shrink-0 ml-3">{plan.precioStr}</span>
+            <span className="font-bold shrink-0 ml-3">{precio.precioStr}</span>
           </div>
 
           <ul className="space-y-1.5 text-sm text-muted-foreground">
@@ -439,11 +442,12 @@ export function CheckoutForm() {
 
           <div className="flex justify-between font-bold text-sm">
             <span>Total hoy <span className="font-normal text-muted-foreground">(incl. IGV)</span></span>
-            <span>{plan.precioStr}</span>
+            <span>{precio.precioStr}</span>
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Cancela cuando quieras desde tu panel.
+            Se renueva {textoRenovacion(periodo)} por {precio.precioStr}. Cancela cuando quieras desde tu
+            panel: mantienes el acceso hasta el final del periodo pagado, sin reembolso de lo que resta.
           </p>
         </div>
       </div>

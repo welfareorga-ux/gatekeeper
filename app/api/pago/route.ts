@@ -4,29 +4,13 @@ import bcrypt from "bcryptjs"
 import { runAsAdmin } from "@/lib/tenant"
 import { enviarEmailBienvenida } from "@/lib/email"
 import { checkRateLimit, getClientIP } from "@/lib/rate-limit"
-
-const PLAN_CODES: Record<string, string> = {
-  PRO: "plan-pro-2026",
-}
-
-const PLAN_LABELS: Record<string, string> = {
-  PRO: "Pro",
-}
-
-async function resolverPlanId(planCode: string, secretKey: string): Promise<string> {
-  const res = await fetch("https://api.culqi.com/v2/recurrent/plans?limit=20", {
-    headers: { Authorization: `Bearer ${secretKey}` },
-  })
-  const data = await res.json().catch(() => ({})) as { data?: Record<string, unknown>[] }
-  const plan = (data?.data ?? []).find((p) => Object.values(p).some((v) => v === planCode))
-  if (!plan) throw new Error(`Plan '${planCode}' no encontrado en Culqi.`)
-  return plan.id as string
-}
+import { resolverPlanCulqi } from "@/lib/culqi-planes"
+import { CLAVES_PERIODO, PERIODOS_PRO } from "@/lib/periodos-pro"
 
 const schema = z.object({
   tokenId: z.string().min(1),
   plan: z.literal("PRO"),
-  amount: z.number().int().positive(),
+  periodo: z.enum(CLAVES_PERIODO).default("mensual"),
   nombreCondominio: z.string().min(3).max(100),
   direccion: z.string().min(5).max(200),
   adminNombre: z.string().min(3).max(100),
@@ -68,7 +52,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
   }
 
-  const { tokenId, plan, nombreCondominio, direccion, adminNombre, adminEmail, adminPassword } =
+  const { tokenId, plan, periodo, nombreCondominio, direccion, adminNombre, adminEmail, adminPassword } =
     result.data
 
   const secretKey = process.env.CULQI_SECRET_KEY
@@ -129,7 +113,7 @@ export async function POST(req: Request) {
   // 3. Crear Subscription (primer cobro ocurre automáticamente)
   let planId: string
   try {
-    planId = await resolverPlanId(PLAN_CODES[plan], secretKey)
+    planId = await resolverPlanCulqi(periodo, secretKey)
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 402 })
   }
@@ -140,7 +124,7 @@ export async function POST(req: Request) {
       card_id: card.id,
       plan_id: planId,
       tyc: true,
-      metadata: { condominio: nombreCondominio, plan },
+      metadata: { condominio: nombreCondominio, plan, periodo },
     })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 402 })
@@ -173,15 +157,16 @@ export async function POST(req: Request) {
         data: {
           userId: admin.id,
           accion: "REGISTRO_CONDOMINIO",
-          detalle: JSON.stringify({ condominio: nombreCondominio, plan, subscriptionId: subscription.id }),
+          detalle: JSON.stringify({ condominio: nombreCondominio, plan, periodo, subscriptionId: subscription.id }),
         },
       })
     })
   } catch (dbErr) {
     console.error("[pago] Error en DB, revirtiendo suscripción Culqi:", dbErr)
-    // Cancelar la suscripción Culqi para no cobrar al usuario sin cuenta
+    // Cancelar la suscripción Culqi para no cobrar al usuario sin cuenta.
+    // El id va al FINAL del path: el sufijo "/delete" no existe en Culqi.
     await fetch(
-      `https://api.culqi.com/v2/recurrent/subscriptions/${subscription.id}/delete`,
+      `https://api.culqi.com/v2/recurrent/subscriptions/${subscription.id}`,
       { method: "DELETE", headers: { Authorization: `Bearer ${secretKey}` } }
     ).catch((e) => console.error("[pago] Error al cancelar suscripción Culqi:", e))
     return NextResponse.json(
@@ -195,7 +180,7 @@ export async function POST(req: Request) {
     email: adminEmail,
     nombre: adminNombre,
     condominioNombre: nombreCondominio,
-    planLabel: PLAN_LABELS[plan] ?? plan,
+    planLabel: `Pro ${PERIODOS_PRO[periodo].etiqueta.toLowerCase()}`,
     loginUrl: `${process.env.NEXTAUTH_URL ?? "https://gatekeeper-app.org"}/login`,
   })
 

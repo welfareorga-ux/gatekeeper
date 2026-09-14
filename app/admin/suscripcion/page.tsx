@@ -14,6 +14,8 @@ import {
   Bell, FileSpreadsheet, Ticket,
 } from "lucide-react"
 import { LIMITES_GRATIS, PAQUETE_VISITAS, DIAS_HISTORIAL_GRATIS } from "@/lib/limites-plan"
+import { PERIODOS_PRO, textoRenovacion, type PeriodoPro } from "@/lib/periodos-pro"
+import { SelectorPeriodo } from "@/components/planes/selector-periodo"
 
 declare global {
   interface Window {
@@ -45,8 +47,6 @@ const PLANES_DISPONIBLES = [
   {
     key: "PRO" as const,
     nombre: "Pro",
-    precio: 8900,
-    precioStr: "S/ 89",
     descripcion: "Sin límites de residentes ni vigilantes",
     icon: BarChart3,
     gradient: "from-primary to-primary/70",
@@ -65,6 +65,7 @@ type SuscripcionData = {
   currentPeriodEnd: number | null
   visitasUsadas: number
   visitasExtra: number
+  periodo: PeriodoPro | null
 }
 
 export default function SuscripcionPage() {
@@ -76,6 +77,7 @@ export default function SuscripcionPage() {
   const [suscribiendo, setSuscribiendo] = useState<string | null>(null)
   const [culqiListo, setCulqiListo] = useState(false)
   const [comprandoPaquete, setComprandoPaquete] = useState(false)
+  const [periodo, setPeriodo] = useState<PeriodoPro>("mensual")
 
   const resolveToken = useRef<((id: string) => void) | null>(null)
   const rejectToken = useRef<((msg?: string | null) => void) | null>(null)
@@ -167,12 +169,13 @@ export default function SuscripcionPage() {
     }
   }
 
-  async function handleSuscribir(planKey: "PRO", precio: number, planNombre: string) {
+  async function handleSuscribir(planKey: "PRO", planNombre: string) {
     setSuscribiendo(planKey)
+    const elegido = PERIODOS_PRO[periodo]
 
     let tokenId: string
     try {
-      tokenId = await obtenerTokenCulqi(`Plan ${planNombre} — 1 mes`, precio)
+      tokenId = await obtenerTokenCulqi(`Plan ${planNombre} ${elegido.etiqueta.toLowerCase()}`, elegido.amount)
     } catch (err) {
       const msg = typeof err === "string" && err ? err : "Pago cancelado."
       toast.error(msg)
@@ -184,7 +187,7 @@ export default function SuscripcionPage() {
       const res = await fetch("/api/admin/suscripcion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tokenId, plan: planKey }),
+        body: JSON.stringify({ tokenId, plan: planKey, periodo }),
       })
 
       if (!res.ok) {
@@ -233,7 +236,15 @@ export default function SuscripcionPage() {
 
   if (!data) return null
 
-  const planInfo = PLAN_INFO[data.plan] ?? { label: data.plan, precio: "—", features: [] }
+  const planInfoBase = PLAN_INFO[data.plan] ?? { label: data.plan, precio: "—", features: [] }
+  // En Pro el precio depende del periodo contratado (se deduce del monto en Culqi).
+  const planInfo = data.plan === "PRO" && data.periodo
+    ? {
+        ...planInfoBase,
+        label: `Pro ${PERIODOS_PRO[data.periodo].etiqueta.toLowerCase()}`,
+        precio: `${PERIODOS_PRO[data.periodo].precioStr} ${textoRenovacion(data.periodo)}`,
+      }
+    : planInfoBase
   const activa = data.suscripcionEstado === "activa"
   const esGratis = data.plan === "GRATIS"
 
@@ -375,12 +386,13 @@ export default function SuscripcionPage() {
                     <Icon className="h-8 w-8 text-white/90" />
                     <p className="text-white font-bold text-lg">{plan.nombre}</p>
                     <div className="flex items-end gap-1">
-                      <span className="text-white text-2xl font-bold">{plan.precioStr}</span>
-                      <span className="text-white/70 text-xs mb-0.5">/mes</span>
+                      <span className="text-white text-2xl font-bold">{PERIODOS_PRO[periodo].precioStr}</span>
+                      <span className="text-white/70 text-xs mb-0.5">{textoRenovacion(periodo)}</span>
                     </div>
                   </div>
                   <div className="p-4 space-y-3">
                     <p className="text-muted-foreground text-xs leading-relaxed">{plan.descripcion}</p>
+                    <SelectorPeriodo valor={periodo} onChange={setPeriodo} deshabilitado={!!suscribiendo} />
                     <ul className="space-y-1.5">
                       {plan.features.map((f) => (
                         <li key={f} className="flex items-center gap-1.5 text-xs">
@@ -394,14 +406,14 @@ export default function SuscripcionPage() {
                       className="w-full"
                       size="sm"
                       disabled={!!suscribiendo || !culqiListo}
-                      onClick={() => handleSuscribir(plan.key, plan.precio, plan.nombre)}
+                      onClick={() => handleSuscribir(plan.key, plan.nombre)}
                     >
                       {isLoading ? (
                         <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Procesando…</>
                       ) : !culqiListo ? (
                         <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Cargando…</>
                       ) : (
-                        `Suscribirme — ${plan.precioStr}/mes`
+                        `Suscribirme — ${PERIODOS_PRO[periodo].precioStr} ${textoRenovacion(periodo)}`
                       )}
                     </Button>
                   </div>
@@ -411,7 +423,8 @@ export default function SuscripcionPage() {
           </div>
 
           <p className="text-xs text-muted-foreground text-center">
-            Pago seguro procesado por Culqi — PCI DSS nivel 1. Cancela cuando quieras.
+            Pago seguro procesado por Culqi — PCI DSS nivel 1. Se renueva al mismo precio. Si cancelas,
+            mantienes el acceso hasta el final del periodo pagado, sin reembolso de lo que resta.
           </p>
         </div>
       )}

@@ -5,13 +5,10 @@ import { prisma } from "@/lib/prisma"
 import { withTenant } from "@/lib/tenant"
 import { z } from "zod"
 import { visitasUsadasEsteMes } from "@/lib/limites-plan"
+import { resolverPlanCulqi } from "@/lib/culqi-planes"
+import { CLAVES_PERIODO, periodoPorMonto, type PeriodoPro } from "@/lib/periodos-pro"
 
 const CULQI_BASE = "https://api.culqi.com/v2"
-
-// Plan unico de pago. El plan GRATIS no pasa por Culqi.
-const PLAN_CODES: Record<string, string> = {
-  PRO: "plan-pro-2026",
-}
 
 async function culqiFetch(path: string, method: string, secretKey: string, body?: object) {
   const res = await fetch(`${CULQI_BASE}${path}`, {
@@ -23,13 +20,6 @@ async function culqiFetch(path: string, method: string, secretKey: string, body?
     ...(body ? { body: JSON.stringify(body) } : {}),
   })
   return res.json().catch(() => ({}))
-}
-
-async function resolverPlanId(planCode: string, secretKey: string): Promise<string> {
-  const data = await culqiFetch("/recurrent/plans?limit=20", "GET", secretKey) as { data?: Record<string, unknown>[] }
-  const plan = (data?.data ?? []).find((p) => Object.values(p).some((v) => v === planCode))
-  if (!plan) throw new Error(`Plan '${planCode}' no encontrado en Culqi.`)
-  return plan.id as string
 }
 
 // GET — devuelve datos de la suscripción activa
@@ -49,6 +39,7 @@ export async function GET() {
   if (!condominio) return NextResponse.json({ error: "Condominio no encontrado" }, { status: 404 })
 
   let currentPeriodEnd: number | null = null
+  let periodo: PeriodoPro | null = null
   if (condominio.culqiSubscriptionId) {
     const secretKey = process.env.CULQI_SECRET_KEY
     if (secretKey) {
@@ -64,6 +55,7 @@ export async function GET() {
         sub?.cancel_at ??
         null
       ) as number | null
+      periodo = periodoPorMonto((sub?.plan as { amount?: number } | undefined)?.amount)
     }
   }
 
@@ -72,6 +64,7 @@ export async function GET() {
     ...resto,
     visitasUsadas: visitasUsadasEsteMes({ visitasMes, visitasMesInicio }),
     currentPeriodEnd,
+    periodo,
   })
 }
 
@@ -79,6 +72,7 @@ export async function GET() {
 const suscribirSchema = z.object({
   tokenId: z.string().min(1),
   plan: z.literal("PRO"),
+  periodo: z.enum(CLAVES_PERIODO).default("mensual"),
 })
 
 export async function POST(req: Request) {
@@ -93,7 +87,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
   }
 
-  const { tokenId, plan } = result.data
+  const { tokenId, periodo } = result.data
 
   const secretKey = process.env.CULQI_SECRET_KEY
   if (!secretKey) {
@@ -159,7 +153,7 @@ export async function POST(req: Request) {
   // 3. Crear Subscription
   let planId: string
   try {
-    planId = await resolverPlanId(PLAN_CODES[plan], secretKey)
+    planId = await resolverPlanCulqi(periodo, secretKey)
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 402 })
   }
@@ -170,6 +164,7 @@ export async function POST(req: Request) {
       card_id: card.id,
       plan_id: planId,
       tyc: true,
+      metadata: { condominioId, periodo },
     }) as { id?: string; user_message?: string; merchant_message?: string }
     if (!sRes.id) throw new Error(sRes.merchant_message ?? sRes.user_message ?? "Error al crear suscripción")
     subscription = sRes as { id: string }
@@ -177,15 +172,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: (e as Error).message }, { status: 402 })
   }
 
-  // 4. Actualizar DB
-  await prisma.condominio.update({
-    where: { id: session.user.condominioId ?? "" },
-    data: {
-      plan: "PRO",
-      suscripcionEstado: "activa",
-      culqiSubscriptionId: subscription.id,
-    },
-  })
+  // 4. Actualizar DB. Si falla, se da de baja la suscripción recién creada para
+  // no cobrar un plan que la cuenta no refleja.
+  try {
+    await prisma.condominio.update({
+      where: { id: condominioId },
+      data: {
+        plan: "PRO",
+        suscripcionEstado: "activa",
+        culqiSubscriptionId: subscription.id,
+      },
+    })
+  } catch (dbErr) {
+    console.error("[suscripcion] Error en DB, cancelando suscripción Culqi:", subscription.id, dbErr)
+    await fetch(`${CULQI_BASE}/recurrent/subscriptions/${subscription.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${secretKey}` },
+    }).catch((e) => console.error("[suscripcion] No se pudo cancelar en Culqi:", e))
+    return NextResponse.json(
+      { error: "No pudimos activar el plan y se anuló la suscripción. Intenta de nuevo o escríbenos a soporte@gatekeeper-app.org." },
+      { status: 500 },
+    )
+  }
 
   return NextResponse.json({ ok: true })
 }

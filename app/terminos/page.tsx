@@ -60,7 +60,7 @@ export default function TerminosPage() {
             <p>Los planes disponibles y sus tarifas mensuales son:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li><strong>Plan Gratis:</strong> S/ 0.00 — 1 administrador, 1 vigilante, hasta 4 residentes, 12 visitas al mes, historial de 30 días. Sin fecha de vencimiento. Los cupos de vigilante y residentes son acumulativos: cada alta cuenta aunque después se elimine o desactive a esa persona, y el correo de un usuario ya creado no se puede cambiar. Las visitas se cuentan por mes calendario (hora de Lima) e incluyen las canceladas. Las visitas, turnos y registros de actividad con más de 30 días se eliminan de forma permanente y no se pueden recuperar.</li>
-              <li><strong>Plan Pro:</strong> S/ 89.00/mes — residentes y vigilantes ilimitados, historial completo, reportes, notificaciones por correo y empresas.</li>
+              <li><strong>Plan Pro:</strong> residentes y vigilantes ilimitados, historial completo, reportes, notificaciones por correo y empresas. Se paga en uno de estos periodos, que se renuevan al mismo precio: S/ 89.00 al mes; S/ 254.00 cada 3 meses (5% de descuento); S/ 480.00 cada 6 meses (10% de descuento); o S/ 890.00 al año (equivale a 2 meses gratis). En los periodos de 3, 6 y 12 meses, si se cancela, el acceso sigue hasta el final del periodo pagado y no se devuelven los meses restantes.</li>
               <li><strong>Paquete de 20 visitas extra (solo plan Gratis):</strong> S/ 9.00 (pago único) — el saldo no caduca y se usa solo cuando se agotan las visitas incluidas del mes.</li>
               <li><strong>Onboarding y Configuración:</strong> S/ 59.00 (pago único) — implementación inicial del sistema.</li>
               <li><strong>Capacitación del Personal:</strong> S/ 29.00 (pago único) — sesión de capacitación para vigilantes y administradores.</li>
@@ -82,7 +82,8 @@ export default function TerminosPage() {
             <p>
               Los pagos se procesan a través de <strong>Culqi</strong>, plataforma de pagos segura certificada PCI DSS.
               Se aceptan tarjetas de débito y crédito Visa, Mastercard y American Express emitidas en Perú.
-              La suscripción se renueva automáticamente cada mes hasta que el cliente la cancele.
+              La suscripción se renueva automáticamente al final de cada periodo contratado (mensual,
+              trimestral, semestral o anual), por el mismo monto, hasta que el cliente la cancele.
             </p>
           </section>
 

@@ -48,8 +48,9 @@ export default function PoliticaDevolucionesPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">3. Cancelación de suscripción mensual</h2>
-            <p>El cliente puede cancelar su suscripción en cualquier momento:</p>
+            <h2 className="text-xl font-semibold">3. Cancelación de suscripción</h2>
+            <p>El cliente puede cancelar su suscripción en cualquier momento.</p>
+            <p><strong>Pago mensual:</strong></p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
                 <strong>Cancelación dentro de los primeros 7 días del período facturado:</strong> se
@@ -64,6 +65,17 @@ export default function PoliticaDevolucionesPage() {
               <li>
                 La cancelación no genera penalidad alguna sobre períodos futuros; el cliente
                 simplemente deja de ser cobrado a partir del siguiente ciclo.
+              </li>
+            </ul>
+            <p><strong>Pago trimestral, semestral o anual (con descuento):</strong></p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                Estos periodos se cobran por adelantado con un precio reducido (S/ 254 cada 3 meses,
+                S/ 480 cada 6 meses o S/ 890 al año) y se renuevan automáticamente al mismo precio.
+              </li>
+              <li>
+                Al cancelar, el acceso se mantiene activo hasta el final del periodo pagado y no se
+                realizan más cobros. <strong>No se devuelven los meses restantes</strong> del periodo en curso.
               </li>
             </ul>
           </section>

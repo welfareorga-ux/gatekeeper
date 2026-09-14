@@ -333,7 +333,7 @@ export default async function RootPage() {
               {
                 nombre: "Pro", precio: "S/ 89", periodo: "/mes", slug: "PRO",
                 gradient: "from-primary to-primary/70", icon: BarChart3,
-                descripcion: "Cuando el edificio crece y la administración necesita respaldo.",
+                descripcion: "Cuando el edificio crece y la administración necesita respaldo. O S/ 890 al año: 2 meses gratis.",
                 features: [
                   "Residentes ilimitados",
                   "Vigilantes ilimitados",
@@ -513,7 +513,7 @@ export default async function RootPage() {
             { q: "¿Necesito comprar algún equipo o instalar algo?", a: "No. Gatekeeper funciona 100% en la nube desde el navegador. Tu vigilante puede usarlo desde un celular con internet." },
             { q: "¿Qué pasa con los datos de los visitantes?", a: "Se tratan de forma responsable y conforme a la Ley N° 29733. Cada usuario accede solo a lo que le corresponde y queda registro de las acciones." },
             { q: "¿Capacitan a mi personal?", a: "Sí. Ofrecemos onboarding y capacitación para vigilantes, residentes y administradores, para que arranquen sin complicaciones." },
-            { q: "¿Hay contrato de permanencia?", a: "No. El plan Gratis no caduca y no pide tarjeta. Si pasas a Pro es mes a mes y puedes cancelar cuando quieras." },
+            { q: "¿Hay contrato de permanencia?", a: "No. El plan Gratis no caduca y no pide tarjeta. Si pasas a Pro eliges pagar cada mes, cada 3 o 6 meses, o al año con descuento, y puedes cancelar cuando quieras." },
             { q: "¿Sirve para edificios y urbanizaciones, no solo condominios?", a: "Sí. Funciona en cualquier inmueble con vigilancia: condominios cerrados, edificios y complejos multifamiliares con vigilante, urbanizaciones y empresas que administran varios inmuebles." },
             { q: "¿Cómo registra el vigilante a una visita?", a: "Por placa o DNI, o escaneando el código QR que el residente envió por WhatsApp. Registra ingreso y salida con un toque." },
           ].map((item) => (
