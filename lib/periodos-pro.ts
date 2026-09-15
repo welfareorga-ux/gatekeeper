@@ -19,7 +19,7 @@ export const PERIODOS_PRO = {
     amount: 8900,
     precioStr: "S/ 89",
     descuento: null,
-    codigoCulqi: "plan-pro-2026",
+    codigoCulqi: "plan-pro-mensual",
   },
   trimestral: {
     etiqueta: "Trimestral",
@@ -27,7 +27,7 @@ export const PERIODOS_PRO = {
     amount: 25400,
     precioStr: "S/ 254",
     descuento: "5% de descuento",
-    codigoCulqi: "plan-pro-trimestral-2026",
+    codigoCulqi: "plan-pro-trimestral",
   },
   semestral: {
     etiqueta: "Semestral",
@@ -35,7 +35,7 @@ export const PERIODOS_PRO = {
     amount: 48000,
     precioStr: "S/ 480",
     descuento: "10% de descuento",
-    codigoCulqi: "plan-pro-semestral-2026",
+    codigoCulqi: "plan-pro-semestral",
   },
   anual: {
     etiqueta: "Anual",
@@ -43,7 +43,7 @@ export const PERIODOS_PRO = {
     amount: 89000,
     precioStr: "S/ 890",
     descuento: "2 meses gratis",
-    codigoCulqi: "plan-pro-anual-2026",
+    codigoCulqi: "plan-pro-anual",
   },
 } as const
 

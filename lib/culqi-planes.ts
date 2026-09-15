@@ -17,7 +17,8 @@ export async function resolverPlanCulqi(periodo: PeriodoPro, secretKey: string):
     headers: { Authorization: `Bearer ${secretKey}` },
   })
   const data = await res.json().catch(() => ({})) as { data?: PlanCulqi[] }
-  const plan = (data.data ?? []).find((p) => p.short_name === esperado.codigoCulqi && p.status !== 0)
+  // status 1 = activo; los planes desactivados en el panel vuelven con status 2.
+  const plan = (data.data ?? []).find((p) => p.short_name === esperado.codigoCulqi && p.status === 1)
 
   if (!plan) {
     console.error(`[Culqi] no existe el plan '${esperado.codigoCulqi}'`)
