@@ -30,7 +30,7 @@ const PLAN_INFO: Record<string, { label: string; precio: string; features: strin
     label: "Gratis",
     precio: "S/ 0.00 · no caduca",
     features: [
-      "1 administrador y 1 vigilante", "Hasta 4 residentes", "12 visitas al mes",
+      "1 administrador y 1 vigilante", "Hasta 4 residentes", `${LIMITES_GRATIS.visitasPorMes} visitas al mes`,
       "Pase QR por WhatsApp", "Historial de 30 días",
     ],
   },
@@ -65,6 +65,8 @@ type SuscripcionData = {
   currentPeriodEnd: number | null
   visitasUsadas: number
   visitasExtra: number
+  finDeMes: string
+  diasRestantesMes: number
   periodo: PeriodoPro | null
 }
 
@@ -168,7 +170,7 @@ export default function SuscripcionPage() {
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) { toast.error(body.error ?? "Error al procesar el pago"); return }
-      toast.success(`¡Listo! Sumaste ${PAQUETE_VISITAS.visitas} visitas extra.`)
+      toast.success(`¡Listo! Sumaste ${PAQUETE_VISITAS.visitas} visitas extra, válidas hasta el ${data?.finDeMes ?? "fin de mes"}.`)
       setData((prev) => prev ? { ...prev, visitasExtra: body.visitasExtra } : prev)
     } catch {
       toast.error("Error de conexión")
@@ -318,14 +320,25 @@ export default function SuscripcionPage() {
                   </span>
                   <span>
                     Saldo extra: <strong>{data.visitasExtra}</strong>
+                    {data.visitasExtra > 0 && <span className="text-muted-foreground"> · vence el {data.finDeMes}</span>}
                   </span>
                 </div>
+                {data.diasRestantesMes <= 7 && (
+                  <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span>
+                      {data.diasRestantesMes === 1 ? "Hoy es el último día" : `Quedan ${data.diasRestantesMes} días`} del mes.
+                      Un paquete comprado ahora vence el {data.finDeMes}: cómpralo solo si lo vas a usar antes.
+                    </span>
+                  </div>
+                )}
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-xs text-muted-foreground flex items-start gap-2 max-w-sm">
                     <Ticket className="h-4 w-4 shrink-0 text-orange-500" />
                     <span>
                       <strong className="text-foreground">Paquete de {PAQUETE_VISITAS.visitas} visitas extra — {PAQUETE_VISITAS.precioStr}</strong>.
-                      Pago único. El saldo no caduca y se usa solo cuando se acaban las visitas del mes.
+                      Pago único. Se usa solo cuando se acaban las visitas del mes y <strong className="text-foreground">vence el {data.finDeMes}</strong>;
+                      lo que no uses se pierde. Si cada mes te faltan visitas, el plan Pro sale más a cuenta.
                     </span>
                   </p>
                   <Button size="sm" variant="outline" disabled={comprandoPaquete || !culqiListo} onClick={handleComprarPaquete}>

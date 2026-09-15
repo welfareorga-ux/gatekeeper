@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest"
-import { fechaCorteHistorial, inicioMesLima, limiteUsuarios, visitasUsadasEsteMes, LIMITES_GRATIS } from "./limites-plan"
+import {
+  diasRestantesMesLima, fechaCorteHistorial, finDeMesLimaTexto, inicioMesLima, limiteUsuarios,
+  saldoExtraVigente, visitasUsadasEsteMes, LIMITES_GRATIS,
+} from "./limites-plan"
 
 describe("inicioMesLima", () => {
   it("devuelve el día 1 a las 00:00 de Lima (05:00 UTC)", () => {
@@ -41,6 +44,37 @@ describe("visitasUsadasEsteMes", () => {
 
   it("sin contador iniciado cuenta como cero", () => {
     expect(visitasUsadasEsteMes({ visitasMes: 0, visitasMesInicio: null }, ahora)).toBe(0)
+  })
+})
+
+describe("paquete de visitas extra", () => {
+  const ahora = new Date("2026-09-14T15:00:00Z")
+  const inicioSep = new Date("2026-09-01T05:00:00Z")
+
+  it("el saldo comprado este mes se puede usar", () => {
+    expect(saldoExtraVigente({ visitasExtra: 20, visitasExtraInicio: inicioSep }, ahora)).toBe(20)
+  })
+
+  it("el saldo de un mes anterior ya venció", () => {
+    expect(saldoExtraVigente({ visitasExtra: 20, visitasExtraInicio: new Date("2026-08-01T05:00:00Z") }, ahora)).toBe(0)
+  })
+
+  it("sin compra no hay saldo", () => {
+    expect(saldoExtraVigente({ visitasExtra: 0, visitasExtraInicio: null }, ahora)).toBe(0)
+  })
+
+  it("vence a medianoche de Lima del último día", () => {
+    // 30 sep 23:00 en Lima = 1 oct 04:00 UTC: todavía septiembre
+    expect(saldoExtraVigente({ visitasExtra: 5, visitasExtraInicio: inicioSep }, new Date("2026-10-01T04:00:00Z"))).toBe(5)
+    expect(saldoExtraVigente({ visitasExtra: 5, visitasExtraInicio: inicioSep }, new Date("2026-10-01T05:00:00Z"))).toBe(0)
+  })
+
+  it("texto y días hasta fin de mes", () => {
+    // es-PE escribe "setiembre", la forma usada en Perú.
+    expect(finDeMesLimaTexto(ahora)).toBe("30 de setiembre")
+    expect(finDeMesLimaTexto(new Date("2027-02-10T15:00:00Z"))).toBe("28 de febrero")
+    expect(diasRestantesMesLima(new Date("2026-09-30T15:00:00Z"))).toBe(1)
+    expect(diasRestantesMesLima(new Date("2026-09-01T06:00:00Z"))).toBe(30)
   })
 })
 

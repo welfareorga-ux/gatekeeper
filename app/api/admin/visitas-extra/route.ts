@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
 import { PAQUETE_VISITAS } from "@/lib/limites-plan"
 import { enviarNotificacionServicioContratado } from "@/lib/email"
+import { abonarPaqueteVisitas } from "@/lib/cupos-plan"
 
 const CULQI_BASE = "https://api.culqi.com/v2"
 
@@ -62,11 +63,7 @@ export async function POST(req: Request) {
 
   try {
     const saldo = await withTenant(condominioId, async (tx) => {
-      const actualizado = await tx.condominio.update({
-        where: { id: condominioId },
-        data: { visitasExtra: { increment: PAQUETE_VISITAS.visitas } },
-        select: { visitasExtra: true },
-      })
+      const saldoNuevo = await abonarPaqueteVisitas(tx, condominioId, PAQUETE_VISITAS.visitas)
       await tx.logActividad.create({
         data: {
           userId: session.user.id,
@@ -74,7 +71,7 @@ export async function POST(req: Request) {
           detalle: JSON.stringify({ visitas: PAQUETE_VISITAS.visitas, monto: PAQUETE_VISITAS.precioStr, cargo: datosCobro.id }),
         },
       })
-      return actualizado.visitasExtra
+      return saldoNuevo
     })
 
     void enviarNotificacionServicioContratado({

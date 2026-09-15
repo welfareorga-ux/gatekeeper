@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { PlanGratisBanner } from "@/components/admin/plan-gratis-banner"
 import { EspacioPublicitario } from "@/components/ads/espacio-publicitario"
-import { visitasUsadasEsteMes } from "@/lib/limites-plan"
+import { saldoExtraVigente, visitasUsadasEsteMes } from "@/lib/limites-plan"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
@@ -20,12 +20,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (session.user.condominioId) {
     const condo = await prisma.condominio.findUnique({
       where: { id: session.user.condominioId },
-      select: { plan: true, visitasMes: true, visitasMesInicio: true, visitasExtra: true },
+      select: { plan: true, visitasMes: true, visitasMesInicio: true, visitasExtra: true, visitasExtraInicio: true },
     })
     enPlanGratis = condo?.plan === "GRATIS"
     if (condo) {
       visitasUsadas = visitasUsadasEsteMes(condo)
-      visitasExtra = condo.visitasExtra
+      visitasExtra = saldoExtraVigente(condo)
     }
   }
 

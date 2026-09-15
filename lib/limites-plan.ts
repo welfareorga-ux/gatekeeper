@@ -13,19 +13,23 @@ export const LIMITES_GRATIS = {
   administradores: 1,
   vigilantes: 1,
   residentes: 4,
-  visitasPorMes: 12,
+  visitasPorMes: 10,
 } as const
 
 /**
- * Paquete de visitas extra para el plan GRATIS: pago único, el saldo no caduca
- * y se usa solo cuando ya se agotaron las visitas incluidas del mes.
- * Si cambia el precio, actualizar también la portada y los términos.
+ * Paquete de visitas extra para el plan GRATIS: pago único, se usa solo cuando
+ * ya se agotaron las visitas incluidas del mes y VENCE al terminar el mes
+ * calendario (hora de Lima) en que se compró; lo no usado se pierde.
+ *
+ * El precio está pensado para ser un parche puntual: unos 4 paquetes al mes
+ * rondan el precio de Pro, así que el uso intenso conviene resolverlo con Pro.
+ * Si cambia el precio, actualizar también la portada, el brochure y los términos.
  */
 export const PAQUETE_VISITAS = {
   visitas: 20,
   /** En céntimos, como lo pide Culqi. */
-  amount: 900,
-  precioStr: "S/ 9.00",
+  amount: 1900,
+  precioStr: "S/ 19.00",
 } as const
 
 /** Días de historial que conserva el plan GRATIS; lo anterior se borra. */
@@ -62,6 +66,35 @@ export function visitasUsadasEsteMes(
   const { visitasMesInicio } = condominio
   if (!visitasMesInicio || visitasMesInicio < inicioMesLima(ahora)) return 0
   return condominio.visitasMes
+}
+
+/**
+ * Saldo de visitas extra que todavía se puede usar: el que se compró en el mes
+ * en curso. Un saldo de un mes anterior ya venció y cuenta como cero.
+ */
+export function saldoExtraVigente(
+  condominio: { visitasExtra: number; visitasExtraInicio: Date | null },
+  ahora: Date = new Date(),
+): number {
+  const { visitasExtraInicio } = condominio
+  if (!visitasExtraInicio || visitasExtraInicio.getTime() !== inicioMesLima(ahora).getTime()) return 0
+  return condominio.visitasExtra
+}
+
+/** Último día del mes en curso en Lima, en texto: "30 de septiembre". */
+export function finDeMesLimaTexto(ahora: Date = new Date()): string {
+  const inicio = inicioMesLima(ahora)
+  const inicioSiguiente = new Date(Date.UTC(inicio.getUTCFullYear(), inicio.getUTCMonth() + 1, 1, OFFSET_LIMA_HORAS))
+  return new Date(inicioSiguiente.getTime() - 1).toLocaleDateString("es-PE", {
+    timeZone: "America/Lima", day: "numeric", month: "long",
+  })
+}
+
+/** Días que quedan del mes en curso en Lima, contando el de hoy. */
+export function diasRestantesMesLima(ahora: Date = new Date()): number {
+  const inicio = inicioMesLima(ahora)
+  const inicioSiguiente = Date.UTC(inicio.getUTCFullYear(), inicio.getUTCMonth() + 1, 1, OFFSET_LIMA_HORAS)
+  return Math.ceil((inicioSiguiente - ahora.getTime()) / 86_400_000)
 }
 
 /** Límite de usuarios por rol según el plan. `Infinity` = sin límite comercial. */

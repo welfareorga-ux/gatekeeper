@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withTenant } from "@/lib/tenant"
 import { z } from "zod"
-import { visitasUsadasEsteMes } from "@/lib/limites-plan"
+import { diasRestantesMesLima, finDeMesLimaTexto, saldoExtraVigente, visitasUsadasEsteMes } from "@/lib/limites-plan"
 import { resolverPlanCulqi } from "@/lib/culqi-planes"
 import { CLAVES_PERIODO, periodoPorMonto, type PeriodoPro } from "@/lib/periodos-pro"
 
@@ -33,7 +33,7 @@ export async function GET() {
     where: { id: session.user.condominioId ?? "" },
     select: {
       plan: true, suscripcionEstado: true, culqiSubscriptionId: true, nombre: true,
-      visitasMes: true, visitasMesInicio: true, visitasExtra: true,
+      visitasMes: true, visitasMesInicio: true, visitasExtra: true, visitasExtraInicio: true,
     },
   })
   if (!condominio) return NextResponse.json({ error: "Condominio no encontrado" }, { status: 404 })
@@ -59,10 +59,14 @@ export async function GET() {
     }
   }
 
-  const { visitasMes, visitasMesInicio, ...resto } = condominio
+  const { visitasMes, visitasMesInicio, visitasExtra, visitasExtraInicio, ...resto } = condominio
   return NextResponse.json({
     ...resto,
     visitasUsadas: visitasUsadasEsteMes({ visitasMes, visitasMesInicio }),
+    // Solo el saldo comprado este mes: el de meses anteriores ya venció.
+    visitasExtra: saldoExtraVigente({ visitasExtra, visitasExtraInicio }),
+    finDeMes: finDeMesLimaTexto(),
+    diasRestantesMes: diasRestantesMesLima(),
     currentPeriodEnd,
     periodo,
   })

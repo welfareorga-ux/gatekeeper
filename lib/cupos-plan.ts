@@ -39,7 +39,8 @@ export async function reservarCupoUsuario(
 
 /**
  * Devuelve `false` si el plan Gratis ya agotó las visitas del mes Y no le queda
- * saldo de paquetes extra. El saldo extra solo se toca cuando el mes se acabó.
+ * saldo extra vigente. El saldo extra solo se toca cuando se acabaron las
+ * visitas del mes, y solo el comprado en este mismo mes (lo anterior venció).
  */
 export async function reservarCupoVisita(
   tx: TenantTx,
@@ -66,8 +67,34 @@ export async function reservarCupoVisita(
   if (count === 1) return true
 
   const extra = await tx.condominio.updateMany({
-    where: { id: condominioId, visitasExtra: { gt: 0 } },
+    where: { id: condominioId, visitasExtra: { gt: 0 }, visitasExtraInicio: inicio },
     data: { visitasExtra: { decrement: 1 } },
   })
   return extra.count === 1
+}
+
+/**
+ * Abona un paquete de visitas extra. Si el saldo que había era de un mes
+ * anterior (ya vencido), primero lo pone en cero y lo asigna al mes en curso.
+ * Devuelve el saldo resultante.
+ */
+export async function abonarPaqueteVisitas(
+  tx: TenantTx,
+  condominioId: string,
+  visitas: number,
+  ahora: Date = new Date(),
+): Promise<number> {
+  const inicio = inicioMesLima(ahora)
+
+  await tx.condominio.updateMany({
+    where: { id: condominioId, OR: [{ visitasExtraInicio: null }, { visitasExtraInicio: { lt: inicio } }] },
+    data: { visitasExtra: 0, visitasExtraInicio: inicio },
+  })
+
+  const actualizado = await tx.condominio.update({
+    where: { id: condominioId },
+    data: { visitasExtra: { increment: visitas } },
+    select: { visitasExtra: true },
+  })
+  return actualizado.visitasExtra
 }
