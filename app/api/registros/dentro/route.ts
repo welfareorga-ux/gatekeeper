@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
+import { filtroEmpresaVigilante } from "@/lib/empresa"
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -14,8 +15,13 @@ export async function GET() {
 
   // RegistroIngreso no tiene RLS propio; el join a Visita sí. withTenant fija el
   // contexto para que el join no quede vacío. Mantenemos el filtro relacional.
-  const dentro = await withTenant(condominioId, (tx) => tx.registroIngreso.findMany({
-    where: { fechaHoraSalida: null, visita: { condominioId } },
+  // Un vigilante asignado a empresas solo ve a los visitantes de esas empresas
+  // (en Pro). El filtro devuelve {} para el admin o si no aplica.
+  const dentro = await withTenant(condominioId, async (tx) => tx.registroIngreso.findMany({
+    where: {
+      fechaHoraSalida: null,
+      visita: { condominioId, ...(await filtroEmpresaVigilante(tx, session.user.id)) },
+    },
     include: {
       vehiculo: true,
       visita: {

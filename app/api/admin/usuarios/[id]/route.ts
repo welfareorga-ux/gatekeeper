@@ -48,15 +48,23 @@ export async function PATCH(
     // El cupo del plan Gratis es acumulativo: cambiarle el correo a un residente
     // o vigilante equivale a dar de alta a otra persona en su lugar. El nombre
     // sí se puede corregir, y el admin sigue pudiendo cambiar su propio correo.
+    const condominio = await tx.condominio.findUnique({ where: { id: condominioId }, select: { plan: true } })
+    const enGratis = condominio?.plan !== "PRO"
     const cambiaEmail = result.data.email !== undefined && result.data.email.toLowerCase() !== target.email.toLowerCase()
     if (cambiaEmail && target.rol !== Rol.ADMIN) {
-      const condominio = await tx.condominio.findUnique({ where: { id: condominioId }, select: { plan: true } })
-      if (condominio?.plan === "GRATIS") {
+      if (enGratis) {
         return NextResponse.json(
           { error: "En el plan Gratis no se puede cambiar el correo de un usuario: cada persona ocupa un cupo. Pasa al plan Pro para gestionarlo libremente." },
           { status: 403 },
         )
       }
+    }
+
+    // Empresas es del plan Pro: en Gratis no se tocan las asignaciones (se
+    // conservan por si la cuenta vuelve a Pro, pero no tienen efecto).
+    if (enGratis) {
+      delete result.data.empresaId
+      delete result.data.empresaIds
     }
 
     // La empresa debe existir y ser de esta organización. El findFirst va dentro

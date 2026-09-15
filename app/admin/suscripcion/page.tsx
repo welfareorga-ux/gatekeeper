@@ -478,6 +478,12 @@ export default function SuscripcionPage() {
                     <p className="text-muted-foreground mt-0.5">
                       Tu plan <strong>{planInfo.label}</strong> será cancelado. Esta acción no se puede deshacer.
                     </p>
+                    <p className="text-muted-foreground mt-2">
+                      Al terminar el periodo pagado, tu organización pasará al plan Gratis: se conservarán el
+                      vigilante y los {LIMITES_GRATIS.residentes} residentes <strong>más antiguos</strong> y el resto se eliminará con sus
+                      visitas. Si quieres elegir quiénes se quedan, <strong>exporta tus reportes y elimina antes en
+                      Usuarios</strong> a los que no necesites.
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-2">

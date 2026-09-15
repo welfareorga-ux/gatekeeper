@@ -132,8 +132,9 @@ export async function POST(req: Request) {
 
     // La empresa debe existir y pertenecer a esta organización. El findFirst va
     // dentro de withTenant, así que RLS ya impide referenciar una de otro tenant.
+    // Empresas es del plan Pro: en Gratis se ignora cualquier asignación.
     let empresaValida: string | null = null
-    if (empresaId) {
+    if (empresaId && plan === "PRO") {
       const empresa = await tx.empresa.findFirst({ where: { id: empresaId }, select: { id: true } })
       if (!empresa) {
         return { error: NextResponse.json({ error: "La empresa seleccionada no existe" }, { status: 400 }) }
@@ -148,7 +149,7 @@ export async function POST(req: Request) {
 
     // Empresas que vigila (solo VIGILANTE). Se validan contra el tenant antes
     // de crear las asignaciones.
-    if (rol === "VIGILANTE" && empresaIds && empresaIds.length > 0) {
+    if (rol === "VIGILANTE" && plan === "PRO" && empresaIds && empresaIds.length > 0) {
       const validas = await tx.empresa.findMany({
         where: { id: { in: empresaIds } },
         select: { id: true },

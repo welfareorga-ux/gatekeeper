@@ -255,7 +255,7 @@ export default async function RootPage() {
             { icon: QrCode, t: "QR por WhatsApp", d: "El residente envía el pase al visitante. La garita solo escanea." },
             { icon: Zap, t: "Sin hardware", d: "100% en la nube. Funciona desde cualquier celular o PC." },
             { icon: Building2, t: "Varios edificios", d: "Cada uno con su cuenta y su administrador, todos con el mismo sistema." },
-            { icon: Users, t: "Coworkings y oficinas", d: "Dos vigilantes: el de la empresa ve solo sus visitas; el del edificio, todas." },
+            { icon: Users, t: "Coworkings y oficinas", d: "En el plan Pro, dos vigilantes: el de la empresa ve solo sus visitas; el del edificio, todas." },
           ].map((d) => {
             const Icon = d.icon
             return (

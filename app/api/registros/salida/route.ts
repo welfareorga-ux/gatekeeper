@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
 import { enviarNotificacionSalida } from "@/lib/email"
 import { esPlanGratis } from "@/lib/plan"
+import { filtroEmpresaVigilante } from "@/lib/empresa"
 import { z } from "zod"
 import { EstadoVisita } from "@prisma/client"
 
@@ -36,8 +37,10 @@ export async function POST(req: NextRequest) {
 
   // DB en transacción con contexto de tenant (RLS). Email DESPUÉS, fuera de la tx.
   const result = await withTenant(condominioId, async (tx) => {
+    // Con el filtro por empresa, un vigilante acotado no puede registrar la
+    // salida de visitantes de otras empresas aunque conozca el id.
     const visita = await tx.visita.findFirst({
-      where: { id: visitaId },
+      where: { id: visitaId, ...(await filtroEmpresaVigilante(tx, session.user.id)) },
       select: {
         estado: true,
         nombreVisitante: true,

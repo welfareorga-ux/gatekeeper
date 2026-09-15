@@ -1,13 +1,15 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
+import { esPlanGratis } from "@/lib/plan"
+import { MENSAJE_EMPRESAS_SOLO_PRO } from "@/lib/empresa"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
 /**
  * Empresas de la organización (caso coworking / edificio de oficinas).
  * La lista la administra el ADMIN. Los residentes se asignan a una empresa
- * de forma OPCIONAL.
+ * de forma OPCIONAL. Función del plan PRO: en Gratis todas las acciones dan 403.
  */
 
 const crearSchema = z.object({
@@ -23,6 +25,7 @@ export async function GET() {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin organización asociada" }, { status: 403 })
+  if (await esPlanGratis(condominioId)) return NextResponse.json({ error: MENSAJE_EMPRESAS_SOLO_PRO }, { status: 403 })
 
   const empresas = await withTenant(condominioId, (tx) => tx.empresa.findMany({
     orderBy: { nombre: "asc" },
@@ -45,6 +48,7 @@ export async function POST(req: Request) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin organización asociada" }, { status: 403 })
+  if (await esPlanGratis(condominioId)) return NextResponse.json({ error: MENSAJE_EMPRESAS_SOLO_PRO }, { status: 403 })
 
   const result = crearSchema.safeParse(await req.json())
   if (!result.success) {

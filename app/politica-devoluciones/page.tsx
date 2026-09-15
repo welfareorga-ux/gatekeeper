@@ -127,6 +127,8 @@ export default function PoliticaDevolucionesPage() {
                 devolución por el periodo en curso, salvo lo indicado para el pago mensual. Al terminar el
                 periodo, o si falla el pago, la organización pasa al plan Gratis: se conservan los
                 vigilantes y residentes más antiguos hasta su límite y los demás se eliminan con sus visitas.
+                Recomendamos exportar la información y eliminar antes, desde el panel, a los usuarios que no
+                necesites, para que se queden los que tú elijas.
               </li>
             </ul>
           </section>

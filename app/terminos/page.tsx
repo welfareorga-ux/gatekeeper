@@ -102,7 +102,11 @@ export default function TerminosPage() {
               periodo pagado o por falta de pago), la organización no se bloquea: pasa al plan Gratis. Se
               mantiene el administrador y se conservan los vigilantes y residentes más antiguos hasta el
               límite del plan Gratis; los demás usuarios se eliminan de forma permanente junto con sus
-              visitas. Recomendamos exportar la información antes de cancelar.
+              visitas. Las empresas configuradas se conservan, pero dejan de aplicarse mientras la
+              organización esté en Gratis. Antes de que termine el plan Pro recomendamos
+              <strong> exportar la información</strong> y <strong>eliminar desde el panel los vigilantes y
+              residentes que no necesites</strong>, para que se queden exactamente los que tú elijas dentro
+              del límite del plan Gratis.
             </p>
           </section>
 
@@ -112,8 +116,9 @@ export default function TerminosPage() {
               El plan Gratis no es un período de prueba: no caduca, no requiere ingresar datos de pago y
               el servicio no se suspende con el paso del tiempo. Al alcanzar sus límites (usuarios o
               visitas del mes), la plataforma impide registrar más hasta el mes siguiente, hasta comprar
-              un paquete de visitas extra o hasta contratar el plan Pro. El aviso por correo al residente
-              y los reportes con exportación son exclusivos del plan Pro.
+              un paquete de visitas extra o hasta contratar el plan Pro. El aviso por correo al residente,
+              los reportes con exportación y la gestión de Empresas (coworking y oficinas) son exclusivos
+              del plan Pro.
             </p>
           </section>
 
