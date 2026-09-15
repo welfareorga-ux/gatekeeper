@@ -64,10 +64,11 @@ const CATEGORIES: Category[] = [
         ],
       },
       {
-        q: "¿Cómo marco un vehículo o persona en alerta?",
+        q: "¿Qué aparece en Alertas?",
         a: [
-          "Abre Alertas y registra el vehículo o la persona a vigilar.",
-          "Cuando el vigilante intente registrar ese vehículo, verá una advertencia.",
+          "Alertas muestra los ingresos de emergencia: vehículos que el vigilante dejó entrar sin una visita registrada, porque el residente lo autorizó de palabra.",
+          "Cada alerta indica la placa, el visitante si se conoce, qué vigilante lo registró, la hora y el motivo.",
+          "Revísalas con frecuencia: si se repiten, conviene pedir a los residentes que registren sus visitas con anticipación.",
         ],
       },
       {

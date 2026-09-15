@@ -22,7 +22,7 @@ export default function TerminosPage() {
       <main className="container max-w-4xl mx-auto px-4 py-12 space-y-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Términos y Condiciones</h1>
-          <p className="text-muted-foreground text-sm">Última actualización: 15 de mayo de 2026</p>
+          <p className="text-muted-foreground text-sm">Última actualización: 15 de setiembre de 2026</p>
         </div>
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8 text-sm leading-relaxed">
@@ -100,11 +100,13 @@ export default function TerminosPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">7. Período de prueba</h2>
+            <h2 className="text-xl font-semibold">7. Plan Gratis</h2>
             <p>
-              El plan Gratis no caduca y no requiere ingresar datos
-              de pago. Al finalizar el período de prueba, el servicio se suspenderá hasta que el cliente
-              contrate un plan.
+              El plan Gratis no es un período de prueba: no caduca, no requiere ingresar datos de pago y
+              el servicio no se suspende con el paso del tiempo. Al alcanzar sus límites (usuarios o
+              visitas del mes), la plataforma impide registrar más hasta el mes siguiente, hasta comprar
+              un paquete de visitas extra o hasta contratar el plan Pro. El aviso por correo al residente
+              y los reportes con exportación son exclusivos del plan Pro.
             </p>
           </section>
 
@@ -127,21 +129,10 @@ export default function TerminosPage() {
               eliminados a solicitud.
             </p>
             <p>
-              <strong>Publicidad en el plan Gratis.</strong> Las cuentas del plan gratuito pueden mostrar
-              anuncios servidos por Google AdSense. Para ello, Google recibe datos técnicos de navegación
-              (dirección IP, tipo de dispositivo y navegador) y puede usar cookies para mostrar anuncios.
-              <strong> Los datos que registras en la plataforma nunca se envían a la red publicitaria</strong>:
-              los anuncios no acceden a nombres, DNI, placas ni al historial de visitas. Puedes gestionar
-              tus preferencias en{" "}
-              <a
-                href="https://adssettings.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-4"
-              >
-                adssettings.google.com
-              </a>{" "}
-              o eliminarlos por completo pasando al plan Pro, que no muestra publicidad.
+              <strong>Sin publicidad de terceros.</strong> La plataforma no muestra anuncios de redes
+              publicitarias ni carga scripts de publicidad. En el plan Gratis pueden aparecer avisos
+              propios de Gatekeeper sobre el plan Pro o sobre el paquete de visitas extra, que no usan
+              cookies publicitarias ni envían tus datos a nadie.
             </p>
           </section>
 

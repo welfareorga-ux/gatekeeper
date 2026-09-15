@@ -12,8 +12,11 @@ import { Sparkles } from "lucide-react"
  * monta (ver lib/plan.ts → esPlanGratis).
  *
  * Sin `NEXT_PUBLIC_ADSENSE_CLIENT` configurado muestra un aviso propio que
- * invita a pasar a Pro, así el hueco nunca se ve roto ni vacío mientras la
- * cuenta de AdSense está en revisión.
+ * invita a pasar a Pro, así el hueco nunca se ve roto ni vacío.
+ *
+ * ⚠️ AdSense se abandonó en septiembre de 2026 y la variable ya no existe en
+ * Vercel. Los términos (cláusula 9) declaran que NO hay publicidad de terceros:
+ * si alguna vez se vuelve a configurar la variable, hay que reescribirlos antes.
  */
 
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT

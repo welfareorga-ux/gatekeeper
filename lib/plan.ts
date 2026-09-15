@@ -17,3 +17,7 @@ export async function esPlanGratis(condominioId: string | null | undefined): Pro
   })
   return condominio?.plan === "GRATIS"
 }
+
+/** Mensaje de las funciones reservadas al plan Pro (reportes y exportación). */
+export const MENSAJE_SOLO_PRO_REPORTES =
+  "Los reportes y la exportación a Excel y PDF son parte del plan Pro. Puedes contratarlo desde Suscripción."

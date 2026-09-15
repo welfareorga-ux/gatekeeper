@@ -23,7 +23,7 @@ export default function PoliticaDevolucionesPage() {
       <main className="container max-w-4xl mx-auto px-4 py-12 space-y-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Política de Cambios y Devoluciones</h1>
-          <p className="text-muted-foreground text-sm">Última actualización: 15 de mayo de 2026</p>
+          <p className="text-muted-foreground text-sm">Última actualización: 15 de setiembre de 2026</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed">
@@ -39,11 +39,11 @@ export default function PoliticaDevolucionesPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">2. Período de prueba gratuita</h2>
+            <h2 className="text-xl font-semibold">2. Plan Gratis</h2>
             <p>
-              Puedes usar el <strong>plan Gratis</strong> sin cargo y sin fecha límite. Durante
-              este período el cliente puede evaluar el servicio sin compromiso. No se realiza ningún
-              cobro hasta que el período de prueba finalice y el cliente contrate un plan.
+              El <strong>plan Gratis</strong> no es un período de prueba: no tiene costo, no vence y no
+              pide datos de pago, por lo que no genera cobros ni devoluciones. Solo se cobra cuando el
+              cliente contrata el plan Pro o compra un paquete de visitas extra.
             </p>
           </section>
 
@@ -114,14 +114,28 @@ export default function PoliticaDevolucionesPage() {
             <h2 className="text-xl font-semibold">6. Cambio de plan</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong>Upgrade (plan mayor):</strong> el cambio es inmediato. Se cobra la diferencia
-                proporcional por los días restantes del mes en curso.
+                <strong>De Gratis a Pro:</strong> el cambio es inmediato y se cobra el periodo elegido
+                completo (mensual, trimestral, semestral o anual). No hay cobros proporcionales.
               </li>
               <li>
-                <strong>Downgrade (plan menor):</strong> el cambio aplica al inicio del siguiente
-                período de facturación. No hay devolución por la diferencia del mes actual.
+                <strong>Cambiar el periodo de Pro</strong> (por ejemplo, de mensual a anual): escríbenos a
+                soporte@gatekeeper-app.org. El nuevo periodo empieza cuando termina el que está pagado;
+                no se cobra ni se devuelve ninguna diferencia.
+              </li>
+              <li>
+                <strong>Dejar Pro:</strong> se hace cancelando la suscripción (ver sección 3). No hay
+                devolución por el periodo en curso, salvo lo indicado para el pago mensual.
               </li>
             </ul>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold">6-A. Paquetes de visitas extra</h2>
+            <p>
+              El paquete de 20 visitas extra (S/ 19.00, solo plan Gratis) es un pago único que vence al
+              terminar el mes calendario en que se compró. Las visitas no usadas se pierden y no se
+              reembolsan, salvo fallo imputable al proveedor.
+            </p>
           </section>
 
           <section className="space-y-3">

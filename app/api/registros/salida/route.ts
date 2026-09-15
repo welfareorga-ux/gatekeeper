@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
 import { enviarNotificacionSalida } from "@/lib/email"
+import { esPlanGratis } from "@/lib/plan"
 import { z } from "zod"
 import { EstadoVisita } from "@prisma/client"
 
@@ -89,16 +90,20 @@ export async function POST(req: NextRequest) {
 
   if ("error" in result) return result.error
 
-  // Envío de email en background — no bloquea la respuesta
-  void enviarNotificacionSalida({
-    emailResidente: result.visita.residente.email,
-    nombreResidente: result.visita.residente.nombre,
-    nombreVisitante: result.visita.nombreVisitante,
-    placa: result.visita.vehiculos[0]?.placa ?? "",
-    condominioNombre: result.visita.condominio?.nombre ?? "",
-    horaIngreso: result.horaIngreso,
-    horaSalida,
-  })
+  // El aviso por correo al residente es del plan Pro (cuesta envíos de Resend).
+  // En Gratis el residente ve la hora de salida en su panel.
+  // Envío en background — no bloquea la respuesta.
+  if (!(await esPlanGratis(condominioId))) {
+    void enviarNotificacionSalida({
+      emailResidente: result.visita.residente.email,
+      nombreResidente: result.visita.residente.nombre,
+      nombreVisitante: result.visita.nombreVisitante,
+      placa: result.visita.vehiculos[0]?.placa ?? "",
+      condominioNombre: result.visita.condominio?.nombre ?? "",
+      horaIngreso: result.horaIngreso,
+      horaSalida,
+    })
+  }
 
   return NextResponse.json(result.registro)
 }

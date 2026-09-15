@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { withTenant } from "@/lib/tenant"
+import { esPlanGratis, MENSAJE_SOLO_PRO_REPORTES } from "@/lib/plan"
 import { NextResponse } from "next/server"
 
 export async function GET(req: Request) {
@@ -10,6 +11,7 @@ export async function GET(req: Request) {
   }
   const condominioId = session.user.condominioId
   if (!condominioId) return NextResponse.json({ error: "Sin condominio asociado" }, { status: 403 })
+  if (await esPlanGratis(condominioId)) return NextResponse.json({ error: MENSAJE_SOLO_PRO_REPORTES }, { status: 403 })
 
   const { searchParams } = new URL(req.url)
   const dias = Math.min(90, Math.max(7, parseInt(searchParams.get("dias") ?? "30")))
