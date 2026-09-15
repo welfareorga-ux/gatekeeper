@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { runAsAdmin } from "@/lib/tenant"
-import { enviarEmailCobroFallido } from "@/lib/email"
-
-const PLAN_LABEL: Record<string, string> = {
-  PRO: "Pro",
-}
+import { degradarAGratis } from "@/lib/degradar-plan"
 
 function verificarAuth(req: Request): boolean {
   const secret = process.env.CULQI_WEBHOOK_SECRET
@@ -65,43 +60,27 @@ export async function POST(req: Request) {
       where: { culqiSubscriptionId: subscriptionId },
       data: { suscripcionEstado: "cancelada" },
     })
-  } else if (type.includes("expir")) {
-    // Período vencido: cortar acceso
-    await prisma.condominio.updateMany({
-      where: { culqiSubscriptionId: subscriptionId },
-      data: { suscripcionEstado: "vencida", activo: false },
-    })
-  } else if (type.includes("fail")) {
+  } else if (type.includes("expir") || type.includes("fail")) {
+    // Dejó de pagar (periodo vencido o cobro fallido): la organización NO se
+    // bloquea, pasa a Gratis y se retiran los usuarios que exceden el plan
+    // (se conservan los más antiguos). Ver lib/degradar-plan.ts.
     const condominio = await prisma.condominio.findFirst({
       where: { culqiSubscriptionId: subscriptionId },
-      select: { id: true, nombre: true, plan: true },
+      select: { id: true },
     })
-
-    await prisma.condominio.updateMany({
-      where: { culqiSubscriptionId: subscriptionId },
-      data: { suscripcionEstado: "vencida", activo: false },
-    })
-
     if (condominio) {
-      // User tiene RLS; el webhook no tiene contexto de tenant → bypass.
-      const admin = await runAsAdmin((tx) => tx.user.findFirst({
-        where: { condominioId: condominio.id, rol: "ADMIN" },
-        select: { nombre: true, email: true },
-      }))
-      if (admin) {
-        await enviarEmailCobroFallido({
-          emailAdmin: admin.email,
-          nombreAdmin: admin.nombre,
-          condominioNombre: condominio.nombre,
-          planLabel: PLAN_LABEL[condominio.plan] ?? condominio.plan,
-        })
-      }
+      await degradarAGratis(condominio.id, `webhook ${type}`)
     }
   } else if (type.includes("success") || type.includes("paid")) {
-    await prisma.condominio.updateMany({
+    const { count } = await prisma.condominio.updateMany({
       where: { culqiSubscriptionId: subscriptionId },
       data: { suscripcionEstado: "activa", activo: true },
     })
+    if (count === 0) {
+      // Una organización pasada a Gratis deja de tener suscripción asociada. Si
+      // aun así llega un cobro, hay que revisarlo y devolverlo a mano.
+      console.error("[webhook/culqi] Cobro de una suscripción sin organización asociada:", subscriptionId)
+    }
   }
 
   return NextResponse.json({ ok: true })

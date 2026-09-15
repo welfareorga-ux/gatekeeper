@@ -1,4 +1,5 @@
 import { Resend } from "resend"
+import { LIMITES_GRATIS } from "@/lib/limites-plan"
 
 // Inicialización perezosa: el constructor de Resend lanza si falta la API key.
 // Crearlo al importar el módulo rompía `next build` (page-data collection) sin la
@@ -580,56 +581,61 @@ export async function enviarCredencialesUsuario({
   }
 }
 
-export async function enviarEmailCobroFallido({
+/**
+ * La organización dejó de pagar Pro y pasó a Gratis. Si hubo que retirar
+ * usuarios por los límites del plan, se listan para que el admin lo sepa.
+ */
+export async function enviarEmailPasoAGratis({
   emailAdmin,
   nombreAdmin,
   condominioNombre,
-  planLabel,
+  residentesEliminados,
+  vigilantesEliminados,
 }: {
   emailAdmin: string
   nombreAdmin: string
   condominioNombre: string
-  planLabel: string
+  residentesEliminados: string[]
+  vigilantesEliminados: string[]
 }) {
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!)
+  const lista = (titulo: string, nombres: string[]) =>
+    nombres.length === 0 ? "" : `
+      <p style="color:#111827;font-size:14px;margin:16px 0 6px;font-weight:600">${titulo}</p>
+      <ul style="color:#6b7280;font-size:14px;margin:0;padding-left:20px">${nombres.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`
+  const huboRetiro = residentesEliminados.length + vigilantesEliminados.length > 0
+
   try {
     await getResend().emails.send({
       from: FROM,
       to: emailAdmin,
-      subject: `⚠️ Problema con tu pago — Gatekeeper`,
+      subject: `Tu organización pasó al plan Gratis — Gatekeeper`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
           <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
             <h1 style="color:#fff;font-size:20px;margin:0">🛡️ Gatekeeper</h1>
             <p style="color:#9ca3af;font-size:13px;margin:4px 0 0">Sistema de control de acceso</p>
           </div>
-
-          <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px 16px;margin-bottom:24px">
-            <p style="color:#92400e;font-size:14px;margin:0;font-weight:600">⚠️ No pudimos procesar tu pago</p>
-          </div>
-
-          <h2 style="color:#111827;font-size:18px;margin:0 0 8px">Acción requerida</h2>
-          <p style="color:#6b7280;font-size:14px;margin:0 0 24px">
-            Hola <strong>${nombreAdmin}</strong>, el cobro mensual de tu suscripción a Gatekeeper no pudo ser procesado.
-            El acceso al panel de <strong>${condominioNombre}</strong> ha sido suspendido temporalmente.
-          </p>
-
-          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px">
-            <table style="width:100%;border-collapse:collapse">
-              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:40%">Condominio</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${condominioNombre}</td></tr>
-              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Plan</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${planLabel}</td></tr>
-              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Estado</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#dc2626">Pago fallido</td></tr>
-            </table>
-          </div>
-
+          <h2 style="color:#111827;font-size:18px;margin:0 0 8px">Tu plan Pro terminó</h2>
           <p style="color:#6b7280;font-size:14px;margin:0 0 16px">
-            Para reactivar tu acceso, actualiza tu método de pago o contáctanos:
+            Hola <strong>${esc(nombreAdmin)}</strong>, no recibimos el pago de la suscripción Pro de
+            <strong>${esc(condominioNombre)}</strong>, así que la organización pasó al <strong>plan Gratis</strong>.
+            Puedes seguir usando Gatekeeper sin costo.
           </p>
-
-          <a href="mailto:soporte@gatekeeper-app.org?subject=Reactivar suscripción — ${condominioNombre}"
+          ${huboRetiro ? `
+          <p style="color:#6b7280;font-size:14px;margin:0">
+            El plan Gratis admite ${LIMITES_GRATIS.vigilantes} vigilante y ${LIMITES_GRATIS.residentes} residentes. Se conservaron los usuarios
+            más antiguos y se eliminaron los siguientes, junto con sus visitas:
+          </p>
+          ${lista("Residentes eliminados", residentesEliminados)}
+          ${lista("Vigilantes eliminados", vigilantesEliminados)}` : ""}
+          <p style="color:#6b7280;font-size:14px;margin:24px 0 16px">
+            Si quieres volver a Pro, entra a <strong>Suscripción</strong> en tu panel o escríbenos.
+          </p>
+          <a href="mailto:soporte@gatekeeper-app.org?subject=Volver a Pro — ${esc(condominioNombre)}"
              style="display:inline-block;background:#111827;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
             Contactar soporte
           </a>
-
           <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">
             Este es un mensaje automático de Gatekeeper — soporte@gatekeeper-app.org
           </p>
@@ -637,6 +643,7 @@ export async function enviarEmailCobroFallido({
       `,
     })
   } catch (err) {
-    console.error("[email] Error al enviar email de cobro fallido:", err)
+    console.error("[email] Error al enviar email de paso a Gratis:", err)
   }
 }
+
