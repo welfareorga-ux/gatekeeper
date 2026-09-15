@@ -6,8 +6,14 @@
 //   - GRATIS: no caduca nunca. Su acceso jamás se bloquea.
 //   - PRO:    depende del estado del cobro (Culqi o transferencia).
 
-/** Estados que cortan el acceso del admin al panel (salvo /admin/suscripcion). */
-export const ESTADOS_BLOQUEADOS = ["vencida", "fallida"] as const
+/**
+ * Estados que cortan el acceso del admin al panel (salvo /admin/suscripcion).
+ *
+ * "fallida" YA NO bloquea: abre un periodo de gracia en el que la cuenta sigue
+ * en Pro; si no paga, pasa a Gratis (nunca se bloquea). "vencida" solo queda
+ * por datos antiguos: el cron las pasa a Gratis.
+ */
+export const ESTADOS_BLOQUEADOS = ["vencida"] as const
 
 /**
  * Resuelve el estado efectivo de la suscripción de una organización.

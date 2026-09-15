@@ -1,5 +1,5 @@
 import type { AdminTx } from "@/lib/tenant"
-import { fechaCorteHistorial } from "@/lib/limites-plan"
+import { corteConservarEmpresas, fechaCorteHistorial } from "@/lib/limites-plan"
 
 /**
  * Borrado del historial del plan GRATIS con más de 30 días.
@@ -14,6 +14,7 @@ import { fechaCorteHistorial } from "@/lib/limites-plan"
  *     dentro (ingreso sin salida), para no romper la pantalla del vigilante.
  *   - Turnos de vigilante cerrados hace más de 30 días.
  *   - Registros de auditoría de sus usuarios con más de 30 días.
+ *   - Empresas: si nunca fue Pro, o si pasó a Gratis hace más de 30 días.
  * Y en todas las organizaciones: tokens de recuperación de contraseña vencidos.
  *
  * NO toca los contadores de cupo: las visitas borradas siguen contando para el
@@ -27,8 +28,19 @@ export async function purgarHistorialGratis(tx: AdminTx, ahora: Date = new Date(
   const gratis = await tx.condominio.findMany({ where: { plan: "GRATIS" }, select: { id: true } })
   const ids = gratis.map((c) => c.id)
   if (ids.length === 0) {
-    return { visitas: 0, registros: 0, turnos: 0, logs: 0, tokens: await borrarTokensVencidos(tx, ahora) }
+    return { visitas: 0, registros: 0, turnos: 0, logs: 0, empresas: 0, tokens: await borrarTokensVencidos(tx, ahora) }
   }
+
+  // Empresas es del plan Pro. Las de una cuenta que pasó a Gratis se guardan
+  // DIAS_CONSERVAR_EMPRESAS por si vuelve; después se borran. Si nunca fue Pro
+  // (pasoAGratisEn nulo), no hay nada que conservar. Al borrar la empresa, sus
+  // asignaciones de vigilante se van en cascada y usuarios/visitas quedan sin empresa.
+  const empresas = await tx.empresa.deleteMany({
+    where: {
+      condominioId: { in: ids },
+      condominio: { OR: [{ pasoAGratisEn: null }, { pasoAGratisEn: { lt: corteConservarEmpresas(ahora) } }] },
+    },
+  })
 
   const visitasViejas = {
     condominioId: { in: ids },
@@ -51,7 +63,7 @@ export async function purgarHistorialGratis(tx: AdminTx, ahora: Date = new Date(
 
   const tokens = await borrarTokensVencidos(tx, ahora)
 
-  return { visitas: visitas.count, registros: registros.count, turnos: turnos.count, logs: logs.count, tokens }
+  return { visitas: visitas.count, registros: registros.count, turnos: turnos.count, logs: logs.count, empresas: empresas.count, tokens }
 }
 
 async function borrarTokensVencidos(tx: AdminTx, ahora: Date) {

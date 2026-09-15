@@ -32,6 +32,35 @@ export const PAQUETE_VISITAS = {
   precioStr: "S/ 19.00",
 } as const
 
+/**
+ * Días de gracia tras un cobro fallido de Pro: la cuenta sigue en Pro y el
+ * admin puede volver a pagar. Pasado el plazo, pasa a Gratis (lib/degradar-plan.ts).
+ */
+export const DIAS_GRACIA_COBRO = 5
+
+/**
+ * Días que se conservan las empresas configuradas de una cuenta que pasó de
+ * Pro a Gratis. Si vuelve a Pro antes, se recuperan; después se borran.
+ */
+export const DIAS_CONSERVAR_EMPRESAS = 30
+
+const DIA_MS = 24 * 3_600_000
+
+/** Instante en que vence el periodo de gracia de un cobro fallido. */
+export function finGraciaCobro(cobroFallidoEn: Date): Date {
+  return new Date(cobroFallidoEn.getTime() + DIAS_GRACIA_COBRO * DIA_MS)
+}
+
+/** Fecha antes de la cual un paso a Gratis ya no conserva sus empresas. */
+export function corteConservarEmpresas(ahora: Date = new Date()): Date {
+  return new Date(ahora.getTime() - DIAS_CONSERVAR_EMPRESAS * DIA_MS)
+}
+
+/** Fecha en texto para correos y avisos: "20 de setiembre". */
+export function fechaLimaTexto(fecha: Date): string {
+  return fecha.toLocaleDateString("es-PE", { timeZone: "America/Lima", day: "numeric", month: "long" })
+}
+
 /** Días de historial que conserva el plan GRATIS; lo anterior se borra. */
 export const DIAS_HISTORIAL_GRATIS = 30
 

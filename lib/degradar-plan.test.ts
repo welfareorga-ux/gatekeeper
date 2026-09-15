@@ -4,7 +4,8 @@ import { repartirPorAntiguedad } from "./degradar-plan"
 // degradar-plan importa la base de datos y el correo; para probar la regla
 // pura basta con sustituir esos módulos (vi.mock se eleva antes del import).
 vi.mock("@/lib/tenant", () => ({ runAsAdmin: vi.fn() }))
-vi.mock("@/lib/email", () => ({ enviarEmailPasoAGratis: vi.fn() }))
+vi.mock("@/lib/email", () => ({ enviarEmailPasoAGratis: vi.fn(), enviarEmailCobroFallido: vi.fn() }))
+vi.mock("@/lib/prisma", () => ({ prisma: {} }))
 
 const u = (id: string, fecha: string) => ({ id, nombre: id, email: `${id}@x.pe`, createdAt: new Date(fecha) })
 

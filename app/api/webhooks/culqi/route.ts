@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { degradarAGratis } from "@/lib/degradar-plan"
+import { degradarAGratis, marcarCobroFallido } from "@/lib/degradar-plan"
+import { finGraciaCobro } from "@/lib/limites-plan"
 
 function verificarAuth(req: Request): boolean {
   const secret = process.env.CULQI_WEBHOOK_SECRET
@@ -60,21 +61,24 @@ export async function POST(req: Request) {
       where: { culqiSubscriptionId: subscriptionId },
       data: { suscripcionEstado: "cancelada" },
     })
-  } else if (type.includes("expir") || type.includes("fail")) {
-    // Dejó de pagar (periodo vencido o cobro fallido): la organización NO se
-    // bloquea, pasa a Gratis y se retiran los usuarios que exceden el plan
-    // (se conservan los más antiguos). Ver lib/degradar-plan.ts.
+  } else if (type.includes("fail")) {
+    // Cobro fallido: abre el periodo de gracia (sigue en Pro y se avisa al
+    // admin). Si no paga a tiempo, el cron la pasa a Gratis.
+    await marcarCobroFallido(subscriptionId)
+  } else if (type.includes("expir")) {
+    // Periodo vencido: pasa a Gratis (ver lib/degradar-plan.ts). Si está en
+    // gracia por un cobro fallido, se respeta el plazo: la pasará el cron.
     const condominio = await prisma.condominio.findFirst({
       where: { culqiSubscriptionId: subscriptionId },
-      select: { id: true },
+      select: { id: true, cobroFallidoEn: true },
     })
-    if (condominio) {
+    if (condominio && !(condominio.cobroFallidoEn && finGraciaCobro(condominio.cobroFallidoEn) > new Date())) {
       await degradarAGratis(condominio.id, `webhook ${type}`)
     }
   } else if (type.includes("success") || type.includes("paid")) {
     const { count } = await prisma.condominio.updateMany({
       where: { culqiSubscriptionId: subscriptionId },
-      data: { suscripcionEstado: "activa", activo: true },
+      data: { suscripcionEstado: "activa", activo: true, cobroFallidoEn: null },
     })
     if (count === 0) {
       // Una organización pasada a Gratis deja de tener suscripción asociada. Si

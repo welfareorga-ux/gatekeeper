@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
-  diasRestantesMesLima, fechaCorteHistorial, finDeMesLimaTexto, inicioMesLima, limiteUsuarios,
+  corteConservarEmpresas, diasRestantesMesLima, fechaCorteHistorial, fechaLimaTexto, finGraciaCobro, finDeMesLimaTexto, inicioMesLima, limiteUsuarios,
   saldoExtraVigente, visitasUsadasEsteMes, LIMITES_GRATIS,
 } from "./limites-plan"
 
@@ -22,6 +22,21 @@ describe("inicioMesLima", () => {
     // 31 dic 23:30 en Lima = 1 ene 04:30 UTC
     expect(inicioMesLima(new Date("2027-01-01T04:30:00Z")).toISOString()).toBe("2026-12-01T05:00:00.000Z")
     expect(inicioMesLima(new Date("2027-01-01T05:00:00Z")).toISOString()).toBe("2027-01-01T05:00:00.000Z")
+  })
+})
+
+describe("plazos de gracia y conservación de empresas", () => {
+  it("la gracia de un cobro fallido dura 5 días", () => {
+    expect(finGraciaCobro(new Date("2026-09-15T18:00:00Z")).toISOString()).toBe("2026-09-20T18:00:00.000Z")
+  })
+
+  it("las empresas se conservan 30 días tras pasar a Gratis", () => {
+    expect(corteConservarEmpresas(new Date("2026-10-15T12:00:00Z")).toISOString()).toBe("2026-09-15T12:00:00.000Z")
+  })
+
+  it("la fecha para correos va en hora de Lima", () => {
+    // 21 set 02:00 UTC = 20 set 21:00 en Lima
+    expect(fechaLimaTexto(new Date("2026-09-21T02:00:00Z"))).toBe("20 de setiembre")
   })
 })
 

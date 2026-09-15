@@ -178,6 +178,9 @@ export async function POST(req: Request) {
 
   // 4. Actualizar DB. Si falla, se da de baja la suscripción recién creada para
   // no cobrar un plan que la cuenta no refleja.
+  // Se limpian el periodo de gracia (si pagó tras un cobro fallido) y la marca
+  // de paso a Gratis (así sus empresas guardadas vuelven a tener efecto).
+  const anterior = await prisma.condominio.findUnique({ where: { id: condominioId }, select: { culqiSubscriptionId: true } })
   try {
     await prisma.condominio.update({
       where: { id: condominioId },
@@ -185,6 +188,8 @@ export async function POST(req: Request) {
         plan: "PRO",
         suscripcionEstado: "activa",
         culqiSubscriptionId: subscription.id,
+        cobroFallidoEn: null,
+        pasoAGratisEn: null,
       },
     })
   } catch (dbErr) {
@@ -197,6 +202,15 @@ export async function POST(req: Request) {
       { error: "No pudimos activar el plan y se anuló la suscripción. Intenta de nuevo o escríbenos a soporte@gatekeeper-app.org." },
       { status: 500 },
     )
+  }
+
+  // Si pagó con una suscripción nueva tras un cobro fallido, la anterior se da
+  // de baja: si Culqi reintentara cobrarla, cobraría dos veces.
+  if (anterior?.culqiSubscriptionId && anterior.culqiSubscriptionId !== subscription.id) {
+    await fetch(`${CULQI_BASE}/recurrent/subscriptions/${anterior.culqiSubscriptionId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${secretKey}` },
+    }).catch((e) => console.error("[suscripcion] No se pudo dar de baja la suscripción anterior:", anterior.culqiSubscriptionId, e))
   }
 
   return NextResponse.json({ ok: true })

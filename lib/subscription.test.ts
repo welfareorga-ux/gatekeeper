@@ -34,9 +34,12 @@ describe("resolverEstadoSuscripcion", () => {
 })
 
 describe("estaBloqueada", () => {
-  it("bloquea vencida y fallida", () => {
+  it("bloquea vencida (datos antiguos)", () => {
     expect(estaBloqueada("vencida")).toBe(true)
-    expect(estaBloqueada("fallida")).toBe(true)
+  })
+
+  it("NO bloquea fallida: es el periodo de gracia", () => {
+    expect(estaBloqueada("fallida")).toBe(false)
   })
 
   it("NO bloquea activa ni cancelada (cancelada tiene gracia hasta fin de periodo)", () => {
@@ -56,7 +59,7 @@ describe("estaBloqueada", () => {
   })
 
   it("la lista de bloqueo es exactamente la esperada", () => {
-    expect([...ESTADOS_BLOQUEADOS]).toEqual(["vencida", "fallida"])
+    expect([...ESTADOS_BLOQUEADOS]).toEqual(["vencida"])
   })
 })
 
@@ -68,8 +71,8 @@ describe("flujo de una cuenta gratuita", () => {
     }
   })
 
-  it("al pasar a PRO, un cobro fallido sí bloquea", () => {
+  it("en PRO, un cobro fallido no bloquea durante la gracia", () => {
     const estado = resolverEstadoSuscripcion("fallida", "PRO")
-    expect(estaBloqueada(estado)).toBe(true)
+    expect(estaBloqueada(estado)).toBe(false)
   })
 })

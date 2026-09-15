@@ -582,6 +582,79 @@ export async function enviarCredencialesUsuario({
 }
 
 /**
+ * Primer cobro fallido de Pro. La cuenta sigue en Pro durante el periodo de
+ * gracia; el correo deja claro qué se pierde si no paga antes de la fecha.
+ */
+export async function enviarEmailCobroFallido({
+  emailAdmin,
+  nombreAdmin,
+  condominioNombre,
+  fechaLimite,
+}: {
+  emailAdmin: string
+  nombreAdmin: string
+  condominioNombre: string
+  /** Fecha en texto: "20 de setiembre". */
+  fechaLimite: string
+}) {
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!)
+  const urlSuscripcion = `${process.env.NEXTAUTH_URL ?? "https://www.gatekeeper-app.org"}/admin/suscripcion`
+  try {
+    await getResend().emails.send({
+      from: FROM,
+      to: emailAdmin,
+      subject: `⚠️ Tu pago falló: tienes hasta el ${fechaLimite} para no perder el plan Pro`,
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:32px 24px;border-radius:12px">
+          <div style="background:#111827;padding:20px 24px;border-radius:8px;margin-bottom:24px">
+            <h1 style="color:#fff;font-size:20px;margin:0">🛡️ Gatekeeper</h1>
+            <p style="color:#9ca3af;font-size:13px;margin:4px 0 0">Sistema de control de acceso</p>
+          </div>
+
+          <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px 16px;margin-bottom:24px">
+            <p style="color:#92400e;font-size:14px;margin:0;font-weight:600">
+              No pudimos cobrar tu plan Pro. Tienes hasta el ${esc(fechaLimite)} para pagar.
+            </p>
+          </div>
+
+          <p style="color:#6b7280;font-size:14px;margin:0 0 16px">
+            Hola <strong>${esc(nombreAdmin)}</strong>, el cobro de la suscripción Pro de
+            <strong>${esc(condominioNombre)}</strong> no pudo procesarse (por ejemplo, tarjeta sin saldo o vencida).
+            Por ahora <strong>todo sigue funcionando igual</strong>.
+          </p>
+
+          <p style="color:#111827;font-size:14px;margin:0 0 8px;font-weight:600">
+            Si no pagas antes del ${esc(fechaLimite)}, tu organización pasará al plan Gratis y:
+          </p>
+          <ul style="color:#6b7280;font-size:14px;margin:0 0 16px;padding-left:20px">
+            <li>Solo se conservarán el administrador, el vigilante más antiguo y los ${LIMITES_GRATIS.residentes} residentes más antiguos.</li>
+            <li><strong>Los demás vigilantes y residentes se eliminarán de forma permanente, junto con sus visitas y registros.</strong></li>
+            <li>El historial con más de 30 días se borrará y no se podrá recuperar.</li>
+            <li>Perderás los reportes, los avisos por correo a residentes y las empresas (coworking).</li>
+          </ul>
+
+          <p style="color:#6b7280;font-size:14px;margin:0 0 16px">
+            Si no piensas volver a pagar, exporta tus reportes y elimina desde el panel a los usuarios que
+            no necesites, para que se queden los que tú elijas.
+          </p>
+
+          <a href="${urlSuscripcion}"
+             style="display:inline-block;background:#111827;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
+            Pagar ahora
+          </a>
+
+          <p style="color:#9ca3af;font-size:11px;margin:24px 0 0;text-align:center">
+            ¿Dudas? Escríbenos a soporte@gatekeeper-app.org
+          </p>
+        </div>
+      `,
+    })
+  } catch (err) {
+    console.error("[email] Error al enviar email de cobro fallido:", err)
+  }
+}
+
+/**
  * La organización dejó de pagar Pro y pasó a Gratis. Si hubo que retirar
  * usuarios por los límites del plan, se listan para que el admin lo sepa.
  */
@@ -591,12 +664,15 @@ export async function enviarEmailPasoAGratis({
   condominioNombre,
   residentesEliminados,
   vigilantesEliminados,
+  conservaEmpresasHasta,
 }: {
   emailAdmin: string
   nombreAdmin: string
   condominioNombre: string
   residentesEliminados: string[]
   vigilantesEliminados: string[]
+  /** Fecha en texto hasta la que se guardan sus empresas, o null si no tenía. */
+  conservaEmpresasHasta: string | null
 }) {
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!)
   const lista = (titulo: string, nombres: string[]) =>
@@ -629,6 +705,12 @@ export async function enviarEmailPasoAGratis({
           </p>
           ${lista("Residentes eliminados", residentesEliminados)}
           ${lista("Vigilantes eliminados", vigilantesEliminados)}` : ""}
+          ${conservaEmpresasHasta ? `
+          <p style="color:#6b7280;font-size:14px;margin:16px 0 0">
+            Las <strong>empresas</strong> que configuraste dejan de aplicarse en el plan Gratis. Las guardaremos
+            hasta el <strong>${esc(conservaEmpresasHasta)}</strong>: si vuelves a Pro antes, se recuperan tal cual;
+            después se eliminarán.
+          </p>` : ""}
           <p style="color:#6b7280;font-size:14px;margin:24px 0 16px">
             Si quieres volver a Pro, entra a <strong>Suscripción</strong> en tu panel o escríbenos.
           </p>

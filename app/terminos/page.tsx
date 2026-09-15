@@ -99,11 +99,13 @@ export default function TerminosPage() {
             </p>
             <p>
               <strong>Fin del plan Pro.</strong> Si la suscripción Pro termina (por cancelación al final del
-              periodo pagado o por falta de pago), la organización no se bloquea: pasa al plan Gratis. Se
+              periodo pagado o por falta de pago), la organización no se bloquea: pasa al plan Gratis. Si
+              falla un cobro, la cuenta se mantiene en Pro durante 5 días para regularizar el pago y se
+              avisa al administrador por correo; si no paga en ese plazo, pasa al plan Gratis. Se
               mantiene el administrador y se conservan los vigilantes y residentes más antiguos hasta el
               límite del plan Gratis; los demás usuarios se eliminan de forma permanente junto con sus
-              visitas. Las empresas configuradas se conservan, pero dejan de aplicarse mientras la
-              organización esté en Gratis. Antes de que termine el plan Pro recomendamos
+              visitas. Las empresas configuradas dejan de aplicarse y se conservan durante 30 días: si
+              la organización vuelve a Pro en ese plazo se recuperan; después se eliminan. Antes de que termine el plan Pro recomendamos
               <strong> exportar la información</strong> y <strong>eliminar desde el panel los vigilantes y
               residentes que no necesites</strong>, para que se queden exactamente los que tú elijas dentro
               del límite del plan Gratis.

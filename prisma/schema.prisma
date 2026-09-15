@@ -57,6 +57,12 @@ model Condominio {
   /// mes en que se compró (`visitasExtraInicio`, hora de Lima).
   visitasExtra        Int      @default(0)
   visitasExtraInicio  DateTime?
+  /// Primer cobro fallido de Pro sin resolver. Abre el periodo de gracia
+  /// (DIAS_GRACIA_COBRO); se limpia al volver a cobrar o al pasar a Gratis.
+  cobroFallidoEn      DateTime?
+  /// Cuándo la organización pasó de Pro a Gratis. Sus empresas se conservan
+  /// DIAS_CONSERVAR_EMPRESAS por si vuelve a Pro; se limpia al volver.
+  pasoAGratisEn       DateTime?
   createdAt          DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

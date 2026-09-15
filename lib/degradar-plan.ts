@@ -1,6 +1,7 @@
 import { runAsAdmin, type AdminTx } from "@/lib/tenant"
-import { LIMITES_GRATIS } from "@/lib/limites-plan"
-import { enviarEmailPasoAGratis } from "@/lib/email"
+import { prisma } from "@/lib/prisma"
+import { DIAS_CONSERVAR_EMPRESAS, LIMITES_GRATIS, fechaLimaTexto, finGraciaCobro } from "@/lib/limites-plan"
+import { enviarEmailCobroFallido, enviarEmailPasoAGratis } from "@/lib/email"
 
 /**
  * Paso de una organización PRO al plan GRATIS cuando deja de pagar.
@@ -16,7 +17,46 @@ import { enviarEmailPasoAGratis } from "@/lib/email"
  * recorte fue forzado por el sistema, no una rotación del cliente.
  */
 
-export type UsuarioOrdenable = { id: string; nombre: string; email: string; createdAt: Date }
+/**
+ * Primer cobro fallido de una suscripción Pro: abre el periodo de gracia.
+ *
+ * La cuenta sigue en Pro (el estado "fallida" no bloquea) y se avisa al admin
+ * de la fecha límite y de lo que perderá si no paga. La suscripción de Culqi
+ * NO se da de baja, por si su reintento de cobro funciona. Si llegan más
+ * avisos de fallo, la fecha no se reinicia. El cron pasa la cuenta a Gratis al
+ * vencer la gracia.
+ */
+export async function marcarCobroFallido(subscriptionId: string) {
+  const condominio = await prisma.condominio.findFirst({
+    where: { culqiSubscriptionId: subscriptionId, plan: "PRO" },
+    select: { id: true, nombre: true, cobroFallidoEn: true },
+  })
+  if (!condominio || condominio.cobroFallidoEn) return
+
+  const ahora = new Date()
+  await prisma.condominio.update({
+    where: { id: condominio.id },
+    data: { suscripcionEstado: "fallida", cobroFallidoEn: ahora },
+  })
+
+  // User tiene RLS; sin contexto de tenant → bypass.
+  const admin = await runAsAdmin((tx) => tx.user.findFirst({
+    where: { condominioId: condominio.id, rol: "ADMIN" },
+    orderBy: { createdAt: "asc" },
+    select: { nombre: true, email: true },
+  }))
+  if (admin) {
+    await enviarEmailCobroFallido({
+      emailAdmin: admin.email,
+      nombreAdmin: admin.nombre,
+      condominioNombre: condominio.nombre,
+      fechaLimite: fechaLimaTexto(finGraciaCobro(ahora)),
+    })
+  }
+  console.log(`[cobro-fallido] ${condominio.nombre}: gracia hasta ${finGraciaCobro(ahora).toISOString()}`)
+}
+
+export type UsuarioOrdenable ={ id: string; nombre: string; email: string; createdAt: Date }
 
 /** Separa a los que se quedan (los más antiguos) de los que se eliminan. */
 export function repartirPorAntiguedad<T extends UsuarioOrdenable>(usuarios: T[], limite: number) {
@@ -96,9 +136,17 @@ export async function degradarAGratis(condominioId: string, motivo: string) {
     const huboRecorte = recorte.residentesEliminados.length + recorte.vigilantesEliminados.length > 0
     if (condominio.plan === "GRATIS" && !huboRecorte) return null
 
+    // Las empresas NO se borran aquí: se conservan DIAS_CONSERVAR_EMPRESAS por
+    // si vuelve a Pro (sin efecto mientras sea Gratis). Las borra el cron
+    // (lib/retencion.ts) contando desde pasoAGratisEn.
+    const empresas = await tx.empresa.count({ where: { condominioId } })
     await tx.condominio.update({
       where: { id: condominioId },
-      data: { plan: "GRATIS", suscripcionEstado: "activa", activo: true, culqiSubscriptionId: null },
+      data: {
+        plan: "GRATIS", suscripcionEstado: "activa", activo: true, culqiSubscriptionId: null,
+        cobroFallidoEn: null,
+        ...(condominio.plan === "PRO" ? { pasoAGratisEn: new Date() } : {}),
+      },
     })
 
     const admin = await tx.user.findFirst({
@@ -120,11 +168,11 @@ export async function degradarAGratis(condominioId: string, motivo: string) {
         },
       })
     }
-    return { condominio, recorte, admin }
+    return { condominio, recorte, admin, empresas }
   })
 
   if (!resultado) return null
-  const { condominio, recorte, admin } = resultado
+  const { condominio, recorte, admin, empresas } = resultado
 
   const secretKey = process.env.CULQI_SECRET_KEY
   if (condominio.culqiSubscriptionId && secretKey) {
@@ -144,6 +192,7 @@ export async function degradarAGratis(condominioId: string, motivo: string) {
       condominioNombre: condominio.nombre,
       residentesEliminados: recorte.residentesEliminados.map((u) => u.nombre),
       vigilantesEliminados: recorte.vigilantesEliminados.map((u) => u.nombre),
+      conservaEmpresasHasta: empresas > 0 ? fechaLimaTexto(new Date(Date.now() + DIAS_CONSERVAR_EMPRESAS * 86_400_000)) : null,
     })
   }
 

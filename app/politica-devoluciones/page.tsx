@@ -125,7 +125,8 @@ export default function PoliticaDevolucionesPage() {
               <li>
                 <strong>Dejar Pro:</strong> se hace cancelando la suscripción (ver sección 3). No hay
                 devolución por el periodo en curso, salvo lo indicado para el pago mensual. Al terminar el
-                periodo, o si falla el pago, la organización pasa al plan Gratis: se conservan los
+                periodo, o 5 días después de un cobro fallido que no se regularice, la organización pasa al
+                plan Gratis (sus empresas se conservan 30 días por si vuelve a Pro): se conservan los
                 vigilantes y residentes más antiguos hasta su límite y los demás se eliminan con sus visitas.
                 Recomendamos exportar la información y eliminar antes, desde el panel, a los usuarios que no
                 necesites, para que se queden los que tú elijas.

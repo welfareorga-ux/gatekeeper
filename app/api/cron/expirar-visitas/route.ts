@@ -2,6 +2,7 @@ import { runAsAdmin } from "@/lib/tenant"
 import { purgarHistorialGratis } from "@/lib/retencion"
 import { degradarAGratis } from "@/lib/degradar-plan"
 import { prisma } from "@/lib/prisma"
+import { finGraciaCobro } from "@/lib/limites-plan"
 import { NextResponse } from "next/server"
 
 // Llamar con: GET /api/cron/expirar-visitas
@@ -53,22 +54,30 @@ export async function GET(req: Request) {
 }
 
 /**
- * Red de seguridad por si Culqi no avisa por webhook:
- *   - "vencida" o "fallida" → pasa a Gratis.
- *   - "cancelada" → pasa a Gratis cuando termina el periodo pagado, según la
- *     fecha de próximo cobro que devuelve Culqi. Hasta entonces sigue en Pro.
+ * Pasa a Gratis las cuentas Pro que dejaron de pagar:
+ *   - "fallida" → cuando vence el periodo de gracia (DIAS_GRACIA_COBRO) desde
+ *     el primer cobro fallido. Antes, sigue en Pro.
+ *   - "vencida" (datos antiguos) → pasa a Gratis.
+ *   - "cancelada" → cuando termina el periodo pagado, según la fecha de próximo
+ *     cobro que devuelve Culqi. Hasta entonces sigue en Pro.
  */
 async function pasarAGratisLasQueDejaronDePagar(): Promise<number> {
   const candidatas = await prisma.condominio.findMany({
     where: { plan: "PRO", suscripcionEstado: { in: ["cancelada", "vencida", "fallida"] } },
-    select: { id: true, suscripcionEstado: true, culqiSubscriptionId: true },
+    select: { id: true, suscripcionEstado: true, culqiSubscriptionId: true, cobroFallidoEn: true },
   })
 
   let pasadas = 0
   for (const c of candidatas) {
     try {
-      if (c.suscripcionEstado !== "cancelada") {
-        if (await degradarAGratis(c.id, `cron ${c.suscripcionEstado}`)) pasadas++
+      if (c.suscripcionEstado === "fallida") {
+        // Sin fecha de fallo (datos anteriores a la gracia) cuenta como vencida.
+        const vencioGracia = !c.cobroFallidoEn || finGraciaCobro(c.cobroFallidoEn) <= new Date()
+        if (vencioGracia && await degradarAGratis(c.id, "cron: venció la gracia del cobro fallido")) pasadas++
+        continue
+      }
+      if (c.suscripcionEstado === "vencida") {
+        if (await degradarAGratis(c.id, "cron vencida")) pasadas++
         continue
       }
 
