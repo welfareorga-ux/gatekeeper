@@ -281,7 +281,7 @@ export async function enviarEmailBienvenidaGratis({
             <table style="width:100%;border-collapse:collapse">
               <tr><td style="padding:8px 0;color:#6b7280;font-size:13px;width:40%">Organización</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#111827">${condominioNombre}</td></tr>
               <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Plan</td><td style="padding:8px 0;font-weight:600;font-size:14px;color:#059669">Gratis · Sin fecha de vencimiento</td></tr>
-              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Incluye</td><td style="padding:8px 0;font-size:14px;color:#111827">1 administrador · 1 vigilante · 4 residentes · 10 visitas al mes</td></tr>
+              <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Incluye</td><td style="padding:8px 0;font-size:14px;color:#111827">1 administrador · 1 vigilante · 2 residentes · 10 visitas al mes</td></tr>
               <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Email de acceso</td><td style="padding:8px 0;font-size:14px;color:#111827">${email}</td></tr>
             </table>
           </div>

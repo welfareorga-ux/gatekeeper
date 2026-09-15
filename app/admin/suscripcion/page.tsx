@@ -30,7 +30,7 @@ const PLAN_INFO: Record<string, { label: string; precio: string; features: strin
     label: "Gratis",
     precio: "S/ 0.00 · no caduca",
     features: [
-      "1 administrador y 1 vigilante", "Hasta 4 residentes", `${LIMITES_GRATIS.visitasPorMes} visitas al mes`,
+      "1 administrador y 1 vigilante", `Hasta ${LIMITES_GRATIS.residentes} residentes`, `${LIMITES_GRATIS.visitasPorMes} visitas al mes`,
       "Pase QR por WhatsApp", "Historial de 30 días",
     ],
   },

@@ -12,7 +12,7 @@
 export const LIMITES_GRATIS = {
   administradores: 1,
   vigilantes: 1,
-  residentes: 4,
+  residentes: 2,
   visitasPorMes: 10,
 } as const
 

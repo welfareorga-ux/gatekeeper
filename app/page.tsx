@@ -323,7 +323,7 @@ export default async function RootPage() {
                 descripcion: "Para empezar hoy mismo. No caduca y no pedimos tarjeta.",
                 features: [
                   "1 administrador y 1 vigilante",
-                  "Hasta 4 residentes",
+                  "Hasta 2 residentes",
                   "10 visitas al mes (+20 por S/ 19 si te faltan)",
                   "Pase QR por WhatsApp",
                   "Acceso por placa o DNI",

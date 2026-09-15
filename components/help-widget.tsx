@@ -168,7 +168,7 @@ const CATEGORIES: Category[] = [
       {
         q: "¿Tengo periodo de prueba gratis?",
         a: [
-          "Sí: el plan Gratis no caduca (1 administrador, 1 vigilante, 4 residentes y 10 visitas al mes; cada alta ocupa un cupo aunque después elimines a esa persona; si se acaban las visitas puedes comprar 20 más por S/ 19, válidas hasta fin de ese mes; y el historial con más de 30 días se borra). El plan Pro cuesta S/ 89 al mes, o menos pagando por adelantado: S/ 254 cada 3 meses, S/ 480 cada 6 o S/ 890 al año.",
+          "Sí: el plan Gratis no caduca (1 administrador, 1 vigilante, 2 residentes y 10 visitas al mes; cada alta ocupa un cupo aunque después elimines a esa persona; si se acaban las visitas puedes comprar 20 más por S/ 19, válidas hasta fin de ese mes; y el historial con más de 30 días se borra). El plan Pro cuesta S/ 89 al mes, o menos pagando por adelantado: S/ 254 cada 3 meses, S/ 480 cada 6 o S/ 890 al año.",
           "Puedes empezar sin ingresar tarjeta y suscribirte cuando quieras.",
         ],
       },
