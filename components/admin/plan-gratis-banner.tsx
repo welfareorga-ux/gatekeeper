@@ -27,12 +27,20 @@ export function PlanGratisBanner({ visitasUsadas, visitasExtra }: { visitasUsada
             {visitasExtra > 0 && <span className="text-slate-300"> · +{visitasExtra} extra</span>}
           </span>
         </p>
-        <Link
-          href="/admin/suscripcion"
-          className="text-sm font-semibold text-orange-400 hover:text-orange-300 underline underline-offset-4 whitespace-nowrap"
-        >
-          {agotado ? "Comprar visitas o pasar a Pro →" : "Ver plan Pro →"}
-        </Link>
+        <div className="flex items-center gap-4 text-sm font-semibold whitespace-nowrap">
+          <Link
+            href="/admin/suscripcion#visitas-extra"
+            className={`underline underline-offset-4 ${agotado ? "text-orange-400 hover:text-orange-300" : "text-slate-200 hover:text-white"}`}
+          >
+            Comprar visitas
+          </Link>
+          <Link
+            href="/admin/suscripcion"
+            className="text-orange-400 hover:text-orange-300 underline underline-offset-4"
+          >
+            Ver plan Pro →
+          </Link>
+        </div>
       </div>
     </div>
   )

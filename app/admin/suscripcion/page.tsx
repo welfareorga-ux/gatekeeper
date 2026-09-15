@@ -95,6 +95,14 @@ export default function SuscripcionPage() {
     updateSession()
   }, [])
 
+  // El enlace "Comprar visitas" del banner apunta a #visitas-extra, pero esa
+  // sección aparece recién cuando llegan los datos: se desplaza entonces.
+  useEffect(() => {
+    if (data && window.location.hash === "#visitas-extra") {
+      document.getElementById("visitas-extra")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }, [data])
+
   // Carga Culqi
   useEffect(() => {
     if (window.Culqi) { setCulqiListo(true); return }
@@ -299,7 +307,8 @@ export default function SuscripcionPage() {
               </div>
 
               {/* Cupo del mes + paquete de visitas extra */}
-              <div className="rounded-lg border p-4 space-y-3">
+              <div id="visitas-extra" className="scroll-mt-20 rounded-lg border p-4 space-y-3">
+                <p className="text-sm font-semibold text-foreground">Comprar visitas extra</p>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                   <span>
                     Visitas este mes:{" "}
