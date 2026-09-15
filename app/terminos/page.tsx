@@ -97,6 +97,13 @@ export default function TerminosPage() {
               </Link>{" "}
               para más detalles.
             </p>
+            <p>
+              <strong>Fin del plan Pro.</strong> Si la suscripción Pro termina (por cancelación al final del
+              periodo pagado o por falta de pago), la organización no se bloquea: pasa al plan Gratis. Se
+              mantiene el administrador y se conservan los vigilantes y residentes más antiguos hasta el
+              límite del plan Gratis; los demás usuarios se eliminan de forma permanente junto con sus
+              visitas. Recomendamos exportar la información antes de cancelar.
+            </p>
           </section>
 
           <section className="space-y-3">

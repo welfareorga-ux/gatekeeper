@@ -124,7 +124,9 @@ export default function PoliticaDevolucionesPage() {
               </li>
               <li>
                 <strong>Dejar Pro:</strong> se hace cancelando la suscripción (ver sección 3). No hay
-                devolución por el periodo en curso, salvo lo indicado para el pago mensual.
+                devolución por el periodo en curso, salvo lo indicado para el pago mensual. Al terminar el
+                periodo, o si falla el pago, la organización pasa al plan Gratis: se conservan los
+                vigilantes y residentes más antiguos hasta su límite y los demás se eliminan con sus visitas.
               </li>
             </ul>
           </section>
